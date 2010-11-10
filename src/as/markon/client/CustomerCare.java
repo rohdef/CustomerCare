@@ -8,7 +8,8 @@ public class CustomerCare implements EntryPoint {
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-		Login l = new Login();
+//		Login l = new Login();
+		CustomerView l = new CustomerView();
 		
 		RootPanel.get().add(l);
 	}
