@@ -19,6 +19,7 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
+import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 
 public class CustomerView extends LayoutContainer {
@@ -48,8 +49,11 @@ public class CustomerView extends LayoutContainer {
 		
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		
-		ColumnConfig column = new ColumnConfig("companyname", "Firmanavn", 200);
+		ColumnConfig column = new ColumnConfig("companyname", "Et Firmanavn", 300);
 		column.setRowHeader(true);
+		configs.add(column);
+		
+		column = new ColumnConfig("city", "Postnr og by", 100);
 		configs.add(column);
 		
 		cm = new ColumnModel(configs);
