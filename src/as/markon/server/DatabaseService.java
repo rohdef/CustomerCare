@@ -28,27 +28,22 @@ public class DatabaseService {
 		}
 		
 		try {
-			c = DriverManager.getConnection("jdbc:postgresql://localhost/Markon", "markon", "123");
+			c = DriverManager.getConnection("jdbc:postgresql://localhost/Markon", "Markon", "123");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
 	
-	public synchronized List<Company> getCompanies(int salesmanId) {
+	public synchronized List<Company> getCompanies(int salesmanId) throws SQLException {
 		companies = new ArrayList<Company>();
 		
 		connect();
-		Statement statement;
-		try {
-			statement = c.createStatement();
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-			return null;
-		}
+		Statement companyStatement, contactStatement;
+		companyStatement = c.createStatement();
+		contactStatement = c.createStatement();
 		
 		String companyQuery = "SELECT DISTINCT" +
-//				"	s.salesman," +
 				"	c.companyid," +
 				"	c.companyname," +
 				"	c.address," +
@@ -63,12 +58,7 @@ public class DatabaseService {
 				"			AND s.salesmanid = "+salesmanId+";";
 		
 		ResultSet companyResults;
-		try {
-			companyResults = statement.executeQuery(companyQuery);
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-			return null;
-		}
+		companyResults = companyStatement.executeQuery(companyQuery);
 
 		try {
 			while (companyResults.next()) {
@@ -93,7 +83,7 @@ public class DatabaseService {
 						"		WHERE s.salesmanid = "+salesmanId+
 						"			AND c.companyid = "+companyResults.getInt("companyid");
 				
-				ResultSet contactResult = statement.executeQuery(contactQuery);
+				ResultSet contactResult = contactStatement.executeQuery(contactQuery);
 				
 				List<Contact> contacts = new ArrayList<Contact>();
 				while (contactResult.next()) {
