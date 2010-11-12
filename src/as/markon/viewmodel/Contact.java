@@ -1,10 +1,14 @@
 package as.markon.viewmodel;
 
 import com.extjs.gxt.ui.client.data.BaseModelData;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class Contact extends BaseModelData {
+public class Contact extends BaseModelData implements IsSerializable {
 	private static final long serialVersionUID = 1L;
 
+	public Contact() {
+	}
+	
 	public String getName() {
 		return get("contactname");
 	}

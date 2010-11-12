@@ -9,7 +9,7 @@ import as.markon.viewmodel.Importance;
 
 public class DemoDataService {
 	public static List<Company> getCompanies() {
-		List<Company> companies = new ArrayList<Company>();
+		ArrayList<Company> companies = new ArrayList<Company>();
 		
 		Company cmp;
 		Contact ctc;
@@ -23,7 +23,7 @@ public class DemoDataService {
 		cmp.setImportance(Importance.Silver);
 		cmp.setComments("Einar er ubehagelig, spoerg efter Hans. Ud over det meget flinke.");
 		
-		List<Contact> contacts = new ArrayList<Contact>();
+		ArrayList<Contact> contacts = new ArrayList<Contact>();
 		
 		ctc = new Contact();
 		ctc.setName("John");

@@ -1,6 +1,6 @@
 package as.markon.viewmodel;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import com.extjs.gxt.ui.client.data.BaseModelData;
 
@@ -63,11 +63,11 @@ public class Company extends BaseModelData {
 		set("comments", comments);
 	}
 
-	public List<Contact> getContacts() {
+	public ArrayList<Contact> getContacts() {
 		return get("contacts");
 	}
 
-	public void setContacts(List<Contact> contacts) {
+	public void setContacts(ArrayList<Contact> contacts) {
 		set("contacts", contacts);
 	}
 }
