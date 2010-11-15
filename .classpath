@@ -49,7 +49,7 @@
 	</classpathentry>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GXT"/>
-	<classpathentry kind="lib" path="postgresql-9.0-801.jdbc3.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/postgresql-9.0-801.jdbc3.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/gxt.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

@@ -30,6 +30,14 @@ public class Company extends BaseModelData {
 	public void setCity(String city) {
 		set("city", city);
 	}
+	
+	public int getPostal() {
+		return get("postal");
+	}
+	
+	public void setPostal(int postal) {
+		set("postal", postal);
+	}
 
 	public String getPhone() {
 		return get("phone");

@@ -3,9 +3,12 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.digester.SetNextRule;
+
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Salesman;
+import as.markon.viewmodel.Trade;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
@@ -23,7 +26,9 @@ import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.Text;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
+import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
+import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
@@ -31,6 +36,7 @@ import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridSelectionModel;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
+import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -60,7 +66,7 @@ public class CustomerView extends LayoutContainer {
 	}
 
 	private ColumnModel cm;
-	private final Grid<Company> companyGrid;
+	private Grid<Company> companyGrid;
 
 	public CustomerView(Salesman salesman) {
 		setSalesman(salesman);
@@ -79,8 +85,21 @@ public class CustomerView extends LayoutContainer {
 
 		// TODO Add login link
 
-		// CENTER
+
+		// REST
+		ContentPanel centerPanel = createCenterPanel();
+		ContentPanel eastPanel = getEastPnael();
+
+		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 100));
+		this.add(centerPanel, new BorderLayoutData(LayoutRegion.CENTER, 0.7f));
+		this.add(eastPanel, new BorderLayoutData(LayoutRegion.EAST, 0.3f));
+	}
+
+	private ContentPanel createCenterPanel() {
 		ContentPanel centerPanel = new ContentPanel();
+		FitLayout centerLayout = new FitLayout();
+		centerPanel.setLayout(centerLayout);
+		
 		centerPanel.setHeading("Virksomheder");
 
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
@@ -90,7 +109,10 @@ public class CustomerView extends LayoutContainer {
 		column.setRowHeader(true);
 		configs.add(column);
 
-		column = new ColumnConfig("city", "Postnr og by", 100);
+		column = new ColumnConfig("postal", "Postnr", 50);
+		configs.add(column);
+		
+		column = new ColumnConfig("city", "By", 150);
 		configs.add(column);
 
 		cm = new ColumnModel(configs);
@@ -99,7 +121,6 @@ public class CustomerView extends LayoutContainer {
 
 		companyGrid = new Grid<Company>(companyStore, cm);
 		companyGrid.setAutoExpandColumn("companyname");
-		companyGrid.setAutoHeight(true);
 		companyGrid.setBorders(false);
 		companyGrid.setColumnLines(true);
 		companyGrid.setColumnReordering(true);
@@ -109,14 +130,9 @@ public class CustomerView extends LayoutContainer {
 		sm.setSelectionMode(SelectionMode.SINGLE);
 		companyGrid.setSelectionModel(sm);
 
+		centerPanel.setHeight(550);
 		centerPanel.add(companyGrid);
-
-		// EAST
-		ContentPanel eastPanel = getEastPnael();
-
-		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 100));
-		this.add(centerPanel, new BorderLayoutData(LayoutRegion.CENTER, 0.7f));
-		this.add(eastPanel, new BorderLayoutData(LayoutRegion.EAST, 0.3f));
+		return centerPanel;
 	}
 
 	private ContentPanel getEastPnael() {
@@ -138,27 +154,33 @@ public class CustomerView extends LayoutContainer {
 		final ComboBox<Contact> contactsBox = new ComboBox<Contact>();
 		contactsBox.setFieldLabel("Kontaktliste");
 		contactsBox.setDisplayField("contactname");
+		contactsBox.setTypeAhead(true);
 		contactsBox.setStore(emptyStore);
+		contactsBox.setTriggerAction(TriggerAction.ALL);
 		contactsForm.add(contactsBox);
 
 		TextField<String> nameFld = new TextField<String>();
 		nameFld.setBorders(false);
 		nameFld.setFieldLabel("Navn");
+		nameFld.setName("contactname");
 		contactsForm.add(nameFld);
 
 		TextField<String> titleFld = new TextField<String>();
 		titleFld.setBorders(false);
 		titleFld.setFieldLabel("Titel");
+		titleFld.setName("title");
 		contactsForm.add(titleFld);
 
 		TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
+		phoneFld.setName("phone");
 		contactsForm.add(phoneFld);
 
 		TextField<String> mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
+		mailFld.setName("mail");
 		contactsForm.add(mailFld);
 
 		// TODO kommentarer
@@ -170,8 +192,7 @@ public class CustomerView extends LayoutContainer {
 							contactsBox.clear();
 
 							ListStore<Contact> contactStore = new ListStore<Contact>();
-							contactStore
-									.add(be.getSelectedItem().getContacts());
+							contactStore.add(be.getSelectedItem().getContacts());
 
 							contactsBox.setStore(contactStore);
 						} else
@@ -180,17 +201,10 @@ public class CustomerView extends LayoutContainer {
 				});
 
 		final FormBinding contactBinding = new FormBinding(contactsForm, true);
-		contactBinding
-				.addFieldBinding(new FieldBinding(nameFld, "contactname"));
-		contactBinding.addFieldBinding(new FieldBinding(titleFld, "title"));
-		contactBinding.addFieldBinding(new FieldBinding(phoneFld, "phone"));
-		contactBinding.addFieldBinding(new FieldBinding(mailFld, "mail"));
-
-		contactsBox
-				.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
+		
+		contactsBox.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
 					@Override
-					public void selectionChanged(
-							SelectionChangedEvent<Contact> se) {
+					public void selectionChanged(SelectionChangedEvent<Contact> se) {
 						contactBinding.bind(se.getSelectedItem());
 					}
 				});
@@ -205,31 +219,41 @@ public class CustomerView extends LayoutContainer {
 		TextField<String> addressFld = new TextField<String>();
 		addressFld.setBorders(false);
 		addressFld.setFieldLabel("Adresse");
+		addressFld.setName("address");
 		companyForm.add(addressFld);
 
-		TextField<String> cityFld = new TextField<String>();
-		cityFld.setBorders(false);
-		cityFld.setFieldLabel("Postnr./by");
-		companyForm.add(cityFld);
+		TextField<String> postalFld = new TextField<String>();
+		postalFld.setBorders(false);
+		postalFld.setFieldLabel("Postnr.");
+		postalFld.setName("postal");
+		companyForm.add(postalFld);
 
 		TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
+		phoneFld.setName("phone");
 		companyForm.add(phoneFld);
 
 		TextField<String> mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
+		mailFld.setName("mail");
 		companyForm.add(mailFld);
 
+		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
+		
+		
+		
 		// TODO importance (gruppe)
-		// TODO comments
+		
+		
+		TextArea commentsFld = new TextArea();
+		commentsFld.setFieldLabel("Kommentarer");
+		commentsFld.setName("comments");
+		commentsFld.setBorders(false);
+		companyForm.add(commentsFld);
 
 		final FormBinding binding = new FormBinding(companyForm, true);
-		binding.addFieldBinding(new FieldBinding(addressFld, "address"));
-		binding.addFieldBinding(new FieldBinding(cityFld, "city"));
-		binding.addFieldBinding(new FieldBinding(phoneFld, "phone"));
-		binding.addFieldBinding(new FieldBinding(mailFld, "mail"));
 
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
@@ -255,7 +279,7 @@ public class CustomerView extends LayoutContainer {
 		errorMessage.setHideOnButtonClick(true);
 		errorMessage.addText("Beskeden fra systemet er:\n\"" + t.getMessage()
 				+ "\"\nsystemet skulle gerne have lavet en log\n"
-				+ "til ham den flinke på hjul.");
+				+ "til ham den flinke p√• hjul.");
 
 		errorMessage.show();
 

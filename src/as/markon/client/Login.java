@@ -1,12 +1,9 @@
 package as.markon.client;
 
-import java.util.ArrayList;
 
 import as.markon.viewmodel.Salesman;
 
-import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
-import com.extjs.gxt.ui.client.event.EventType;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.Observable;
@@ -50,14 +47,14 @@ public class Login extends LayoutContainer implements Observable {
 		Salesman s;
 		
 		s = new Salesman();
-		s.setSalesman("Markon det er John");
+		s.setSalesman("John");
 		s.setSalesmanid(1);
 		loginItem = new LoginItem(s);
 		loginItem.addListener(Events.Select, selectSalesman);
 		content.add(loginItem, 0);
 		
 		s = new Salesman();
-		s.setSalesman("Det andet J.");
+		s.setSalesman("Jesper");
 		s.setSalesmanid(2);
 		loginItem = new LoginItem(s);
 		loginItem.addListener(Events.Select, selectSalesman);

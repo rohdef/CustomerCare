@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.List;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -60,14 +59,21 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			companyStatement = c.createStatement();
 			contactStatement = c.createStatement();
 
-			String companyQuery = "SELECT DISTINCT" + "	c.companyid,"
-					+ "	c.companyname," + "	c.address," + "	c.city,"
-					+ "	c.phone," + "	c.mail," + "	c.importance,"
-					+ "	c.comments\n"
-					+ "		FROM salespeople s, companies c, contacts k\n"
-					+ "		WHERE c.companyid = k.companyid\n"
-					+ "			AND k.salesmanid = s.salesmanid\n"
-					+ "			AND s.salesmanid = " + salesmanId + ";";
+			String companyQuery = "SELECT DISTINCT"
+				+ "	c.companyid,"
+				+ "	c.companyname,"
+				+ "	c.address,"
+				+ "	c.postal,"
+				+ " p.city,"
+				+ "	c.phone,"
+				+ "	c.mail,"
+				+ "	c.importance,"
+				+ "	c.comments\n"
+				+ "		FROM salespeople s, companies c, contacts k, postalcodes p\n"
+				+ "		WHERE c.companyid = k.companyid\n"
+				+ "			AND k.salesmanid = s.salesmanid\n"
+				+ "			AND s.salesmanid = " + salesmanId + ""
+				+"			AND c.postal = p.postal;";
 
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
@@ -77,19 +83,25 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 				c.setCompanyName(companyResults.getString("companyname"));
 				c.setAddress(companyResults.getString("address"));
+				c.setPostal(companyResults.getInt("postal"));
 				c.setCity(companyResults.getString("city"));
 				c.setPhone(companyResults.getString("phone"));
 				c.setMail(companyResults.getString("mail"));
 				// TODO Importance
 				c.setComments(companyResults.getString("comments"));
 
-				String contactQuery = "SELECT" + "	k.contactname,"
-						+ "	k.title," + "	k.phone," + "	k.mail,"
-						+ "	k.comments"
-						+ "		FROM contacts k, companies c, salespeople s"
-						+ "		WHERE s.salesmanid = " + salesmanId
-						+ "			AND c.companyid = "
-						+ companyResults.getInt("companyid");
+				String contactQuery = "SELECT\n" +
+						"\tk.contactname,\n" +
+						"\tk.title,\n" +
+						"\tk.phone,\n" +
+						"\tk.mail,\n" +
+						"\tk.comments\n" +
+						"\t\tFROM contacts k, companies c, salespeople s\n" +
+						"\t\tWHERE s.salesmanid = " + salesmanId + "\n" +
+						"\t\tAND c.companyid = " + companyResults.getInt("companyid") + "\n" +
+						"\t\tAND k.companyid = c.companyid\n" +
+						"\t\tAND k.salesmanid = s.salesmanid;";
+				
 
 				ResultSet contactResult = contactStatement
 						.executeQuery(contactQuery);
@@ -105,7 +117,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 					contacts.add(k);
 				}
-
+				
 				c.setContacts(contacts);
 				companies.add(c);
 			}
