@@ -7,6 +7,46 @@ import com.extjs.gxt.ui.client.data.BaseModelData;
 public class Company extends BaseModelData {
 	private static final long serialVersionUID = 1L;
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((getCompanyName() == null) ? 0 : getCompanyName().hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		
+		Company other = (Company) obj;
+		if (getCompanyName() == null) {
+			if (other.getCompanyName() != null)
+				return false;
+		} else if (!getCompanyName().equals(other.getCompanyName()))
+			return false;
+		
+		if (getPostal() != other.getPostal())
+			return false;
+		
+		if (getAddress() == null) {
+			if (other.getAddress() != null)
+				return false;
+		} else {
+			if (other.getAddress() == null)
+				return false;
+			if (!getAddress().equals(other.getAddress()))
+				return false;
+		}
+		
+		return true;
+	}
+
 	public String getCompanyName() {
 		return get("companyname");
 	}

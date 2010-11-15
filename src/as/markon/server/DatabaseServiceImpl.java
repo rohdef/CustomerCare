@@ -7,11 +7,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import com.google.gwt.dev.util.collect.HashMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import as.markon.client.DataService;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
+import as.markon.viewmodel.Salesman;
+import as.markon.viewmodel.Trade;
 
 public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		DataService {
@@ -23,7 +26,12 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private String url = "jdbc:postgresql://localhost/", db = "Markon",
 			driver = "org.postgresql.Driver", user = "Markon",
 			password = "123";
-
+	
+	private HashMap<Company, Integer> companyMap;
+	private HashMap<Contact, Integer> contactMap;
+	private HashMap<Salesman, Integer> salesmanMap;
+	private HashMap<Trade, Integer> tradeMap;
+	
 	public DatabaseServiceImpl() {
 		try {
 			Class.forName(driver).newInstance();
