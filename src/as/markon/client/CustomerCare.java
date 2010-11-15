@@ -14,7 +14,6 @@ public class CustomerCare implements EntryPoint {
 	 */
 	public void onModuleLoad() {
 		final Login l = new Login();
-//		CustomerView l = new CustomerView();
 		
 		l.addListener(Events.Select, new Listener<SelectionEvent<Salesman>>() {
 			public void handleEvent(SelectionEvent<Salesman> be) {

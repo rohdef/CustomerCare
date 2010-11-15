@@ -1,12 +1,12 @@
 package as.markon.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import org.apache.commons.digester.SetNextRule;
 
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
+import as.markon.viewmodel.Importance;
 import as.markon.viewmodel.Salesman;
 import as.markon.viewmodel.Trade;
 
@@ -14,7 +14,6 @@ import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SelectionMode;
 import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.binding.FieldBinding;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
@@ -28,6 +27,7 @@ import com.extjs.gxt.ui.client.widget.Text;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
+import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
@@ -84,7 +84,6 @@ public class CustomerView extends LayoutContainer {
 		northPanel.add(customersTxt);
 
 		// TODO Add login link
-
 
 		// REST
 		ContentPanel centerPanel = createCenterPanel();
@@ -183,7 +182,11 @@ public class CustomerView extends LayoutContainer {
 		mailFld.setName("mail");
 		contactsForm.add(mailFld);
 
-		// TODO kommentarer
+		TextArea commentFld = new TextArea();
+		commentFld.setBorders(false);
+		commentFld.setFieldLabel("Kommentarer");
+		commentFld.setName("comments");
+		contactsForm.add(commentFld);
 
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
@@ -240,11 +243,35 @@ public class CustomerView extends LayoutContainer {
 		mailFld.setName("mail");
 		companyForm.add(mailFld);
 
+		final ListStore<Trade> tradeStore = new ListStore<Trade>();
+		
+		dataService.getTrades(new AsyncCallback<ArrayList<Trade>>() {
+			public void onSuccess(ArrayList<Trade> result) {
+				tradeStore.removeAll();
+				tradeStore.add(result);
+				
+			}
+			
+			public void onFailure(Throwable caught) {
+				krHandleError(caught);
+			}
+		});
+		
 		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
+		tradeBox.setFieldLabel("Branche");
+		tradeBox.setDisplayField("trade");
+		tradeBox.setTypeAhead(true);
+		tradeBox.setStore(tradeStore);
+		tradeBox.setTriggerAction(TriggerAction.ALL);
+		companyForm.add(tradeBox);
 		
+		SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
+		importanceBox.setFieldLabel("Gruppe");
+		importanceBox.add(Arrays.asList(Importance.values()));
+//		importanceBox.setSimpleValue(...) // Set the value to whatever the database says
+		importanceBox.setTriggerAction(TriggerAction.ALL);
+		companyForm.add(importanceBox);
 		
-		
-		// TODO importance (gruppe)
 		
 		
 		TextArea commentsFld = new TextArea();

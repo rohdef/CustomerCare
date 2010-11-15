@@ -53,7 +53,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 			c = DriverManager.getConnection(url+db, user, password);
 		} catch (SQLException e) {
-			// TODO add log
 			throw new RuntimeException(e.getMessage());
 		}
 	}
@@ -150,5 +149,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	public ArrayList<Contact> getContactsFor(Company company) {
 		return company.getContacts();
+	}
+
+	public ArrayList<Trade> getTrades() {
+		return new ArrayList<Trade>();
 	}
 }

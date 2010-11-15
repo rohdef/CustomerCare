@@ -20,7 +20,7 @@ public class DemoDataService {
 		cmp.setCity("8000");
 		cmp.setPhone("44332211");
 		cmp.setMail("c1@storvirksomhed.dk");
-		cmp.setImportance(Importance.Silver);
+		cmp.setImportance(Importance.B);
 		cmp.setComments("Einar er ubehagelig, spoerg efter Hans. Ud over det meget flinke.");
 		
 		ArrayList<Contact> contacts = new ArrayList<Contact>();
@@ -63,7 +63,7 @@ public class DemoDataService {
 		cmp.setCity("8200");
 		cmp.setPhone("88776655");
 		cmp.setMail("penge@megetstorvirksomhed.dk");
-		cmp.setImportance(Importance.Gold);
+		cmp.setImportance(Importance.A);
 		cmp.setComments("De bruger mange penge og er super soede, siger man ged til dem giver de en julefrokost.");
 		
 		contacts = new ArrayList<Contact>();
@@ -77,7 +77,7 @@ public class DemoDataService {
 		cmp.setCity("8200");
 		cmp.setPhone("90066600");
 		cmp.setMail("lucifer@devinc.usa");
-		cmp.setImportance(Importance.Bronce);
+		cmp.setImportance(Importance.B);
 		cmp.setComments("De er rigtigt traels, men penge er penge");
 		
 		contacts = new ArrayList<Contact>();
@@ -91,7 +91,7 @@ public class DemoDataService {
 		cmp.setCity("8000");
 		cmp.setPhone("66556655");
 		cmp.setMail("virk@virk.dk");
-		cmp.setImportance(Importance.Silver);
+		cmp.setImportance(Importance.B);
 		cmp.setComments("Ingen kommentar");
 		
 		contacts = new ArrayList<Contact>();
