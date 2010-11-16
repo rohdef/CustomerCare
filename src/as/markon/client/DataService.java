@@ -1,9 +1,11 @@
 package as.markon.client;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
+import as.markon.viewmodel.Importance;
 import as.markon.viewmodel.Trade;
 
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -13,6 +15,9 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface DataService extends RemoteService {
 	public ArrayList<Company> getCompanies(int salesmanId);
 	public void close();
-	public ArrayList<Contact> getContactsFor(Company company);
 	public ArrayList<Trade> getTrades();
+	
+	// Gah, there should be a better way to register types for serialization
+	public ArrayList<Contact> getContactsFor(Company company);
+	public Importance getImportance(String name);
 }

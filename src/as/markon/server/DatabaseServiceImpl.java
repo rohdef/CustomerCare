@@ -6,13 +6,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Set;
 
 import com.google.gwt.dev.util.collect.HashMap;
+import com.google.gwt.thirdparty.guava.common.collect.HashBiMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import as.markon.client.DataService;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
+import as.markon.viewmodel.Importance;
 import as.markon.viewmodel.Salesman;
 import as.markon.viewmodel.Trade;
 
@@ -22,15 +25,16 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	private Connection c;
 	private ArrayList<Company> companies;
+	private ArrayList<Trade> trades;
 
 	private String url = "jdbc:postgresql://localhost/", db = "Markon",
 			driver = "org.postgresql.Driver", user = "Markon",
 			password = "123";
 	
-	private HashMap<Company, Integer> companyMap;
-	private HashMap<Contact, Integer> contactMap;
-	private HashMap<Salesman, Integer> salesmanMap;
-	private HashMap<Trade, Integer> tradeMap;
+	private HashBiMap<Company, Integer> companyMap;
+	private HashBiMap<Contact, Integer> contactMap;
+	private HashBiMap<Salesman, Integer> salesmanMap;
+	private HashBiMap<Trade, Integer> tradeMap;
 	
 	public DatabaseServiceImpl() {
 		try {
@@ -58,24 +62,27 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	}
 
 	public synchronized ArrayList<Company> getCompanies(int salesmanId) {
+		getTrades();
 		try {
 			companies = new ArrayList<Company>();
+			companyMap = HashBiMap.create();
 
 			connect();
 			Statement companyStatement, contactStatement;
 			companyStatement = c.createStatement();
 			contactStatement = c.createStatement();
 
-			String companyQuery = "SELECT DISTINCT"
-				+ "	c.companyid,"
-				+ "	c.companyname,"
-				+ "	c.address,"
-				+ "	c.postal,"
-				+ " p.city,"
-				+ "	c.phone,"
-				+ "	c.mail,"
-				+ "	c.importance,"
-				+ "	c.comments\n"
+			String companyQuery = "SELECT DISTINCT\n"
+				+ "	c.companyid,\n"
+				+ "	c.companyname,\n"
+				+ "	c.address,\n"
+				+ "	c.postal,\n"
+				+ " p.city,\n"
+				+ "	c.phone,\n"
+				+ "	c.mail,\n"
+				+ "	c.importance,\n"
+				+ "	c.comments,\n"
+				+ " c.tradeid\n"
 				+ "		FROM salespeople s, companies c, contacts k, postalcodes p\n"
 				+ "		WHERE c.companyid = k.companyid\n"
 				+ "			AND k.salesmanid = s.salesmanid\n"
@@ -88,13 +95,38 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			while (companyResults.next()) {
 				Company c = new Company();
 
-				c.setCompanyName(companyResults.getString("companyname"));
-				c.setAddress(companyResults.getString("address"));
+				String companyName = companyResults.getString("companyname");
+				if (companyName == null)
+					throw new RuntimeException("Data error occured, a company without name should not be possible.");
+				c.setCompanyName(companyName);
+				
+				String companyAddress = companyResults.getString("address");
+				if (companyAddress == null)
+					companyAddress = "";
+				c.setAddress(companyAddress);
+				
 				c.setPostal(companyResults.getInt("postal"));
-				c.setCity(companyResults.getString("city"));
-				c.setPhone(companyResults.getString("phone"));
-				c.setMail(companyResults.getString("mail"));
-				// TODO Importance
+				
+				String companyCity = companyResults.getString("city");
+				if (companyCity == null)
+					companyCity = "";
+				c.setCity(companyCity);
+				
+				String companyPhone = companyResults.getString("phone");
+				if (companyPhone == null)
+					companyPhone = "";
+				c.setPhone(companyPhone);
+				
+				String companyMail = companyResults.getString("mail");
+				if (companyMail == null)
+					companyMail = "";
+				c.setMail(companyMail);
+				
+				String importanceChar = companyResults.getString("importance");
+				if (importanceChar == null)
+					importanceChar = "I";
+				c.setImportance(Importance.valueOf(importanceChar));
+				
 				c.setComments(companyResults.getString("comments"));
 
 				String contactQuery = "SELECT\n" +
@@ -125,8 +157,13 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					contacts.add(k);
 				}
 				
+				int tradeid = companyResults.getInt("tradeid");
+				if (!companyResults.wasNull())
+					c.setTrade(tradeMap.inverse().get(new Integer(tradeid)));
+				
 				c.setContacts(contacts);
 				companies.add(c);
+				companyMap.put(c, companyResults.getInt("companyid"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -151,7 +188,36 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		return company.getContacts();
 	}
 
-	public ArrayList<Trade> getTrades() {
-		return new ArrayList<Trade>();
+	public synchronized ArrayList<Trade> getTrades() {
+		if (tradeMap == null) {
+			tradeMap = HashBiMap.create();
+			trades = new ArrayList<Trade>();
+			
+			String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
+			
+			try {
+				connect();
+				
+				Statement tradeStatement = c.createStatement();
+				ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
+				
+				while (tradeResult.next()) {
+					Trade trade = new Trade();
+					trade.setTrade(tradeResult.getString("tradename"));
+					
+					tradeMap.put(trade, tradeResult.getInt("tradeid"));
+					trades.add(trade);
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+		
+		return trades;
 	}
+	
+	public Importance getImportance(String name) {
+		return Importance.valueOf(name);
+	}
+
 }

@@ -3,8 +3,8 @@ package as.markon.viewmodel;
 public enum Importance {
 	A("Guldkunde"),
 	B("Soelvkunde"),
-	C("Broncekunde");
-	
+	C("Broncekunde"),
+	I("Ingen valgt");
 	private String value;
 
 	Importance(String value) {

@@ -3,6 +3,7 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
@@ -15,6 +16,7 @@ import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SelectionMode;
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
+import com.extjs.gxt.ui.client.binding.SimpleComboBoxFieldBinding;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
@@ -249,7 +251,6 @@ public class CustomerView extends LayoutContainer {
 			public void onSuccess(ArrayList<Trade> result) {
 				tradeStore.removeAll();
 				tradeStore.add(result);
-				
 			}
 			
 			public void onFailure(Throwable caught) {
@@ -265,14 +266,11 @@ public class CustomerView extends LayoutContainer {
 		tradeBox.setTriggerAction(TriggerAction.ALL);
 		companyForm.add(tradeBox);
 		
-		SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
+		final SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
 		importanceBox.setFieldLabel("Gruppe");
 		importanceBox.add(Arrays.asList(Importance.values()));
-//		importanceBox.setSimpleValue(...) // Set the value to whatever the database says
 		importanceBox.setTriggerAction(TriggerAction.ALL);
 		companyForm.add(importanceBox);
-		
-		
 		
 		TextArea commentsFld = new TextArea();
 		commentsFld.setFieldLabel("Kommentarer");
@@ -285,10 +283,12 @@ public class CustomerView extends LayoutContainer {
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
-						if (be.getSelection().size() > 0)
+						if (be.getSelection().size() > 0) {
 							binding.bind(be.getSelectedItem());
-						else
+							importanceBox.setSimpleValue(be.getSelectedItem().getImportance());
+						} else {
 							binding.unbind();
+						}
 					}
 				});
 
