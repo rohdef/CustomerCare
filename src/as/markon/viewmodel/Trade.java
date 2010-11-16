@@ -37,4 +37,9 @@ public class Trade extends BaseModelData {
 	public void setTrade(String trade) {
 		set("trade", trade);
 	}
+	
+	@Override
+	public String toString() {
+		return get("trade");
+	}
 }

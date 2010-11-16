@@ -62,6 +62,14 @@ public class Company extends BaseModelData {
 	public void setAddress(String address) {
 		set("address", address);
 	}
+	
+	public City getCompanyCity() {
+		return get("companycity");
+	}
+	
+	public void setCompanyCity(City city) {
+		set("companycity", city);
+	}
 
 	public String getCity() {
 		return get("city");

@@ -6,13 +6,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Set;
 
-import com.google.gwt.dev.util.collect.HashMap;
 import com.google.gwt.thirdparty.guava.common.collect.HashBiMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import as.markon.client.DataService;
+import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Importance;
@@ -26,6 +25,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private Connection c;
 	private ArrayList<Company> companies;
 	private ArrayList<Trade> trades;
+	private ArrayList<City> cities;
 
 	private String url = "jdbc:postgresql://localhost/", db = "Markon",
 			driver = "org.postgresql.Driver", user = "Markon",
@@ -35,6 +35,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private HashBiMap<Contact, Integer> contactMap;
 	private HashBiMap<Salesman, Integer> salesmanMap;
 	private HashBiMap<Trade, Integer> tradeMap;
+	private HashBiMap<Integer, City> cityMap; 
 	
 	public DatabaseServiceImpl() {
 		try {
@@ -63,6 +64,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	public synchronized ArrayList<Company> getCompanies(int salesmanId) {
 		getTrades();
+		getCities();
+		
 		try {
 			companies = new ArrayList<Company>();
 			companyMap = HashBiMap.create();
@@ -157,9 +160,13 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					contacts.add(k);
 				}
 				
+				Trade noTrade = new Trade();
+				noTrade.setTrade("Ingen branche valgt");
 				int tradeid = companyResults.getInt("tradeid");
 				if (!companyResults.wasNull())
 					c.setTrade(tradeMap.inverse().get(new Integer(tradeid)));
+				else 
+					c.setTrade(noTrade);
 				
 				c.setContacts(contacts);
 				companies.add(c);
@@ -209,6 +216,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					trades.add(trade);
 				}
 			} catch (Exception e) {
+				tradeMap = null;
+				trades = null;
+				
 				throw new RuntimeException(e.getMessage());
 			}
 		}
@@ -220,4 +230,36 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		return Importance.valueOf(name);
 	}
 
+	public synchronized ArrayList<City> getCities() {
+		if (cities == null) {
+			cities = new ArrayList<City>();
+			cityMap = HashBiMap.create();
+			
+			try {
+				connect();
+				
+				Statement cityStatement = c.createStatement();
+				
+				String citySql = "SELECT p.postal, p.city FROM postalcodes p;";
+				ResultSet cityResults = cityStatement.executeQuery(citySql);
+				
+				while (cityResults.next()) {
+					int postal = cityResults.getInt("postal");
+					City c = new City();
+					c.setPostal(postal);
+					c.setCity(cityResults.getString("city"));
+					
+					cities.add(c);
+					cityMap.put(postal, c);
+				}
+			} catch (Exception e) {
+				cities = null;
+				cityMap = null;
+				
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+		
+		return cities;
+	}
 }

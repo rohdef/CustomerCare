@@ -3,8 +3,8 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
+import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Importance;
@@ -16,11 +16,14 @@ import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SelectionMode;
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
-import com.extjs.gxt.ui.client.binding.SimpleComboBoxFieldBinding;
+import com.extjs.gxt.ui.client.core.El;
+import com.extjs.gxt.ui.client.data.ModelData;
 import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.GridEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
+import com.extjs.gxt.ui.client.store.GroupingStore;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
@@ -32,43 +35,57 @@ import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
+import com.extjs.gxt.ui.client.widget.grid.CheckBoxSelectionModel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
-import com.extjs.gxt.ui.client.widget.grid.GridSelectionModel;
+import com.extjs.gxt.ui.client.widget.grid.GridGroupRenderer;
+import com.extjs.gxt.ui.client.widget.grid.GroupColumnData;
+import com.extjs.gxt.ui.client.widget.grid.GroupingView;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Element;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CustomerView extends LayoutContainer {
-	private ListStore<Company> companyStore = new ListStore<Company>();
+	private GroupingStore<Company> companyStore = new GroupingStore<Company>();
 	private DataServiceAsync dataService = GWT.create(DataService.class);
 	private Salesman salesman;
-	
+
+	private String checkedStyle = "x-grid3-group-check";
+	private String uncheckedStyle = "x-grid3-group-uncheck";
+	private GroupingView companyView;
+
 	public Salesman getSalesman() {
 		return salesman;
 	}
 
 	public void setSalesman(Salesman salesman) {
 		this.salesman = salesman;
-		
-		dataService.getCompanies(salesman.getSalesmanid(), new AsyncCallback<ArrayList<Company>>() {
-			public void onSuccess(ArrayList<Company> result) {
-				companyStore.removeAll();
-				companyStore.add(result);
-			}
 
-			public void onFailure(Throwable caught) {
-				krHandleError(caught);
-			}
-		});
+		dataService.getCompanies(salesman.getSalesmanid(),
+				new AsyncCallback<ArrayList<Company>>() {
+					public void onSuccess(ArrayList<Company> result) {
+						companyStore.removeAll();
+						companyStore.setMonitorChanges(true);
+						companyStore.add(result);
+						companyStore.setDefaultSort("companyname", SortDir.ASC);
+						companyStore.groupBy("trade");
+					}
+
+					public void onFailure(Throwable caught) {
+						krHandleError(caught);
+					}
+				});
 	}
 
 	private ColumnModel cm;
 	private Grid<Company> companyGrid;
+	private ListStore<City> cityStore;
 
 	public CustomerView(Salesman salesman) {
 		setSalesman(salesman);
@@ -87,48 +104,186 @@ public class CustomerView extends LayoutContainer {
 
 		// TODO Add login link
 
+		// City store
+		cityStore = new ListStore<City>();
+		dataService.getCities(new AsyncCallback<ArrayList<City>>() {
+			public void onSuccess(ArrayList<City> result) {
+				cityStore.add(result);
+				cityStore.sort("postal", SortDir.ASC);
+			}
+
+			public void onFailure(Throwable caught) {
+				krHandleError(caught);
+			}
+		});
+
 		// REST
 		ContentPanel centerPanel = createCenterPanel();
-		ContentPanel eastPanel = getEastPnael();
+		ContentPanel eastPanel = createEastPanel();
 
 		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 100));
 		this.add(centerPanel, new BorderLayoutData(LayoutRegion.CENTER, 0.7f));
 		this.add(eastPanel, new BorderLayoutData(LayoutRegion.EAST, 0.3f));
+
 	}
 
 	private ContentPanel createCenterPanel() {
 		ContentPanel centerPanel = new ContentPanel();
 		FitLayout centerLayout = new FitLayout();
 		centerPanel.setLayout(centerLayout);
-		
+
 		centerPanel.setHeading("Virksomheder");
+
+		final CheckBoxSelectionModel<Company> sm = new CheckBoxSelectionModel<Company>() {
+			@Override
+			public void deselectAll() {
+				super.deselectAll();
+				NodeList<com.google.gwt.dom.client.Element> groups = companyView
+						.getGroups();
+				for (int i = 0; i < groups.getLength(); i++) {
+					com.google.gwt.dom.client.Element group = groups.getItem(i)
+							.getFirstChildElement();
+					setGroupChecked((Element) group, false);
+				}
+			}
+
+			@Override
+			public void selectAll() {
+				super.selectAll();
+				NodeList<com.google.gwt.dom.client.Element> groups = companyView
+						.getGroups();
+				for (int i = 0; i < groups.getLength(); i++) {
+					com.google.gwt.dom.client.Element group = groups.getItem(i)
+							.getFirstChildElement();
+					setGroupChecked((Element) group, true);
+				}
+			}
+
+			@Override
+			protected void doDeselect(List<Company> models, boolean supressEvent) {
+				super.doDeselect(models, supressEvent);
+				NodeList<com.google.gwt.dom.client.Element> groups = companyView.getGroups();
+				search: for (int i = 0; i < groups.getLength(); i++) {
+					com.google.gwt.dom.client.Element group = groups.getItem(i);
+					NodeList<Element> rows = El.fly(group).select(
+							".x-grid3-row");
+					for (int j = 0, len = rows.getLength(); j < len; j++) {
+						Element r = rows.getItem(j);
+						int idx = grid.getView().findRowIndex(r);
+						Company m = grid.getStore().getAt(idx);
+						if (!isSelected(m)) {
+							setGroupChecked((Element) group, false);
+							continue search;
+						}
+					}
+				}
+
+			}
+
+			@Override
+			protected void doSelect(List<Company> models, boolean keepExisting,
+					boolean supressEvent) {
+				super.doSelect(models, keepExisting, supressEvent);
+				NodeList<com.google.gwt.dom.client.Element> groups = companyView
+						.getGroups();
+				search: for (int i = 0; i < groups.getLength(); i++) {
+					com.google.gwt.dom.client.Element group = groups.getItem(i);
+					NodeList<Element> rows = El.fly(group).select(
+							".x-grid3-row");
+					for (int j = 0, len = rows.getLength(); j < len; j++) {
+						Element r = rows.getItem(j);
+						int idx = grid.getView().findRowIndex(r);
+						Company m = grid.getStore().getAt(idx);
+						if (!isSelected(m)) {
+							continue search;
+						}
+					}
+					setGroupChecked((Element) group, true);
+
+				}
+			}
+		};
+		sm.setSelectionMode(SelectionMode.MULTI);
 
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 
-		ColumnConfig column = new ColumnConfig("companyname", "Et Firmanavn",
-				300);
-		column.setRowHeader(true);
+		ColumnConfig column = new ColumnConfig("companyname", "Firmanavn", 300);
 		configs.add(column);
 
 		column = new ColumnConfig("postal", "Postnr", 50);
 		configs.add(column);
-		
+
 		column = new ColumnConfig("city", "By", 150);
+		configs.add(column);
+		
+		column = new ColumnConfig("trade", "Branche", 150);
 		configs.add(column);
 
 		cm = new ColumnModel(configs);
-		
-		companyStore.setDefaultSort("companyname", SortDir.ASC);
+
+		companyView = new GroupingView() {
+			@Override
+			protected void onMouseDown(GridEvent<ModelData> ge) {
+				El hd = ge.getTarget(".x-grid-group-hd", 10);
+				El target = ge.getTargetEl();
+				if (hd != null && target.hasStyleName(uncheckedStyle)
+						|| target.hasStyleName(checkedStyle)) {
+					boolean checked = !ge.getTargetEl().hasStyleName(
+							uncheckedStyle);
+					checked = !checked; // FIXME WHAT THE HOOTING HELL
+
+					if (checked) {
+						ge.getTargetEl().replaceStyleName(uncheckedStyle,
+								checkedStyle);
+					} else {
+						ge.getTargetEl().replaceStyleName(checkedStyle,
+								uncheckedStyle);
+					}
+
+					Element group = (Element) findGroup(ge.getTarget());
+					if (group != null) {
+						NodeList<Element> rows = El.fly(group).select(
+								".x-grid3-row");
+						List<ModelData> temp = new ArrayList<ModelData>();
+						for (int i = 0; i < rows.getLength(); i++) {
+							Element r = rows.getItem(i);
+							int idx = findRowIndex(r);
+							ModelData m = grid.getStore().getAt(idx);
+							temp.add(m);
+						}
+						if (checked) {
+							grid.getSelectionModel().select(temp, true);
+						} else {
+							grid.getSelectionModel().deselect(temp);
+						}
+					}
+					return;
+				}
+				super.onMouseDown(ge);
+			}
+		};
+
+		companyView.setShowGroupedColumn(false);
+		companyView.setForceFit(true);
+		companyView.setGroupRenderer(new GridGroupRenderer() {
+			public String render(GroupColumnData data) {
+				String f = cm.getColumnById(data.field).getHeader();
+				String l = data.models.size() == 1 ? "Item" : "Items";
+				return "<div class='x-grid3-group-checker'><div class='"
+						+ uncheckedStyle + "'> </div></div> " + f + ": "
+						+ data.group + " (" + data.models.size() + " " + l
+						+ ")";
+			}
+		});
 
 		companyGrid = new Grid<Company>(companyStore, cm);
 		companyGrid.setAutoExpandColumn("companyname");
-		companyGrid.setBorders(false);
+		companyGrid.setView(companyView);
+		companyGrid.setBorders(true);
 		companyGrid.setColumnLines(true);
 		companyGrid.setColumnReordering(true);
 		companyGrid.setStripeRows(true);
-
-		GridSelectionModel<Company> sm = new GridSelectionModel<Company>();
-		sm.setSelectionMode(SelectionMode.SINGLE);
+		companyGrid.addPlugin(sm);
 		companyGrid.setSelectionModel(sm);
 
 		centerPanel.setHeight(550);
@@ -136,17 +291,27 @@ public class CustomerView extends LayoutContainer {
 		return centerPanel;
 	}
 
-	private ContentPanel getEastPnael() {
+	private El findCheck(Element group) {
+		return El.fly(group).selectNode(".x-grid3-group-checker").firstChild();
+	}
+
+	private void setGroupChecked(Element group, boolean checked) {
+		findCheck(group).replaceStyleName(
+				checked ? uncheckedStyle : checkedStyle,
+				checked ? checkedStyle : uncheckedStyle);
+	}
+
+	private ContentPanel createEastPanel() {
 		ContentPanel eastPanel = new ContentPanel();
 		eastPanel.setHeading("Firmadata");
 
-		eastPanel.add(getEastCompanyForm());
-		eastPanel.add(getEastContactsForm());
+		eastPanel.add(createEastCompanyForm());
+		eastPanel.add(createEastContactsForm());
 
 		return eastPanel;
 	}
 
-	private FormPanel getEastContactsForm() {
+	private FormPanel createEastContactsForm() {
 		FormPanel contactsForm = new FormPanel();
 		contactsForm.setHeading("Kontakter");
 
@@ -197,7 +362,8 @@ public class CustomerView extends LayoutContainer {
 							contactsBox.clear();
 
 							ListStore<Contact> contactStore = new ListStore<Contact>();
-							contactStore.add(be.getSelectedItem().getContacts());
+							contactStore
+									.add(be.getSelectedItem().getContacts());
 
 							contactsBox.setStore(contactStore);
 						} else
@@ -206,10 +372,12 @@ public class CustomerView extends LayoutContainer {
 				});
 
 		final FormBinding contactBinding = new FormBinding(contactsForm, true);
-		
-		contactsBox.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
+
+		contactsBox
+				.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
 					@Override
-					public void selectionChanged(SelectionChangedEvent<Contact> se) {
+					public void selectionChanged(
+							SelectionChangedEvent<Contact> se) {
 						contactBinding.bind(se.getSelectedItem());
 					}
 				});
@@ -217,7 +385,7 @@ public class CustomerView extends LayoutContainer {
 		return contactsForm;
 	}
 
-	private FormPanel getEastCompanyForm() {
+	private FormPanel createEastCompanyForm() {
 		FormPanel companyForm = new FormPanel();
 		companyForm.setHeaderVisible(false);
 
@@ -227,11 +395,36 @@ public class CustomerView extends LayoutContainer {
 		addressFld.setName("address");
 		companyForm.add(addressFld);
 
-		TextField<String> postalFld = new TextField<String>();
-		postalFld.setBorders(false);
-		postalFld.setFieldLabel("Postnr.");
-		postalFld.setName("postal");
-		companyForm.add(postalFld);
+		final ComboBox<City> postalBox = new ComboBox<City>();
+		postalBox.setFieldLabel("Postnummer");
+		postalBox.setDisplayField("postal");
+		postalBox.setTypeAhead(true);
+		postalBox.setStore(cityStore);
+		postalBox.setTriggerAction(TriggerAction.ALL);
+		companyForm.add(postalBox);
+
+		final ComboBox<City> cityBox = new ComboBox<City>();
+		cityBox.setFieldLabel("By");
+		cityBox.setDisplayField("cityname");
+		cityBox.setTypeAhead(true);
+		cityBox.setStore(cityStore);
+		cityBox.setTriggerAction(TriggerAction.ALL);
+		companyForm.add(cityBox);
+
+		postalBox
+				.addSelectionChangedListener(new SelectionChangedListener<City>() {
+					@Override
+					public void selectionChanged(SelectionChangedEvent<City> se) {
+						cityBox.setSelection(se.getSelection());
+					}
+				});
+
+		cityBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent<City> se) {
+				postalBox.setSelection(se.getSelection());
+			}
+		});
 
 		TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
@@ -246,18 +439,18 @@ public class CustomerView extends LayoutContainer {
 		companyForm.add(mailFld);
 
 		final ListStore<Trade> tradeStore = new ListStore<Trade>();
-		
+
 		dataService.getTrades(new AsyncCallback<ArrayList<Trade>>() {
 			public void onSuccess(ArrayList<Trade> result) {
 				tradeStore.removeAll();
 				tradeStore.add(result);
 			}
-			
+
 			public void onFailure(Throwable caught) {
 				krHandleError(caught);
 			}
 		});
-		
+
 		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
 		tradeBox.setFieldLabel("Branche");
 		tradeBox.setDisplayField("trade");
@@ -265,13 +458,13 @@ public class CustomerView extends LayoutContainer {
 		tradeBox.setStore(tradeStore);
 		tradeBox.setTriggerAction(TriggerAction.ALL);
 		companyForm.add(tradeBox);
-		
+
 		final SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
 		importanceBox.setFieldLabel("Gruppe");
 		importanceBox.add(Arrays.asList(Importance.values()));
 		importanceBox.setTriggerAction(TriggerAction.ALL);
 		companyForm.add(importanceBox);
-		
+
 		TextArea commentsFld = new TextArea();
 		commentsFld.setFieldLabel("Kommentarer");
 		commentsFld.setName("comments");
@@ -285,7 +478,14 @@ public class CustomerView extends LayoutContainer {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
 						if (be.getSelection().size() > 0) {
 							binding.bind(be.getSelectedItem());
-							importanceBox.setSimpleValue(be.getSelectedItem().getImportance());
+							importanceBox.setSimpleValue(be.getSelectedItem()
+									.getImportance());
+
+							City city = cityStore.findModel("postal", be
+									.getSelectedItem().getPostal());
+							ArrayList<City> citySelect = new ArrayList<City>();
+							citySelect.add(city);
+							postalBox.setSelection(citySelect);
 						} else {
 							binding.unbind();
 						}
@@ -297,7 +497,7 @@ public class CustomerView extends LayoutContainer {
 
 	private void krHandleError(Throwable t) {
 		t.printStackTrace();
-		
+
 		Dialog errorMessage = new Dialog();
 		errorMessage.setTitle("Kunne ikke hente virksomhedsdata");
 		errorMessage.setButtons(Dialog.OK);
