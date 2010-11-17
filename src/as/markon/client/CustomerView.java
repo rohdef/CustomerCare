@@ -13,7 +13,6 @@ import as.markon.viewmodel.Trade;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
-import com.extjs.gxt.ui.client.Style.SelectionMode;
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.core.El;
@@ -203,20 +202,21 @@ public class CustomerView extends LayoutContainer {
 				}
 			}
 		};
-		sm.setSelectionMode(SelectionMode.MULTI);
+//		sm.setSelectionMode(SelectionMode.MULTI);
 
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
+		configs.add(sm.getColumn());
 
-		ColumnConfig column = new ColumnConfig("companyname", "Firmanavn", 300);
+		ColumnConfig column = new ColumnConfig("companyname", "Firmanavn", 200);
 		configs.add(column);
 
-		column = new ColumnConfig("postal", "Postnr", 50);
+		column = new ColumnConfig("postal", "Postnr", 35);
 		configs.add(column);
 
-		column = new ColumnConfig("city", "By", 150);
+		column = new ColumnConfig("city", "By", 125);
 		configs.add(column);
 		
-		column = new ColumnConfig("trade", "Branche", 150);
+		column = new ColumnConfig("trade", "Branche", 125);
 		configs.add(column);
 
 		cm = new ColumnModel(configs);
@@ -279,7 +279,7 @@ public class CustomerView extends LayoutContainer {
 		companyGrid = new Grid<Company>(companyStore, cm);
 		companyGrid.setAutoExpandColumn("companyname");
 		companyGrid.setView(companyView);
-		companyGrid.setBorders(true);
+		companyGrid.setBorders(false);
 		companyGrid.setColumnLines(true);
 		companyGrid.setColumnReordering(true);
 		companyGrid.setStripeRows(true);
@@ -303,10 +303,35 @@ public class CustomerView extends LayoutContainer {
 
 	private ContentPanel createEastPanel() {
 		ContentPanel eastPanel = new ContentPanel();
-		eastPanel.setHeading("Firmadata");
+//		eastPanel.setHeading("Firmadata");
+		eastPanel.setHeaderVisible(false);
 
-		eastPanel.add(createEastCompanyForm());
-		eastPanel.add(createEastContactsForm());
+		final FormPanel companyForm = createEastCompanyForm();
+		final FormPanel contactForm = createEastContactsForm();
+		final FormPanel mailForm = createEastMailForm();
+		
+		companyForm.setVisible(true);
+		contactForm.setVisible(true);
+		mailForm.setVisible(false);
+		
+		eastPanel.add(companyForm);
+		eastPanel.add(contactForm);
+		eastPanel.add(mailForm);
+		
+		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
+				new Listener<SelectionChangedEvent<Company>>() {
+					public void handleEvent(SelectionChangedEvent<Company> be) {
+						if (be.getSelection().size() > 1) {
+							companyForm.hide();
+							contactForm.hide();
+							mailForm.show();
+						} else {
+							companyForm.show();
+							contactForm.show();
+							mailForm.hide();
+						}
+					}
+		});
 
 		return eastPanel;
 	}
@@ -387,7 +412,7 @@ public class CustomerView extends LayoutContainer {
 
 	private FormPanel createEastCompanyForm() {
 		FormPanel companyForm = new FormPanel();
-		companyForm.setHeaderVisible(false);
+		companyForm.setHeading("Firmadata");
 
 		TextField<String> addressFld = new TextField<String>();
 		addressFld.setBorders(false);
@@ -411,8 +436,7 @@ public class CustomerView extends LayoutContainer {
 		cityBox.setTriggerAction(TriggerAction.ALL);
 		companyForm.add(cityBox);
 
-		postalBox
-				.addSelectionChangedListener(new SelectionChangedListener<City>() {
+		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
 					@Override
 					public void selectionChanged(SelectionChangedEvent<City> se) {
 						cityBox.setSelection(se.getSelection());
@@ -495,6 +519,14 @@ public class CustomerView extends LayoutContainer {
 		return companyForm;
 	}
 
+	private FormPanel createEastMailForm() {
+		FormPanel mailForm = new FormPanel();
+		mailForm.setHeading("Mailindstillinger");
+		
+		return mailForm;
+	}
+	
+	
 	private void krHandleError(Throwable t) {
 		t.printStackTrace();
 
