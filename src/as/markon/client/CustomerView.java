@@ -26,9 +26,11 @@ import com.extjs.gxt.ui.client.event.GridEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
+import com.extjs.gxt.ui.client.event.SelectionEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.GroupingStore;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.Padding;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
@@ -55,6 +57,8 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
+import com.extjs.gxt.ui.client.widget.layout.MarginData;
+import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -111,7 +115,28 @@ public class CustomerView extends LayoutContainer {
 		customersTxt.setStyleAttribute("font-size", "3em;");
 		northPanel.add(customersTxt);
 
-		// TODO Add login link
+		Button changeSalesmanBtn = new Button("Skift sælger", new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				final Dialog salesmanDialog = new Dialog();
+				salesmanDialog.setButtons(Dialog.CANCEL);
+				salesmanDialog.setHeading("Hvilken sælger ønsker du at se kartoteket for?");
+				salesmanDialog.setHideOnButtonClick(true);
+				
+				Login l = new Login();
+				l.addListener(Events.Select, new Listener<SelectionEvent<Salesman>>() {
+					public void handleEvent(SelectionEvent<Salesman> be) {
+						setSalesman(be.getModel());
+						salesmanDialog.hide();
+					}
+				});
+				
+				salesmanDialog.add(l);
+				salesmanDialog.show();
+			}
+		});
+		
+		northPanel.add(changeSalesmanBtn);
 
 		// City store
 		cityStore = new ListStore<City>();
