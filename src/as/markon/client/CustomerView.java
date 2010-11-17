@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import sun.nio.cs.ext.MSISO2022JP;
+
 import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
@@ -17,32 +19,40 @@ import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.core.El;
 import com.extjs.gxt.ui.client.data.ModelData;
+import com.extjs.gxt.ui.client.event.BaseEvent;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.GridEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
+import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.GroupingStore;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.Text;
+import com.extjs.gxt.ui.client.widget.Window;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
+import com.extjs.gxt.ui.client.widget.grid.CellEditor;
 import com.extjs.gxt.ui.client.widget.grid.CheckBoxSelectionModel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
+import com.extjs.gxt.ui.client.widget.grid.EditorGrid;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridGroupRenderer;
 import com.extjs.gxt.ui.client.widget.grid.GroupColumnData;
 import com.extjs.gxt.ui.client.widget.grid.GroupingView;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
+import com.extjs.gxt.ui.client.widget.layout.FitData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.google.gwt.core.client.GWT;
@@ -130,7 +140,7 @@ public class CustomerView extends LayoutContainer {
 		ContentPanel centerPanel = new ContentPanel();
 		FitLayout centerLayout = new FitLayout();
 		centerPanel.setLayout(centerLayout);
-
+		centerPanel.setFrame(true);
 		centerPanel.setHeading("Virksomheder");
 
 		final CheckBoxSelectionModel<Company> sm = new CheckBoxSelectionModel<Company>() {
@@ -202,7 +212,6 @@ public class CustomerView extends LayoutContainer {
 				}
 			}
 		};
-//		sm.setSelectionMode(SelectionMode.MULTI);
 
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		configs.add(sm.getColumn());
@@ -303,12 +312,11 @@ public class CustomerView extends LayoutContainer {
 
 	private ContentPanel createEastPanel() {
 		ContentPanel eastPanel = new ContentPanel();
-//		eastPanel.setHeading("Firmadata");
 		eastPanel.setHeaderVisible(false);
 
 		final FormPanel companyForm = createEastCompanyForm();
 		final FormPanel contactForm = createEastContactsForm();
-		final FormPanel mailForm = createEastMailForm();
+		final ContentPanel mailForm = createEastMailForm();
 		
 		companyForm.setVisible(true);
 		contactForm.setVisible(true);
@@ -519,9 +527,103 @@ public class CustomerView extends LayoutContainer {
 		return companyForm;
 	}
 
-	private FormPanel createEastMailForm() {
-		FormPanel mailForm = new FormPanel();
+	private ContentPanel createEastMailForm() {
+		ContentPanel mailForm = new ContentPanel();
 		mailForm.setHeading("Mailindstillinger");
+		
+		final SimpleComboBox<String> mailtoBox = new SimpleComboBox<String>();
+		mailtoBox.setForceSelection(true);
+		mailtoBox.setTriggerAction(TriggerAction.ALL);
+		mailtoBox.add("Virksomheden");
+		mailtoBox.add("");
+		mailtoBox.add("Kontakt 1 - Sjæf");
+		mailtoBox.add("Kontakt 2 - Sursjæf");
+		mailtoBox.add("Kontakt 3 - Lønslave");
+		// TODO add real data to box
+		
+		CellEditor comboEditor = new CellEditor(mailtoBox) {
+			@Override
+			public Object preProcessValue(Object value) {
+				if (value == null)
+					return value;
+				
+				return mailtoBox.findModel(value.toString());
+			}
+			
+			@Override
+			public Object postProcessValue(Object value) {
+				if (value == null)
+					return value;
+				
+				return ((ModelData) value).get("value");
+			}
+		};
+		comboEditor.hideToolTip();
+
+		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
+		
+		ColumnConfig companyName = new ColumnConfig();
+		companyName.setId("companyname");
+		companyName.setHeader("Virksomhed");
+		companyName.setWidth(190);
+		
+		ColumnConfig mailTo = new ColumnConfig();
+		mailTo.setId("recipients"); // TODO right choice?
+		mailTo.setHeader("Modtager");
+		mailTo.setWidth(130);
+		mailTo.setEditor(comboEditor);
+		
+		configs.add(companyName);
+		configs.add(mailTo);
+		
+		final ListStore<Company> selectedCompanies = new ListStore<Company>();
+		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
+				new Listener<SelectionChangedEvent<Company>>() {
+					public void handleEvent(SelectionChangedEvent<Company> be) {
+						selectedCompanies.removeAll();
+						selectedCompanies.add(be.getSelection());
+					}
+		});
+		
+		ColumnModel cm = new ColumnModel(configs);
+		
+		final EditorGrid<Company> mailtoGrid = new EditorGrid<Company>(selectedCompanies, cm);
+		mailtoGrid.setHeight(400);
+		mailtoGrid.setBorders(false);
+		mailtoGrid.setStripeRows(true);
+		
+		mailForm.add(mailtoGrid);		
+		
+		mailForm.addButton(new Button("Skriv mail", new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				final Window mailWin = new Window();
+				mailWin.setSize(700, 550);
+				mailWin.setModal(true);
+				mailWin.setHeading("Mail besked");
+				mailWin.setLayout(new FitLayout());
+
+				MailLayout mailLayout = new MailLayout();
+				mailLayout.addListener(Events.Close, new Listener<BaseEvent>() {
+					public void handleEvent(BaseEvent be) {
+						mailWin.hide();
+					}
+				});
+				mailLayout.addListener(Events.Complete, new Listener<BaseEvent>() {
+					public void handleEvent(BaseEvent be) {
+						// TODO handle the recieved mail
+					}
+				});
+				
+				mailWin.add(mailLayout, new FitData(4));
+				
+				mailWin.show();
+			}
+		}));
+		
+		mailForm.setWidth("100%");
+		mailForm.setBorders(false);
+		mailForm.setFrame(true);
 		
 		return mailForm;
 	}

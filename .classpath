@@ -52,5 +52,7 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/postgresql-9.0-801.jdbc3.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/gxt.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/guava-r07-gwt.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/commons-email-1.2.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/mail.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
