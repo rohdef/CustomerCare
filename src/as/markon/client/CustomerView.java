@@ -57,6 +57,7 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
+import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.MarginData;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.google.gwt.core.client.GWT;
@@ -77,17 +78,21 @@ public class CustomerView extends LayoutContainer {
 		return salesman;
 	}
 
-	public void setSalesman(Salesman salesman) {
+	public synchronized void setSalesman(Salesman salesman) {
 		this.salesman = salesman;
 
 		dataService.getCompanies(salesman.getSalesmanid(),
 				new AsyncCallback<ArrayList<Company>>() {
 					public void onSuccess(ArrayList<Company> result) {
-						companyStore.removeAll();
+						companyStore = new GroupingStore<Company>();
 						companyStore.setMonitorChanges(true);
+						companyStore.removeAll();
 						companyStore.add(result);
 						companyStore.setDefaultSort("companyname", SortDir.ASC);
 						companyStore.groupBy("trade");
+						
+						if (companyGrid != null)
+							companyGrid.reconfigure(companyStore, cm);
 					}
 
 					public void onFailure(Throwable caught) {
@@ -108,12 +113,17 @@ public class CustomerView extends LayoutContainer {
 		// NORTH
 		ContentPanel northPanel = new ContentPanel();
 		HBoxLayout topLayout = new HBoxLayout();
+		topLayout.setHBoxLayoutAlign(HBoxLayoutAlign.MIDDLE);
 		northPanel.setLayout(topLayout);
 
 		Text customersTxt = new Text();
 		customersTxt.setText("Kunder");
 		customersTxt.setStyleAttribute("font-size", "3em;");
 		northPanel.add(customersTxt);
+		
+		HBoxLayoutData flex = new HBoxLayoutData(0, 15, 0, 0);
+//		flex.setFlex(0.2);
+		northPanel.add(new Text(), flex);
 
 		Button changeSalesmanBtn = new Button("Skift sælger", new SelectionListener<ButtonEvent>() {
 			@Override
