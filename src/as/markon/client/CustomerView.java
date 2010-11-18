@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import sun.nio.cs.ext.MSISO2022JP;
-
 import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
@@ -18,6 +16,7 @@ import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.core.El;
+import com.extjs.gxt.ui.client.data.BaseModelData;
 import com.extjs.gxt.ui.client.data.ModelData;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -30,7 +29,6 @@ import com.extjs.gxt.ui.client.event.SelectionEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.GroupingStore;
 import com.extjs.gxt.ui.client.store.ListStore;
-import com.extjs.gxt.ui.client.util.Padding;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
@@ -58,7 +56,6 @@ import com.extjs.gxt.ui.client.widget.layout.FitData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
-import com.extjs.gxt.ui.client.widget.layout.MarginData;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Element;
@@ -329,9 +326,10 @@ public class CustomerView extends LayoutContainer {
 		companyGrid.setStripeRows(true);
 		companyGrid.addPlugin(sm);
 		companyGrid.setSelectionModel(sm);
-
+		
 		centerPanel.setHeight(550);
 		centerPanel.add(companyGrid);
+		
 		return centerPanel;
 	}
 
@@ -566,6 +564,8 @@ public class CustomerView extends LayoutContainer {
 		ContentPanel mailForm = new ContentPanel();
 		mailForm.setHeading("Mailindstillinger");
 		
+		final EditorGrid<Company> mailtoGrid;
+		
 		final SimpleComboBox<String> mailtoBox = new SimpleComboBox<String>();
 		mailtoBox.setForceSelection(true);
 		mailtoBox.setTriggerAction(TriggerAction.ALL);
@@ -581,6 +581,7 @@ public class CustomerView extends LayoutContainer {
 			public Object preProcessValue(Object value) {
 				if (value == null)
 					return value;
+			
 				
 				return mailtoBox.findModel(value.toString());
 			}
@@ -593,7 +594,6 @@ public class CustomerView extends LayoutContainer {
 				return ((ModelData) value).get("value");
 			}
 		};
-		comboEditor.hideToolTip();
 
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		
@@ -616,17 +616,17 @@ public class CustomerView extends LayoutContainer {
 				new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
 						selectedCompanies.removeAll();
+						
 						selectedCompanies.add(be.getSelection());
 					}
 		});
 		
 		ColumnModel cm = new ColumnModel(configs);
 		
-		final EditorGrid<Company> mailtoGrid = new EditorGrid<Company>(selectedCompanies, cm);
+		mailtoGrid = new EditorGrid<Company>(selectedCompanies, cm);
 		mailtoGrid.setHeight(400);
 		mailtoGrid.setBorders(false);
 		mailtoGrid.setStripeRows(true);
-		
 		mailForm.add(mailtoGrid);		
 		
 		mailForm.addButton(new Button("Skriv mail", new SelectionListener<ButtonEvent>() {
@@ -680,5 +680,56 @@ public class CustomerView extends LayoutContainer {
 		errorMessage.show();
 
 		// Log.debug(t);
+	}
+	
+	private class MailContact extends BaseModelData {
+		private static final long serialVersionUID = 1L;
+
+		public MailContact(String name, String mail) {
+			this(name, null, mail);
+		}
+		
+		public MailContact(String name, String title, String mail) {
+			setName(name);
+			setTitle(title);
+			setMail(mail);
+		}
+		
+		public String getName() {
+			return get("name");
+		}
+
+		public void setName(String name) {
+			set("name", name);
+		}
+
+		public String getTitle() {
+			return get("title");
+		}
+
+		public void setTitle(String title) {
+			set("title", title);
+		}
+
+		public String getMail() {
+			return get("mail");
+		}
+
+		public void setMail(String mail) {
+			set("mail", mail);
+		}
+		
+		@Override
+		public String toString() {
+			if (get("title") == null)
+				return get("name");
+			else
+				return get("name") + " - " + get("title");
+		}
+	}
+	
+	private class CompanyMailer extends BaseModelData {
+		private static final long serialVersionUID = 1L;
+		
 	}
 }

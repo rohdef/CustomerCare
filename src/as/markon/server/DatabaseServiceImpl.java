@@ -6,6 +6,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.mail.HtmlEmail;
+
+//import org.apache.commons.mail.HtmlEmail;
+//import org.apache.commons.mail.SimpleEmail;
 
 import com.google.gwt.thirdparty.guava.common.collect.HashBiMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -261,5 +274,30 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 		
 		return cities;
+	}
+
+	public void sendMail(String user, String password, String subject,
+			String message, List<String> recipients) {
+		try {
+			for (String recipiant : recipients) {
+				HtmlEmail mail = new HtmlEmail();
+				mail.addTo(recipiant);
+				mail.setFrom(user);
+				mail.setSubject(subject);
+				mail.setHtmlMsg(message);
+				mail.setTextMsg("Dit mail-program understøtter desværre ikke html-beskeder. Du anbefales at opgradere dit mail-program.\n\n" +
+				"Your mail program does not support html-messages. We recommend that you upgrade your program.");
+				
+				mail.setHostName("smtp.gmail.com");
+				mail.setSmtpPort(587);
+				mail.setTLS(true);
+				mail.setAuthentication(user, password);
+				
+				mail.send();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 }
