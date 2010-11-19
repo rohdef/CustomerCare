@@ -8,6 +8,7 @@ import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Importance;
+import as.markon.viewmodel.MailContact;
 import as.markon.viewmodel.Salesman;
 import as.markon.viewmodel.Trade;
 
@@ -16,7 +17,6 @@ import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.core.El;
-import com.extjs.gxt.ui.client.data.BaseModelData;
 import com.extjs.gxt.ui.client.data.ModelData;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -41,12 +41,13 @@ import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
-import com.extjs.gxt.ui.client.widget.grid.CellEditor;
 import com.extjs.gxt.ui.client.widget.grid.CheckBoxSelectionModel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
+import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.EditorGrid;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
+import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.grid.GridGroupRenderer;
 import com.extjs.gxt.ui.client.widget.grid.GroupColumnData;
 import com.extjs.gxt.ui.client.widget.grid.GroupingView;
@@ -57,34 +58,27 @@ import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CustomerView extends LayoutContainer {
 	private GroupingStore<Company> companyStore = new GroupingStore<Company>();
-	private DataServiceAsync dataService = GWT.create(DataService.class);
-	private Salesman salesman;
+	private DataServiceAsync dataService = Global.getInstance().getDataService();
 
 	private String checkedStyle = "x-grid3-group-check";
 	private String uncheckedStyle = "x-grid3-group-uncheck";
 	private GroupingView companyView;
 
-	public Salesman getSalesman() {
-		return salesman;
-	}
-
 	public synchronized void setSalesman(Salesman salesman) {
-		this.salesman = salesman;
+		Global.getInstance().setCurrentSalesman(salesman);
 
-		dataService.getCompanies(salesman.getSalesmanid(),
+		dataService.getCompanies(salesman,
 				new AsyncCallback<ArrayList<Company>>() {
 					public void onSuccess(ArrayList<Company> result) {
 						companyStore = new GroupingStore<Company>();
-						companyStore.setMonitorChanges(true);
-						companyStore.removeAll();
 						companyStore.add(result);
+						companyStore.setMonitorChanges(true);
 						companyStore.setDefaultSort("companyname", SortDir.ASC);
 						companyStore.groupBy("trade");
 						
@@ -561,40 +555,62 @@ public class CustomerView extends LayoutContainer {
 	}
 
 	private ContentPanel createEastMailForm() {
+		final ArrayList<ComboBox<MailContact>> boxes = new ArrayList<ComboBox<MailContact>>();
+		
 		ContentPanel mailForm = new ContentPanel();
 		mailForm.setHeading("Mailindstillinger");
-		
-		final EditorGrid<Company> mailtoGrid;
-		
-		final SimpleComboBox<String> mailtoBox = new SimpleComboBox<String>();
-		mailtoBox.setForceSelection(true);
-		mailtoBox.setTriggerAction(TriggerAction.ALL);
-		mailtoBox.add("Virksomheden");
-		mailtoBox.add("");
-		mailtoBox.add("Kontakt 1 - Sjæf");
-		mailtoBox.add("Kontakt 2 - Sursjæf");
-		mailtoBox.add("Kontakt 3 - Lønslave");
-		// TODO add real data to box
-		
-		CellEditor comboEditor = new CellEditor(mailtoBox) {
-			@Override
-			public Object preProcessValue(Object value) {
-				if (value == null)
-					return value;
-			
+
+		GridCellRenderer<Company> recipientRenderer = new GridCellRenderer<Company>() {
+			public Object render(Company model, String property, ColumnData config,
+					int rowIndex, int colIndex, ListStore<Company> store,
+					Grid<Company> grid) {
+				ComboBox<MailContact> contactsBox = new ComboBox<MailContact>();
+				contactsBox.setWidth(grid.getColumnModel().getColumnWidth(colIndex)-10);
+				contactsBox.setDisplayField("name");
+				contactsBox.setTriggerAction(TriggerAction.ALL);
+				contactsBox.setTypeAhead(true);
+				contactsBox.setForceSelection(true);
 				
-				return mailtoBox.findModel(value.toString());
-			}
-			
-			@Override
-			public Object postProcessValue(Object value) {
-				if (value == null)
-					return value;
+				ArrayList<MailContact> contactMails = new ArrayList<MailContact>();
 				
-				return ((ModelData) value).get("value");
+				if (model.getMail() != null && !model.getMail().isEmpty())
+					contactMails.add(new MailContact("Virksomheden", model.getMail()));
+				
+				for (Contact c : model.getContacts()) {
+					if (c.getMail() != null && !c.getMail().isEmpty())
+						contactMails.add(new MailContact(c.getName(), c.getMail()));
+				}
+
+				ListStore<MailContact> contactStore = new ListStore<MailContact>();
+				contactStore.add(contactMails);
+				contactsBox.setStore(contactStore);
+
+				boxes.add(contactsBox);
+				
+				return contactsBox;
 			}
 		};
+		
+		GridCellRenderer<Company> removeBtnRenderer = new GridCellRenderer<Company>() {
+			public Object render(Company model, String property, ColumnData config,
+					int rowIndex, int colIndex, ListStore<Company> store,
+					Grid<Company> grid) {
+				Button removeBtn = new Button("Fjern");
+				final Company remModel = model;
+				removeBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+					@Override
+					public void componentSelected(ButtonEvent ce) {
+						companyGrid.getSelectionModel().deselect(remModel);
+					}
+				});
 
+				removeBtn.setWidth(grid.getColumnModel().getColumnWidth(colIndex)-10);
+				
+				return removeBtn;
+			}
+		};
+		
+		
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		
 		ColumnConfig companyName = new ColumnConfig();
@@ -603,13 +619,19 @@ public class CustomerView extends LayoutContainer {
 		companyName.setWidth(190);
 		
 		ColumnConfig mailTo = new ColumnConfig();
-		mailTo.setId("recipients"); // TODO right choice?
 		mailTo.setHeader("Modtager");
+		mailTo.setRenderer(recipientRenderer);
 		mailTo.setWidth(130);
-		mailTo.setEditor(comboEditor);
+		
+		ColumnConfig removeBtnConfig = new ColumnConfig();
+		removeBtnConfig.setId("remove");
+		removeBtnConfig.setHeader("Fjern modtager");
+		removeBtnConfig.setRenderer(removeBtnRenderer);
+		removeBtnConfig.setWidth(40);
 		
 		configs.add(companyName);
 		configs.add(mailTo);
+		configs.add(removeBtnConfig);
 		
 		final ListStore<Company> selectedCompanies = new ListStore<Company>();
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
@@ -622,31 +644,34 @@ public class CustomerView extends LayoutContainer {
 		});
 		
 		ColumnModel cm = new ColumnModel(configs);
-		
-		mailtoGrid = new EditorGrid<Company>(selectedCompanies, cm);
-		mailtoGrid.setHeight(400);
-		mailtoGrid.setBorders(false);
-		mailtoGrid.setStripeRows(true);
-		mailForm.add(mailtoGrid);		
+
+		final Grid<Company> mtGrid = new Grid<Company>(selectedCompanies, cm);
+		mtGrid.setHeight(400);
+		mtGrid.setBorders(false);
+		mtGrid.setStripeRows(true);
+		mailForm.add(mtGrid);
 		
 		mailForm.addButton(new Button("Skriv mail", new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
+				List<MailContact> recipients = new ArrayList<MailContact>();
+				
+				for (int i = 0; i<mtGrid.getStore().getCount(); i++) {
+					@SuppressWarnings("unchecked")
+					ComboBox<MailContact> combo = (ComboBox<MailContact>) mtGrid.getView().getWidget(i, 1);
+					recipients.add(combo.getValue());
+				}
+				
 				final Window mailWin = new Window();
 				mailWin.setSize(700, 550);
 				mailWin.setModal(true);
 				mailWin.setHeading("Mail besked");
 				mailWin.setLayout(new FitLayout());
 
-				MailLayout mailLayout = new MailLayout();
+				MailLayout mailLayout = new MailLayout(recipients);
 				mailLayout.addListener(Events.Close, new Listener<BaseEvent>() {
 					public void handleEvent(BaseEvent be) {
 						mailWin.hide();
-					}
-				});
-				mailLayout.addListener(Events.Complete, new Listener<BaseEvent>() {
-					public void handleEvent(BaseEvent be) {
-						// TODO handle the recieved mail
 					}
 				});
 				
@@ -680,56 +705,5 @@ public class CustomerView extends LayoutContainer {
 		errorMessage.show();
 
 		// Log.debug(t);
-	}
-	
-	private class MailContact extends BaseModelData {
-		private static final long serialVersionUID = 1L;
-
-		public MailContact(String name, String mail) {
-			this(name, null, mail);
-		}
-		
-		public MailContact(String name, String title, String mail) {
-			setName(name);
-			setTitle(title);
-			setMail(mail);
-		}
-		
-		public String getName() {
-			return get("name");
-		}
-
-		public void setName(String name) {
-			set("name", name);
-		}
-
-		public String getTitle() {
-			return get("title");
-		}
-
-		public void setTitle(String title) {
-			set("title", title);
-		}
-
-		public String getMail() {
-			return get("mail");
-		}
-
-		public void setMail(String mail) {
-			set("mail", mail);
-		}
-		
-		@Override
-		public String toString() {
-			if (get("title") == null)
-				return get("name");
-			else
-				return get("name") + " - " + get("title");
-		}
-	}
-	
-	private class CompanyMailer extends BaseModelData {
-		private static final long serialVersionUID = 1L;
-		
 	}
 }

@@ -44,6 +44,12 @@ public class Company extends BaseModelData {
 				return false;
 		}
 		
+		if (getPhone() == null) {
+			if (other.getPhone() != null)
+				return false;
+		} else if (!getPhone().equals(other.getPhone()))
+			return false;
+		
 		return true;
 	}
 

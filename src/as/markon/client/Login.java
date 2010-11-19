@@ -1,6 +1,8 @@
 package as.markon.client;
 
 
+import java.util.ArrayList;
+
 import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -14,7 +16,9 @@ import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.custom.Portal;
 import com.extjs.gxt.ui.client.widget.custom.Portlet;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class Login extends LayoutContainer implements Observable {
 	public Login() {
@@ -31,55 +35,32 @@ public class Login extends LayoutContainer implements Observable {
 		panel.setHeading("Hvis kundekartotek vil du se?");
 
 		
-		Portal content = new Portal(3);
+		final Portal content = new Portal(3);
 		content.setColumnWidth(0, .33);
 		content.setColumnWidth(1, .33);
 		content.setColumnWidth(2, .33);
 //		content.setWidth("80%");
 
-		LoginItem loginItem;
-		Listener<SelectionEvent<Salesman>> selectSalesman = new Listener<SelectionEvent<Salesman>>() {
+		final Listener<SelectionEvent<Salesman>> selectSalesman = new Listener<SelectionEvent<Salesman>>() {
 			public void handleEvent(SelectionEvent<Salesman> be) {
 				fireEvent(Events.Select, be);
 			}
 		};
 		
-		Salesman s;
-		
-		s = new Salesman();
-		s.setSalesman("John");
-		s.setSalesmanid(1);
-		loginItem = new LoginItem(s);
-		loginItem.addListener(Events.Select, selectSalesman);
-		content.add(loginItem, 0);
-		
-		s = new Salesman();
-		s.setSalesman("Jesper");
-		s.setSalesmanid(2);
-		loginItem = new LoginItem(s);
-		loginItem.addListener(Events.Select, selectSalesman);
-		content.add(loginItem, 1);
-		
-		s = new Salesman();
-		s.setSalesman("Lars");
-		s.setSalesmanid(3);
-		loginItem = new LoginItem(s);
-		loginItem.addListener(Events.Select, selectSalesman);
-		content.add(loginItem, 2);
-		
-		s = new Salesman();
-		s.setSalesman("Susanne");
-		s.setSalesmanid(4);
-		loginItem = new LoginItem(s);
-		loginItem.addListener(Events.Select, selectSalesman);
-		content.add(loginItem, 0);
-		
-		s = new Salesman();
-		s.setSalesman("Lene");
-		s.setSalesmanid(5);
-		loginItem = new LoginItem(s);
-		loginItem.addListener(Events.Select, selectSalesman);
-		content.add(loginItem, 1);
+		DataServiceAsync dataService = Global.getInstance().getDataService();
+		dataService.getSalesmen(new AsyncCallback<ArrayList<Salesman>>() {
+			public void onSuccess(ArrayList<Salesman> result) {
+				int count = 0;
+				for (Salesman s : result) {
+					LoginItem loginItem = new LoginItem(s);
+					loginItem.addListener(Events.Select, selectSalesman);
+					content.add(loginItem, (count++%3));
+				}
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
 		
 		panel.add(content);
 		

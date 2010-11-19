@@ -7,13 +7,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.mail.HtmlEmail;
 
@@ -43,13 +36,15 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private String url = "jdbc:postgresql://localhost/", db = "Markon",
 			driver = "org.postgresql.Driver", user = "Markon",
 			password = "123";
-	
+
 	private HashBiMap<Company, Integer> companyMap;
 	private HashBiMap<Contact, Integer> contactMap;
 	private HashBiMap<Salesman, Integer> salesmanMap;
 	private HashBiMap<Trade, Integer> tradeMap;
-	private HashBiMap<Integer, City> cityMap; 
-	
+	private HashBiMap<Integer, City> cityMap;
+
+	private ArrayList<Salesman> salespeople;
+
 	public DatabaseServiceImpl() {
 		try {
 			Class.forName(driver).newInstance();
@@ -69,16 +64,18 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			if (c != null && !c.isClosed())
 				return;
 
-			c = DriverManager.getConnection(url+db, user, password);
+			c = DriverManager.getConnection(url + db, user, password);
 		} catch (SQLException e) {
 			throw new RuntimeException(e.getMessage());
 		}
 	}
 
-	public synchronized ArrayList<Company> getCompanies(int salesmanId) {
+	public synchronized ArrayList<Company> getCompanies(Salesman salesman) {
 		getTrades();
 		getCities();
-		
+		getSalesmen();
+		int salesmanId = salesmanMap.get(salesman);
+
 		try {
 			companies = new ArrayList<Company>();
 			companyMap = HashBiMap.create();
@@ -89,21 +86,20 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			contactStatement = c.createStatement();
 
 			String companyQuery = "SELECT DISTINCT\n"
-				+ "	c.companyid,\n"
-				+ "	c.companyname,\n"
-				+ "	c.address,\n"
-				+ "	c.postal,\n"
-				+ " p.city,\n"
-				+ "	c.phone,\n"
-				+ "	c.mail,\n"
-				+ "	c.importance,\n"
-				+ "	c.comments,\n"
-				+ " c.tradeid\n"
-				+ "		FROM salespeople s, companies c, contacts k, postalcodes p\n"
-				+ "		WHERE c.companyid = k.companyid\n"
-				+ "			AND k.salesmanid = s.salesmanid\n"
-				+ "			AND s.salesmanid = " + salesmanId + ""
-				+"			AND c.postal = p.postal;";
+					+ "	c.companyid,\n"
+					+ "	c.companyname,\n"
+					+ "	c.address,\n"
+					+ "	c.postal,\n"
+					+ " c.city,\n"
+					+ "	c.phone,\n"
+					+ "	c.mail,\n"
+					+ "	c.importance,\n"
+					+ "	c.comments,\n"
+					+ " c.tradeid\n"
+					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
+					+ "		WHERE c.companyid = k.companyid\n"
+					+ "			AND k.salesmanid = s.salesmanid\n"
+					+ "			AND s.salesmanid = " + salesmanId + ";";
 
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
@@ -113,50 +109,48 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 				String companyName = companyResults.getString("companyname");
 				if (companyName == null)
-					throw new RuntimeException("Data error occured, a company without name should not be possible.");
+					throw new RuntimeException(
+							"Data error occured, a company without name should not be possible.");
 				c.setCompanyName(companyName);
-				
+
 				String companyAddress = companyResults.getString("address");
 				if (companyAddress == null)
 					companyAddress = "";
 				c.setAddress(companyAddress);
-				
+
 				c.setPostal(companyResults.getInt("postal"));
-				
+
 				String companyCity = companyResults.getString("city");
 				if (companyCity == null)
 					companyCity = "";
 				c.setCity(companyCity);
-				
+
 				String companyPhone = companyResults.getString("phone");
 				if (companyPhone == null)
 					companyPhone = "";
 				c.setPhone(companyPhone);
-				
+
 				String companyMail = companyResults.getString("mail");
 				if (companyMail == null)
 					companyMail = "";
 				c.setMail(companyMail);
-				
+
 				String importanceChar = companyResults.getString("importance");
 				if (importanceChar == null)
 					importanceChar = "I";
 				c.setImportance(Importance.valueOf(importanceChar));
-				
+
 				c.setComments(companyResults.getString("comments"));
 
-				String contactQuery = "SELECT\n" +
-						"\tk.contactname,\n" +
-						"\tk.title,\n" +
-						"\tk.phone,\n" +
-						"\tk.mail,\n" +
-						"\tk.comments\n" +
-						"\t\tFROM contacts k, companies c, salespeople s\n" +
-						"\t\tWHERE s.salesmanid = " + salesmanId + "\n" +
-						"\t\tAND c.companyid = " + companyResults.getInt("companyid") + "\n" +
-						"\t\tAND k.companyid = c.companyid\n" +
-						"\t\tAND k.salesmanid = s.salesmanid;";
-				
+				String contactQuery = "SELECT\n" + "\tk.contactname,\n"
+						+ "\tk.title,\n" + "\tk.phone,\n" + "\tk.mail,\n"
+						+ "\tk.comments\n"
+						+ "\t\tFROM contacts k, companies c, salespeople s\n"
+						+ "\t\tWHERE s.salesmanid = " + salesmanId + "\n"
+						+ "\t\tAND c.companyid = "
+						+ companyResults.getInt("companyid") + "\n"
+						+ "\t\tAND k.companyid = c.companyid\n"
+						+ "\t\tAND k.salesmanid = s.salesmanid;";
 
 				ResultSet contactResult = contactStatement
 						.executeQuery(contactQuery);
@@ -172,15 +166,15 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 					contacts.add(k);
 				}
-				
+
 				Trade noTrade = new Trade();
 				noTrade.setTrade("Ingen branche valgt");
 				int tradeid = companyResults.getInt("tradeid");
 				if (!companyResults.wasNull())
 					c.setTrade(tradeMap.inverse().get(new Integer(tradeid)));
-				else 
+				else
 					c.setTrade(noTrade);
-				
+
 				c.setContacts(contacts);
 				companies.add(c);
 				companyMap.put(c, companyResults.getInt("companyid"));
@@ -191,7 +185,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 
 		close();
-		
+
 		return companies;
 	}
 
@@ -212,33 +206,33 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		if (tradeMap == null) {
 			tradeMap = HashBiMap.create();
 			trades = new ArrayList<Trade>();
-			
+
 			String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
-			
+
 			try {
 				connect();
-				
+
 				Statement tradeStatement = c.createStatement();
 				ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
-				
+
 				while (tradeResult.next()) {
 					Trade trade = new Trade();
 					trade.setTrade(tradeResult.getString("tradename"));
-					
+
 					tradeMap.put(trade, tradeResult.getInt("tradeid"));
 					trades.add(trade);
 				}
 			} catch (Exception e) {
 				tradeMap = null;
 				trades = null;
-				
+
 				throw new RuntimeException(e.getMessage());
 			}
 		}
-		
+
 		return trades;
 	}
-	
+
 	public Importance getImportance(String name) {
 		return Importance.valueOf(name);
 	}
@@ -247,36 +241,36 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		if (cities == null) {
 			cities = new ArrayList<City>();
 			cityMap = HashBiMap.create();
-			
+
 			try {
 				connect();
-				
+
 				Statement cityStatement = c.createStatement();
-				
+
 				String citySql = "SELECT p.postal, p.city FROM postalcodes p;";
 				ResultSet cityResults = cityStatement.executeQuery(citySql);
-				
+
 				while (cityResults.next()) {
 					int postal = cityResults.getInt("postal");
 					City c = new City();
 					c.setPostal(postal);
 					c.setCity(cityResults.getString("city"));
-					
+
 					cities.add(c);
 					cityMap.put(postal, c);
 				}
 			} catch (Exception e) {
 				cities = null;
 				cityMap = null;
-				
+
 				throw new RuntimeException(e.getMessage());
 			}
 		}
-		
+
 		return cities;
 	}
 
-	public void sendMail(String user, String password, String subject,
+	public void sendMail(String user, String subject,
 			String message, List<String> recipients) {
 		try {
 			for (String recipiant : recipients) {
@@ -285,19 +279,49 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				mail.setFrom(user);
 				mail.setSubject(subject);
 				mail.setHtmlMsg(message);
-				mail.setTextMsg("Dit mail-program understøtter desværre ikke html-beskeder. Du anbefales at opgradere dit mail-program.\n\n" +
-				"Your mail program does not support html-messages. We recommend that you upgrade your program.");
-				
-				mail.setHostName("smtp.gmail.com");
-				mail.setSmtpPort(587);
-				mail.setTLS(true);
-				mail.setAuthentication(user, password);
-				
+				mail.setTextMsg("Dit mail-program understøtter desværre ikke html-beskeder. Du anbefales at opgradere dit mail-program.\n\n"
+						+ "Your mail program does not support html-messages. We recommend that you upgrade your program.");
+
+				mail.setHostName("pasmtp.tele.dk");
 				mail.send();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
+	}
+
+	public synchronized ArrayList<Salesman> getSalesmen() {
+		if (salespeople == null) {
+			salespeople = new ArrayList<Salesman>();
+			salesmanMap = HashBiMap.create();
+
+			String tradeSql = "SELECT s.salesmanid, s.salesman, s.mail FROM salespeople s;";
+
+			try {
+				connect();
+
+				Statement salespeopleStatement = c.createStatement();
+				ResultSet salespeopleResult = salespeopleStatement
+						.executeQuery(tradeSql);
+
+				while (salespeopleResult.next()) {
+					Salesman salesman = new Salesman();
+					salesman.setSalesman(salespeopleResult
+							.getString("salesman"));
+					salesman.setMail(salespeopleResult.getString("mail"));
+
+					salespeople.add(salesman);
+					salesmanMap.put(salesman, salespeopleResult.getInt("salesmanid"));
+				}
+			} catch (Exception e) {
+				salespeople = null;
+				salesmanMap = null;
+				
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+
+		return salespeople;
 	}
 }
