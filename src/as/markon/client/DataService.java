@@ -20,11 +20,14 @@ public interface DataService extends RemoteService {
 	public ArrayList<Trade> getTrades();
 	public ArrayList<City> getCities();
 	public ArrayList<Salesman> getSalesmen();
+	public ArrayList<Contact> getContactsFor(Salesman salesman, Company company);
+	public Integer createCompany(Company company);
 	
 	// This logically belong elsewhere, but it wouldn't work :(
 	public void sendMail(String user, String subject, String message, List<String> recipients);
 	
 	// Gah, there should be a better way to register types for serialization
-	public ArrayList<Contact> getContactsFor(Company company);
 	public Importance getImportance(String name);
+	public void sendImportance(Importance i);
+	public void sendTrade(Trade t);
 }

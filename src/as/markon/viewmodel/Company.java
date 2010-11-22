@@ -125,14 +125,6 @@ public class Company extends BaseModelData {
 		set("comments", comments);
 	}
 
-	public ArrayList<Contact> getContacts() {
-		return get("contacts");
-	}
-
-	public void setContacts(ArrayList<Contact> contacts) {
-		set("contacts", contacts);
-	}
-	
 	public Trade getTrade() {
 		return get("trade");
 	}

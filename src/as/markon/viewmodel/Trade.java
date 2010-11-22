@@ -1,8 +1,9 @@
 package as.markon.viewmodel;
 
 import com.extjs.gxt.ui.client.data.BaseModelData;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class Trade extends BaseModelData {
+public class Trade extends BaseModelData implements IsSerializable {
 	private static final long serialVersionUID = 1L;
 	
 	@Override

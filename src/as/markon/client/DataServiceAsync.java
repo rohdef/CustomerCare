@@ -15,12 +15,14 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface DataServiceAsync {
 	void getCompanies(Salesman salesman, AsyncCallback<ArrayList<Company>> callback);
 	void close(AsyncCallback<Void> callback);
-	void getContactsFor(Company company,
-			AsyncCallback<ArrayList<Contact>> callback);
+	void getContactsFor(Salesman salesman, Company company,	AsyncCallback<ArrayList<Contact>> callback);
 	void getTrades(AsyncCallback<ArrayList<Trade>> callback);
 	void getImportance(String name, AsyncCallback<Importance> callback);
 	void getCities(AsyncCallback<ArrayList<City>> callback);
 	void sendMail(String user, String subject, String message,
 			List<String> recipients, AsyncCallback<Void> callback);
 	void getSalesmen(AsyncCallback<ArrayList<Salesman>> callback);
+	void sendTrade(Trade t, AsyncCallback<Void> callback);
+	void sendImportance(Importance i, AsyncCallback<Void> callback);
+	void createCompany(Company company, AsyncCallback<Integer> callback);
 }

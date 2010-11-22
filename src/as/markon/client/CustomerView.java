@@ -39,13 +39,13 @@ import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
+import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.CheckBoxSelectionModel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
-import com.extjs.gxt.ui.client.widget.grid.EditorGrid;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.grid.GridGroupRenderer;
@@ -58,6 +58,7 @@ import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
+import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -159,14 +160,14 @@ public class CustomerView extends LayoutContainer {
 		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 100));
 		this.add(centerPanel, new BorderLayoutData(LayoutRegion.CENTER, 0.7f));
 		this.add(eastPanel, new BorderLayoutData(LayoutRegion.EAST, 0.3f));
-
 	}
 
 	private ContentPanel createCenterPanel() {
 		ContentPanel centerPanel = new ContentPanel();
 		FitLayout centerLayout = new FitLayout();
 		centerPanel.setLayout(centerLayout);
-		centerPanel.setFrame(true);
+		centerPanel.setFrame(false);
+		centerPanel.setBorders(false);
 		centerPanel.setHeading("Virksomheder");
 
 		final CheckBoxSelectionModel<Company> sm = new CheckBoxSelectionModel<Company>() {
@@ -324,6 +325,40 @@ public class CustomerView extends LayoutContainer {
 		centerPanel.setHeight(550);
 		centerPanel.add(companyGrid);
 		
+		ToolBar companyToolBar = new ToolBar();
+		Button newCompany = new Button();
+		newCompany.setText("Opret ny virksomhed");
+		newCompany.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				final Window createCompanyWindow = new Window();
+				final CreateCompany createCompany = new CreateCompany();
+				createCompany.addListener(Events.Close, new Listener<BaseEvent>() {
+					public void handleEvent(BaseEvent be) {
+						createCompanyWindow.hide();
+					}
+				});
+				
+				createCompanyWindow.addListener(Events.Add, new Listener<BaseEvent>() {
+
+					public void handleEvent(BaseEvent be) {
+						createCompany.getNewCompany(); // TODO do something more sane
+					}
+				});
+				
+				createCompanyWindow.add(createCompany);
+				createCompanyWindow.setSize(500, 400);
+				createCompanyWindow.setModal(true);
+				createCompanyWindow.setHeading("Opret ny virksomhed");
+				createCompanyWindow.setLayout(new FitLayout());
+				createCompanyWindow.show();
+			}
+		});
+		
+		companyToolBar.add(newCompany);
+		centerPanel.setTopComponent(companyToolBar);
+		
 		return centerPanel;
 	}
 
@@ -421,11 +456,23 @@ public class CustomerView extends LayoutContainer {
 						if (be.getSelection().size() > 0) {
 							contactsBox.clear();
 
-							ListStore<Contact> contactStore = new ListStore<Contact>();
-							contactStore
-									.add(be.getSelectedItem().getContacts());
+							contactsBox.setStore(emptyStore);
+							
+							dataService.getContactsFor(Global.getInstance().getCurrentSalesman(),
+									be.getSelectedItem(),
+									new AsyncCallback<ArrayList<Contact>>() {
+								
+								public void onSuccess(ArrayList<Contact> result) {
+									ListStore<Contact> contactStore = new ListStore<Contact>();
+									contactStore.add(result);
+									contactsBox.setStore(contactStore);
+								}
+								
+								public void onFailure(Throwable caught) {
+									krHandleError(caught);
+								}
+							});
 
-							contactsBox.setStore(contactStore);
 						} else
 							contactsBox.setStore(emptyStore);
 					}
@@ -433,8 +480,7 @@ public class CustomerView extends LayoutContainer {
 
 		final FormBinding contactBinding = new FormBinding(contactsForm, true);
 
-		contactsBox
-				.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
+		contactsBox.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
 					@Override
 					public void selectionChanged(
 							SelectionChangedEvent<Contact> se) {
@@ -446,7 +492,7 @@ public class CustomerView extends LayoutContainer {
 	}
 
 	private FormPanel createEastCompanyForm() {
-		FormPanel companyForm = new FormPanel();
+		final FormPanel companyForm = new FormPanel();
 		companyForm.setHeading("Firmadata");
 
 		TextField<String> addressFld = new TextField<String>();
@@ -474,6 +520,8 @@ public class CustomerView extends LayoutContainer {
 		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
 					@Override
 					public void selectionChanged(SelectionChangedEvent<City> se) {
+						if (cityBox.getSelection().equals(se.getSelection()))
+							return;
 						cityBox.setSelection(se.getSelection());
 					}
 				});
@@ -481,6 +529,8 @@ public class CustomerView extends LayoutContainer {
 		cityBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent<City> se) {
+				if (postalBox.getSelection().equals(se.getSelection()))
+					return;
 				postalBox.setSelection(se.getSelection());
 			}
 		});
@@ -522,6 +572,15 @@ public class CustomerView extends LayoutContainer {
 		importanceBox.setFieldLabel("Gruppe");
 		importanceBox.add(Arrays.asList(Importance.values()));
 		importanceBox.setTriggerAction(TriggerAction.ALL);
+		
+		importanceBox.addSelectionChangedListener(new SelectionChangedListener<SimpleComboValue<Importance>>() {
+			@Override
+			public void selectionChanged(
+					SelectionChangedEvent<SimpleComboValue<Importance>> se) {
+				((Company)companyForm.getModel()).setImportance(importanceBox.getSimpleValue());
+			}
+		});
+		
 		companyForm.add(importanceBox);
 
 		TextArea commentsFld = new TextArea();
@@ -564,29 +623,42 @@ public class CustomerView extends LayoutContainer {
 			public Object render(Company model, String property, ColumnData config,
 					int rowIndex, int colIndex, ListStore<Company> store,
 					Grid<Company> grid) {
-				ComboBox<MailContact> contactsBox = new ComboBox<MailContact>();
+				final ComboBox<MailContact> contactsBox = new ComboBox<MailContact>();
 				contactsBox.setWidth(grid.getColumnModel().getColumnWidth(colIndex)-10);
 				contactsBox.setDisplayField("name");
 				contactsBox.setTriggerAction(TriggerAction.ALL);
 				contactsBox.setTypeAhead(true);
 				contactsBox.setForceSelection(true);
 				
-				ArrayList<MailContact> contactMails = new ArrayList<MailContact>();
+				final ArrayList<MailContact> contactMails = new ArrayList<MailContact>();
+				ListStore<MailContact> contactStore = new ListStore<MailContact>();
+				contactStore.setMonitorChanges(true);
 				
 				if (model.getMail() != null && !model.getMail().isEmpty())
 					contactMails.add(new MailContact("Virksomheden", model.getMail()));
 				
-				for (Contact c : model.getContacts()) {
-					if (c.getMail() != null && !c.getMail().isEmpty())
-						contactMails.add(new MailContact(c.getName(), c.getMail()));
-				}
+				dataService.getContactsFor(Global.getInstance().getCurrentSalesman(), model,
+						new AsyncCallback<ArrayList<Contact>>() {
+					
+					public void onSuccess(ArrayList<Contact> result) {
+						ListStore<MailContact> contactStore = new ListStore<MailContact>();
+						contactStore.setMonitorChanges(true);
+						for (Contact c : result) {
+							if (c.getMail() != null && !c.getMail().isEmpty())
+								contactMails.add(new MailContact(c.getName(), c.getMail()));
+						}
+						contactStore.add(contactMails);
+						contactsBox.setStore(contactStore);
+					}
+					
+					public void onFailure(Throwable caught) {
+						krHandleError(caught);
+					}
+				});
 
-				ListStore<MailContact> contactStore = new ListStore<MailContact>();
-				contactStore.add(contactMails);
 				contactsBox.setStore(contactStore);
-
 				boxes.add(contactsBox);
-				
+
 				return contactsBox;
 			}
 		};

@@ -1,10 +1,12 @@
 package as.markon.server;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,8 +39,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			driver = "org.postgresql.Driver", user = "Markon",
 			password = "123";
 
-	private HashBiMap<Company, Integer> companyMap;
-	private HashBiMap<Contact, Integer> contactMap;
 	private HashBiMap<Salesman, Integer> salesmanMap;
 	private HashBiMap<Trade, Integer> tradeMap;
 	private HashBiMap<Integer, City> cityMap;
@@ -78,12 +78,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 		try {
 			companies = new ArrayList<Company>();
-			companyMap = HashBiMap.create();
 
 			connect();
-			Statement companyStatement, contactStatement;
+			Statement companyStatement;
 			companyStatement = c.createStatement();
-			contactStatement = c.createStatement();
 
 			String companyQuery = "SELECT DISTINCT\n"
 					+ "	c.companyid,\n"
@@ -106,6 +104,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 			while (companyResults.next()) {
 				Company c = new Company();
+
+				c.set("companyid", companyResults.getInt("companyid"));
 
 				String companyName = companyResults.getString("companyname");
 				if (companyName == null)
@@ -142,31 +142,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 				c.setComments(companyResults.getString("comments"));
 
-				String contactQuery = "SELECT\n" + "\tk.contactname,\n"
-						+ "\tk.title,\n" + "\tk.phone,\n" + "\tk.mail,\n"
-						+ "\tk.comments\n"
-						+ "\t\tFROM contacts k, companies c, salespeople s\n"
-						+ "\t\tWHERE s.salesmanid = " + salesmanId + "\n"
-						+ "\t\tAND c.companyid = "
-						+ companyResults.getInt("companyid") + "\n"
-						+ "\t\tAND k.companyid = c.companyid\n"
-						+ "\t\tAND k.salesmanid = s.salesmanid;";
-
-				ResultSet contactResult = contactStatement
-						.executeQuery(contactQuery);
-
-				ArrayList<Contact> contacts = new ArrayList<Contact>();
-				while (contactResult.next()) {
-					Contact k = new Contact();
-					k.setName(contactResult.getString("contactname"));
-					k.setTitle(contactResult.getString("title"));
-					k.setPhone(contactResult.getString("phone"));
-					k.setMail(contactResult.getString("mail"));
-					k.setComments(contactResult.getString("comments"));
-
-					contacts.add(k);
-				}
-
 				Trade noTrade = new Trade();
 				noTrade.setTrade("Ingen branche valgt");
 				int tradeid = companyResults.getInt("tradeid");
@@ -175,9 +150,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				else
 					c.setTrade(noTrade);
 
-				c.setContacts(contacts);
 				companies.add(c);
-				companyMap.put(c, companyResults.getInt("companyid"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -198,8 +171,38 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
-	public ArrayList<Contact> getContactsFor(Company company) {
-		return company.getContacts();
+	public synchronized ArrayList<Contact> getContactsFor(Salesman salesman,
+			Company company) {
+		try {
+			String contactQuery = "SELECT\n" + "\tk.contactname,\n"
+					+ "\tk.title,\n" + "\tk.phone,\n" + "\tk.mail,\n"
+					+ "\tk.comments\n" + "\t\tFROM contacts k, salespeople s\n"
+					+ "\t\tWHERE s.salesmanid = " + salesmanMap.get(salesman)
+					+ "\n" + "\t\tAND k.companyid = "
+					+ company.get("companyid") + "\n"
+					+ "\t\tAND k.salesmanid = s.salesmanid;";
+
+			connect();
+			Statement contactStatement = c.createStatement();
+			ResultSet contactResult = contactStatement
+					.executeQuery(contactQuery);
+
+			ArrayList<Contact> contacts = new ArrayList<Contact>();
+			while (contactResult.next()) {
+				Contact k = new Contact();
+				k.setName(contactResult.getString("contactname"));
+				k.setTitle(contactResult.getString("title"));
+				k.setPhone(contactResult.getString("phone"));
+				k.setMail(contactResult.getString("mail"));
+				k.setComments(contactResult.getString("comments"));
+
+				contacts.add(k);
+			}
+
+			return contacts;
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 
 	public synchronized ArrayList<Trade> getTrades() {
@@ -270,8 +273,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		return cities;
 	}
 
-	public void sendMail(String user, String subject,
-			String message, List<String> recipients) {
+	public void sendMail(String user, String subject, String message,
+			List<String> recipients) {
 		try {
 			for (String recipiant : recipients) {
 				HtmlEmail mail = new HtmlEmail();
@@ -312,16 +315,50 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					salesman.setMail(salespeopleResult.getString("mail"));
 
 					salespeople.add(salesman);
-					salesmanMap.put(salesman, salespeopleResult.getInt("salesmanid"));
+					salesmanMap.put(salesman,
+							salespeopleResult.getInt("salesmanid"));
 				}
 			} catch (Exception e) {
 				salespeople = null;
 				salesmanMap = null;
-				
+
 				throw new RuntimeException(e.getMessage());
 			}
 		}
 
 		return salespeople;
+	}
+
+	public void sendTrade(Trade t) {
+	}
+
+	public void sendImportance(Importance i) {
+	}
+
+	public Integer createCompany(Company company) {
+		connect();
+
+		try {
+			String storedCall = "{? = call insertCompany " +
+					"(?, ?, ?, ?, ?, ?, ?, ?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.registerOutParameter(1, Types.INTEGER);
+			
+			insertProc.setString(2, company.getCompanyName());
+			insertProc.setString(3, company.getAddress());
+			insertProc.setInt(4, company.getPostal());
+			insertProc.setString(5, company.getPhone());
+			insertProc.setString(6, company.getMail());
+			insertProc.setNull(7, Types.INTEGER); // Trade
+			insertProc.setString(8, company.getImportance().name());
+			insertProc.setString(9, company.getComments());
+			
+			insertProc.execute();
+			int companyid = insertProc.getInt(1); 
+			
+			return companyid;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

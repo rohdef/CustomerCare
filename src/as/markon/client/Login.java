@@ -39,7 +39,6 @@ public class Login extends LayoutContainer implements Observable {
 		content.setColumnWidth(0, .33);
 		content.setColumnWidth(1, .33);
 		content.setColumnWidth(2, .33);
-//		content.setWidth("80%");
 
 		final Listener<SelectionEvent<Salesman>> selectSalesman = new Listener<SelectionEvent<Salesman>>() {
 			public void handleEvent(SelectionEvent<Salesman> be) {
