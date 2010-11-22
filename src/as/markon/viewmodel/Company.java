@@ -132,4 +132,12 @@ public class Company extends BaseModelData {
 	public void setTrade(Trade trade) {
 		set("trade", trade);
 	}
+	
+	public Boolean getAcceptsMails() {
+		return get("acceptsmails");
+	}
+	
+	public void setAcceptsMails(Boolean acceptsmails) {
+		set("acceptsmails", acceptsmails);
+	}
 }

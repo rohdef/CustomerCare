@@ -93,7 +93,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "	c.mail,\n"
 					+ "	c.importance,\n"
 					+ "	c.comments,\n"
-					+ " c.tradeid\n"
+					+ " c.tradeid,\n"
+					+ " c.acceptsmails\n"
 					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
 					+ "		WHERE c.companyid = k.companyid\n"
 					+ "			AND k.salesmanid = s.salesmanid\n"
@@ -150,6 +151,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				else
 					c.setTrade(noTrade);
 
+				Boolean acceptsmails = companyResults.getBoolean("acceptsmails");
+				if (acceptsmails == null)
+					acceptsmails = false;
+				c.setAcceptsMails(acceptsmails);
+				
 				companies.add(c);
 			}
 		} catch (SQLException e) {
@@ -340,7 +346,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 		try {
 			String storedCall = "{? = call insertCompany " +
-					"(?, ?, ?, ?, ?, ?, ?, ?) }";
+					"(?, ?, ?, ?, ?, ?, ?, ?, ?) }";
 			CallableStatement insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
 			
@@ -349,9 +355,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setInt(4, company.getPostal());
 			insertProc.setString(5, company.getPhone());
 			insertProc.setString(6, company.getMail());
-			insertProc.setNull(7, Types.INTEGER); // Trade
-			insertProc.setString(8, company.getImportance().name());
-			insertProc.setString(9, company.getComments());
+			insertProc.setBoolean(7, company.getAcceptsMails());
+			insertProc.setNull(8, Types.INTEGER); // Trade
+			insertProc.setString(9, company.getImportance().name());
+			insertProc.setString(10, company.getComments());
 			
 			insertProc.execute();
 			int companyid = insertProc.getInt(1); 

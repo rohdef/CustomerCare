@@ -35,6 +35,7 @@ import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.Text;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
@@ -546,6 +547,11 @@ public class CustomerView extends LayoutContainer {
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
 		companyForm.add(mailFld);
+		
+		CheckBox acceptsMailsBox = new CheckBox();
+		acceptsMailsBox.setFieldLabel("Ønsker nyhedsmails:");
+		acceptsMailsBox.setName("acceptsmails");
+		companyForm.add(acceptsMailsBox);
 
 		final ListStore<Trade> tradeStore = new ListStore<Trade>();
 
@@ -561,7 +567,7 @@ public class CustomerView extends LayoutContainer {
 		});
 
 		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
-		tradeBox.setFieldLabel("Branche");
+		tradeBox.setFieldLabel("Branche:");
 		tradeBox.setDisplayField("trade");
 		tradeBox.setTypeAhead(true);
 		tradeBox.setStore(tradeStore);
@@ -569,7 +575,7 @@ public class CustomerView extends LayoutContainer {
 		companyForm.add(tradeBox);
 
 		final SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
-		importanceBox.setFieldLabel("Gruppe");
+		importanceBox.setFieldLabel("Gruppe:");
 		importanceBox.add(Arrays.asList(Importance.values()));
 		importanceBox.setTriggerAction(TriggerAction.ALL);
 		
