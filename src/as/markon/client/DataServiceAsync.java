@@ -24,5 +24,6 @@ public interface DataServiceAsync {
 	void getSalesmen(AsyncCallback<ArrayList<Salesman>> callback);
 	void sendTrade(Trade t, AsyncCallback<Void> callback);
 	void sendImportance(Importance i, AsyncCallback<Void> callback);
-	void createCompany(Company company, AsyncCallback<Integer> callback);
+	void createCompany(Company company, ArrayList<Contact> contacts, Salesman salesman, AsyncCallback<Integer> callback);
+	void updateCompany(Company company, AsyncCallback<Void> callback);
 }

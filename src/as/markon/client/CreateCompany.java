@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
+import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Importance;
 import as.markon.viewmodel.Trade;
 
@@ -16,8 +17,10 @@ import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
@@ -25,11 +28,19 @@ import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
+import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
+import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
+import com.extjs.gxt.ui.client.widget.grid.Grid;
+import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
+import com.extjs.gxt.ui.client.widget.layout.VBoxLayout;
+import com.extjs.gxt.ui.client.widget.layout.VBoxLayoutData;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CreateCompany extends LayoutContainer {
 	private DataServiceAsync dataService;
 	private Company newCompany;
+	private ArrayList<Contact> contacts;
+	private ListStore<Contact> contactStore;
 
 	public CreateCompany() {
 		dataService = Global.getInstance().getDataService();
@@ -37,12 +48,28 @@ public class CreateCompany extends LayoutContainer {
 		newCompany = new Company();
 		newCompany.setImportance(Importance.I);
 		
-		createNewCompanyPanel();
-		createNewContactsPanel();
+		contacts = new ArrayList<Contact>();
+		contactStore = new ListStore<Contact>();
+		contactStore.setMonitorChanges(true);
+		
+		this.setLayout(new HBoxLayout());
+		
+		this.add(createNewCompanyPanel());
+		
+		LayoutContainer contacts = new LayoutContainer();
+		contacts.setAutoWidth(true);
+		contacts.setHeight(470);
+		contacts.setLayout(new VBoxLayout());
+		contacts.add(createNewContactsPanel(), new VBoxLayoutData());
+		contacts.add(getContactList(), new VBoxLayoutData());
+		
+		this.add(contacts);
 	}
 
-	private void createNewCompanyPanel() {
+	private FormPanel createNewCompanyPanel() {
 		final FormPanel formPanel = new FormPanel();
+		formPanel.setAutoHeight(true);
+		formPanel.setWidth("50%");
 		formPanel.setHeading("Indtast virksomhedsoplysninger");
 
 		TextField<String> companynameFld = new TextField<String>();
@@ -165,7 +192,8 @@ public class CreateCompany extends LayoutContainer {
 				new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
-						dataService.createCompany(newCompany, new AsyncCallback<Integer>() {
+						dataService.createCompany(newCompany, null, Global.getInstance().getCurrentSalesman(),
+								new AsyncCallback<Integer>() {
 							public void onSuccess(Integer result) {
 								newCompany.set("companyid", result);
 								
@@ -187,13 +215,102 @@ public class CreateCompany extends LayoutContainer {
 			}
 		}));
 
-		this.add(formPanel);
+		return formPanel;
 	}
 	
-	private void createNewContactsPanel() {
+	private FormPanel createNewContactsPanel() {
 		final FormPanel contactsPanel = new FormPanel();
+		contactsPanel.setHeading("Kontaktoplysninger");
+		contactsPanel.setWidth("50%");
+		contactsPanel.setBorders(false);
 		
-		this.add(contactsPanel);
+		TextField<String> nameFld = new TextField<String>();
+		nameFld.setBorders(false);
+		nameFld.setFieldLabel("Navn");
+		nameFld.setName("contactname");
+		contactsPanel.add(nameFld);
+
+		TextField<String> titleFld = new TextField<String>();
+		titleFld.setBorders(false);
+		titleFld.setFieldLabel("Titel");
+		titleFld.setName("title");
+		contactsPanel.add(titleFld);
+
+		TextField<String> phoneFld = new TextField<String>();
+		phoneFld.setBorders(false);
+		phoneFld.setFieldLabel("Telefon");
+		phoneFld.setName("phone");
+		contactsPanel.add(phoneFld);
+
+		TextField<String> mailFld = new TextField<String>();
+		mailFld.setBorders(false);
+		mailFld.setFieldLabel("Mail");
+		mailFld.setName("mail");
+		contactsPanel.add(mailFld);
+		
+		CheckBox acceptsMailsBox = new CheckBox();
+		acceptsMailsBox.setFieldLabel("Ønsker mails");
+		acceptsMailsBox.setName("acceptsmails");
+		contactsPanel.add(acceptsMailsBox);
+
+		TextArea commentFld = new TextArea();
+		commentFld.setBorders(false);
+		commentFld.setFieldLabel("Kommentarer");
+		commentFld.setName("comments");
+		contactsPanel.add(commentFld);
+		
+		final FormBinding binding = new FormBinding(contactsPanel);
+		binding.autoBind();
+		Contact emptyContact = new Contact();
+		emptyContact.setName("");
+		emptyContact.setTitle("");
+		emptyContact.setPhone("");
+		emptyContact.setMail("");
+		emptyContact.setAcceptsMails(false);
+		emptyContact.setComments("");
+		binding.bind(emptyContact);
+		
+		contactsPanel.addButton(new Button("Tilfoej kontakt", new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				Contact newContact = (Contact) binding.getModel();
+
+				Contact emptyContact = new Contact();
+				emptyContact.setName("");
+				emptyContact.setTitle("");
+				emptyContact.setPhone("");
+				emptyContact.setMail("");
+				emptyContact.setAcceptsMails(false);
+				emptyContact.setComments("");
+				binding.bind(emptyContact);
+				
+				contacts.add(newContact);
+				contactStore.add(newContact);
+			}
+		}));
+		
+		return contactsPanel;
+	}
+	
+	private ContentPanel getContactList() {
+		ContentPanel contactsPanel = new ContentPanel();
+		contactsPanel.setWidth("50%");
+		contactsPanel.setHeading("Kontakter");
+		contactsPanel.setHeight(100);
+		
+		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
+		configs.add(new ColumnConfig("contactname", "Navn", 125));
+		configs.add(new ColumnConfig("title", "Titel", 75));
+		
+		ColumnModel cm = new ColumnModel(configs);
+		
+		final Grid<Contact> contactGrid = new Grid<Contact>(contactStore, cm);
+		contactGrid.setStripeRows(true);
+		contactGrid.setBorders(false);
+		
+		contactsPanel.add(contactGrid);
+		
+		return contactsPanel;
 	}
 	
 	public Company getNewCompany() {

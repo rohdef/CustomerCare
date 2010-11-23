@@ -330,7 +330,6 @@ public class CustomerView extends LayoutContainer {
 		Button newCompany = new Button();
 		newCompany.setText("Opret ny virksomhed");
 		newCompany.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				final Window createCompanyWindow = new Window();
@@ -349,7 +348,7 @@ public class CustomerView extends LayoutContainer {
 				});
 				
 				createCompanyWindow.add(createCompany);
-				createCompanyWindow.setSize(500, 400);
+				createCompanyWindow.setSize(650, 475);
 				createCompanyWindow.setModal(true);
 				createCompanyWindow.setHeading("Opret ny virksomhed");
 				createCompanyWindow.setLayout(new FitLayout());
@@ -601,11 +600,24 @@ public class CustomerView extends LayoutContainer {
 		companyForm.add(commentsFld);
 
 		final FormBinding binding = new FormBinding(companyForm, true);
-
+		binding.addListener(Events.UnBind, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				dataService.updateCompany((Company) binding.getModel(),
+						new AsyncCallback<Void>() {
+							public void onSuccess(Void result) {
+							}
+							
+							public void onFailure(Throwable caught) {
+								krHandleError(caught);
+							}
+						});
+			}
+		});
+		
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
-						if (be.getSelection().size() > 0) {
+						if (be.getSelection().size() == 1) {
 							binding.bind(be.getSelectedItem());
 							importanceBox.setSimpleValue(be.getSelectedItem()
 									.getImportance());

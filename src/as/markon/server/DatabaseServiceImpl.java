@@ -347,7 +347,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void sendImportance(Importance i) {
 	}
 
-	public Integer createCompany(Company company) {
+	public Integer createCompany(Company company, ArrayList<Contact> contacts, Salesman salesman) {
 		connect();
 
 		try {
@@ -371,6 +371,32 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			return companyid;
 		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void updateCompany(Company company) {
+		connect();
+
+		try {
+			String storedCall = "{call updateCompany " +
+					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }";
+			
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, (Integer) company.get("companyid"));
+			insertProc.setString(2, company.getCompanyName());
+			insertProc.setString(3, company.getAddress());
+			insertProc.setInt(4, company.getPostal());
+			insertProc.setString(5, company.getPhone());
+			insertProc.setString(6, company.getMail());
+			insertProc.setBoolean(7, company.getAcceptsMails());
+			insertProc.setNull(8, Types.INTEGER); // Trade
+			insertProc.setString(9, company.getImportance().name());
+			insertProc.setString(10, company.getComments());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 	}
