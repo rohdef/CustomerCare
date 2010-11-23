@@ -41,12 +41,14 @@ public class CreateCompany extends LayoutContainer {
 	private Company newCompany;
 	private ArrayList<Contact> contacts;
 	private ListStore<Contact> contactStore;
+	private Grid<Contact> contactGrid;
 
 	public CreateCompany() {
 		dataService = Global.getInstance().getDataService();
 		
 		newCompany = new Company();
 		newCompany.setImportance(Importance.I);
+		newCompany.setAcceptsMails(false);
 		
 		contacts = new ArrayList<Contact>();
 		contactStore = new ListStore<Contact>();
@@ -141,6 +143,11 @@ public class CreateCompany extends LayoutContainer {
 		mailFld.setFieldLabel("Mail:");
 		mailFld.setName("mail");
 		formPanel.add(mailFld);
+		
+		CheckBox acceptsMailsBox = new CheckBox();
+		acceptsMailsBox.setFieldLabel("Ønsker mails");
+		acceptsMailsBox.setName("acceptsmails");
+		formPanel.add(acceptsMailsBox);
 
 		final ListStore<Trade> tradeStore = new ListStore<Trade>();
 
@@ -192,7 +199,7 @@ public class CreateCompany extends LayoutContainer {
 				new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
-						dataService.createCompany(newCompany, null, Global.getInstance().getCurrentSalesman(),
+						dataService.createCompany(newCompany, contacts, Global.getInstance().getCurrentSalesman(),
 								new AsyncCallback<Integer>() {
 							public void onSuccess(Integer result) {
 								newCompany.set("companyid", result);
@@ -285,7 +292,11 @@ public class CreateCompany extends LayoutContainer {
 				binding.bind(emptyContact);
 				
 				contacts.add(newContact);
-				contactStore.add(newContact);
+				
+				contactStore = new ListStore<Contact>();
+				contactStore.add(contacts);
+				if (contactGrid != null)
+					contactGrid.reconfigure(contactStore, contactGrid.getColumnModel());
 			}
 		}));
 		
@@ -304,7 +315,7 @@ public class CreateCompany extends LayoutContainer {
 		
 		ColumnModel cm = new ColumnModel(configs);
 		
-		final Grid<Contact> contactGrid = new Grid<Contact>(contactStore, cm);
+		contactGrid = new Grid<Contact>(contactStore, cm);
 		contactGrid.setStripeRows(true);
 		contactGrid.setBorders(false);
 		

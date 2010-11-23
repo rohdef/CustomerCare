@@ -39,7 +39,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			driver = "org.postgresql.Driver", user = "Markon",
 			password = "123";
 
-	private HashBiMap<Salesman, Integer> salesmanMap;
 	private HashBiMap<Trade, Integer> tradeMap;
 	private HashBiMap<Integer, City> cityMap;
 
@@ -74,7 +73,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		getTrades();
 		getCities();
 		getSalesmen();
-		int salesmanId = salesmanMap.get(salesman);
+		int salesmanId = salesman.get("salesmanid");
 
 		try {
 			companies = new ArrayList<Company>();
@@ -188,7 +187,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				"\tk.acceptsmails,\n" +
 				"\tk.comments\n" +
 				"\t\tFROM contacts k, salespeople s\n"
-				+ "\t\tWHERE s.salesmanid = " + salesmanMap.get(salesman)
+				+ "\t\tWHERE s.salesmanid = " + salesman.get("salesmanid")
 				+ "\n" + "\t\tAND k.companyid = "
 				+ company.get("companyid") + "\n"
 				+ "\t\tAND k.salesmanid = s.salesmanid;";
@@ -309,7 +308,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public synchronized ArrayList<Salesman> getSalesmen() {
 		if (salespeople == null) {
 			salespeople = new ArrayList<Salesman>();
-			salesmanMap = HashBiMap.create();
 
 			String tradeSql = "SELECT s.salesmanid, s.salesman, s.mail FROM salespeople s;";
 
@@ -327,12 +325,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					salesman.setMail(salespeopleResult.getString("mail"));
 
 					salespeople.add(salesman);
-					salesmanMap.put(salesman,
-							salespeopleResult.getInt("salesmanid"));
+					salesman.set("salesmanid", salespeopleResult.getInt("salesmanid"));
 				}
 			} catch (Exception e) {
 				salespeople = null;
-				salesmanMap = null;
 
 				throw new RuntimeException(e.getMessage());
 			}
@@ -367,7 +363,49 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setString(10, company.getComments());
 			
 			insertProc.execute();
-			int companyid = insertProc.getInt(1); 
+			
+			int companyid = insertProc.getInt(1);
+			int salesmanid = salesman.get("salesmanid");
+			
+			storedCall = "{? = call insertContact " +
+				"(?, ?, ?, ?, ?, ?, ?, ?) }";
+			insertProc = c.prepareCall(storedCall);
+			
+			for (Contact c : contacts) {
+				insertProc.registerOutParameter(1, Types.INTEGER);
+				
+				insertProc.setInt(2, companyid);
+				insertProc.setInt(3, salesmanid);
+				
+				String contactName = "";
+				String title = "";
+				String phone = "";
+				String mail = "";
+				Boolean acceptsmails = false;
+				String comments = "";
+				
+				if (c.getName() != null)
+					contactName = c.getName();
+				if (c.getTitle() != null)
+					title = c.getTitle();
+				if (c.getPhone() != null)
+					phone = c.getPhone();
+				if (c.getMail() != null)
+					mail = c.getMail();
+				if (c.getAcceptsMails() != null)
+					acceptsmails = c.getAcceptsMails();
+				if (c.getComments() != null)
+					comments = c.getComments();
+				
+				insertProc.setString(4, contactName);
+				insertProc.setString(5, title);
+				insertProc.setString(6, phone);
+				insertProc.setString(7, mail);
+				insertProc.setBoolean(8, acceptsmails);
+				insertProc.setString(9, comments);
+				
+				insertProc.execute();
+			}
 			
 			return companyid;
 		} catch (Exception e) {
