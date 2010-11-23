@@ -180,13 +180,18 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public synchronized ArrayList<Contact> getContactsFor(Salesman salesman,
 			Company company) {
 		try {
-			String contactQuery = "SELECT\n" + "\tk.contactname,\n"
-					+ "\tk.title,\n" + "\tk.phone,\n" + "\tk.mail,\n"
-					+ "\tk.comments\n" + "\t\tFROM contacts k, salespeople s\n"
-					+ "\t\tWHERE s.salesmanid = " + salesmanMap.get(salesman)
-					+ "\n" + "\t\tAND k.companyid = "
-					+ company.get("companyid") + "\n"
-					+ "\t\tAND k.salesmanid = s.salesmanid;";
+			String contactQuery = "SELECT\n" +
+				"\tk.contactname,\n" +
+				"\tk.title,\n" +
+				"\tk.phone,\n" +
+				"\tk.mail,\n" +
+				"\tk.acceptsmails,\n" +
+				"\tk.comments\n" +
+				"\t\tFROM contacts k, salespeople s\n"
+				+ "\t\tWHERE s.salesmanid = " + salesmanMap.get(salesman)
+				+ "\n" + "\t\tAND k.companyid = "
+				+ company.get("companyid") + "\n"
+				+ "\t\tAND k.salesmanid = s.salesmanid;";
 
 			connect();
 			Statement contactStatement = c.createStatement();
@@ -201,6 +206,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				k.setPhone(contactResult.getString("phone"));
 				k.setMail(contactResult.getString("mail"));
 				k.setComments(contactResult.getString("comments"));
+				k.setAcceptsMails(contactResult.getBoolean("acceptsmails"));
 
 				contacts.add(k);
 			}

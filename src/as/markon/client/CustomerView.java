@@ -444,6 +444,11 @@ public class CustomerView extends LayoutContainer {
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
 		contactsForm.add(mailFld);
+		
+		CheckBox acceptsMailsBox = new CheckBox();
+		acceptsMailsBox.setFieldLabel("Ønsker mails");
+		acceptsMailsBox.setName("acceptsmails");
+		contactsForm.add(acceptsMailsBox);
 
 		TextArea commentFld = new TextArea();
 		commentFld.setBorders(false);
@@ -583,7 +588,7 @@ public class CustomerView extends LayoutContainer {
 			@Override
 			public void selectionChanged(
 					SelectionChangedEvent<SimpleComboValue<Importance>> se) {
-				((Company)companyForm.getModel()).setImportance(importanceBox.getSimpleValue());
+// FIXME NULL				((Company)companyForm.getModel()).setImportance(importanceBox.getSimpleValue());
 			}
 		});
 		
@@ -640,7 +645,8 @@ public class CustomerView extends LayoutContainer {
 				ListStore<MailContact> contactStore = new ListStore<MailContact>();
 				contactStore.setMonitorChanges(true);
 				
-				if (model.getMail() != null && !model.getMail().isEmpty())
+				if (model.getMail() != null && !model.getMail().isEmpty() &&
+						model.getAcceptsMails())
 					contactMails.add(new MailContact("Virksomheden", model.getMail()));
 				
 				dataService.getContactsFor(Global.getInstance().getCurrentSalesman(), model,
@@ -650,7 +656,8 @@ public class CustomerView extends LayoutContainer {
 						ListStore<MailContact> contactStore = new ListStore<MailContact>();
 						contactStore.setMonitorChanges(true);
 						for (Contact c : result) {
-							if (c.getMail() != null && !c.getMail().isEmpty())
+							if (c.getMail() != null && !c.getMail().isEmpty()
+									&& c.getAcceptsMails())
 								contactMails.add(new MailContact(c.getName(), c.getMail()));
 						}
 						contactStore.add(contactMails);
@@ -765,7 +772,6 @@ public class CustomerView extends LayoutContainer {
 		
 		return mailForm;
 	}
-	
 	
 	private void krHandleError(Throwable t) {
 		t.printStackTrace();

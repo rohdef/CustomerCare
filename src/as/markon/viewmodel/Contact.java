@@ -74,5 +74,12 @@ public class Contact extends BaseModelData implements IsSerializable {
 	public void setComments(String comments) {
 		set("comments", comments);
 	}
+	
+	public Boolean getAcceptsMails() {
+		return get("acceptsmails");
+	}
 
+	public void setAcceptsMails(Boolean acceptsmails) {
+		set("acceptsmails", acceptsmails);
+	}
 }
