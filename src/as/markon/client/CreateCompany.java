@@ -11,7 +11,12 @@ import as.markon.viewmodel.Trade;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
+import com.extjs.gxt.ui.client.data.ChangeEvent;
+import com.extjs.gxt.ui.client.data.ChangeEventSource;
+import com.extjs.gxt.ui.client.data.ChangeEventSupport;
+import com.extjs.gxt.ui.client.data.ChangeListener;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
+import com.extjs.gxt.ui.client.event.EventType;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
@@ -37,9 +42,10 @@ import com.extjs.gxt.ui.client.widget.layout.VBoxLayoutData;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CreateCompany extends LayoutContainer {
+	public static EventType CompanyCreated = new EventType();
+	
 	private DataServiceAsync dataService;
 	private Company newCompany;
-	private ArrayList<Contact> contacts;
 	private ListStore<Contact> contactStore;
 	private Grid<Contact> contactGrid;
 
@@ -50,7 +56,6 @@ public class CreateCompany extends LayoutContainer {
 		newCompany.setImportance(Importance.I);
 		newCompany.setAcceptsMails(false);
 		
-		contacts = new ArrayList<Contact>();
 		contactStore = new ListStore<Contact>();
 		contactStore.setMonitorChanges(true);
 		
@@ -63,7 +68,7 @@ public class CreateCompany extends LayoutContainer {
 		contacts.setHeight(470);
 		contacts.setLayout(new VBoxLayout());
 		contacts.add(createNewContactsPanel(), new VBoxLayoutData());
-		contacts.add(getContactList(), new VBoxLayoutData());
+//		contacts.add(getContactList(), new VBoxLayoutData());
 		
 		this.add(contacts);
 	}
@@ -199,12 +204,16 @@ public class CreateCompany extends LayoutContainer {
 				new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
-						dataService.createCompany(newCompany, contacts, Global.getInstance().getCurrentSalesman(),
+						
+						dataService.createCompany(newCompany,
+								new ArrayList<Contact>(contactStore.getModels()),
+								Global.getInstance().getCurrentSalesman(),
 								new AsyncCallback<Integer>() {
 							public void onSuccess(Integer result) {
 								newCompany.set("companyid", result);
 								
-								fireEvent(Events.Add);
+								changeEventSupport.notify(
+										new ChangeEvent(ChangeEventSource.Add, newCompany));
 								fireEvent(Events.Close);
 							}
 							
@@ -281,6 +290,7 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				Contact newContact = (Contact) binding.getModel();
+				contactStore.add(newContact);
 
 				Contact emptyContact = new Contact();
 				emptyContact.setName("");
@@ -290,13 +300,6 @@ public class CreateCompany extends LayoutContainer {
 				emptyContact.setAcceptsMails(false);
 				emptyContact.setComments("");
 				binding.bind(emptyContact);
-				
-				contacts.add(newContact);
-				
-				contactStore = new ListStore<Contact>();
-				contactStore.add(contacts);
-				if (contactGrid != null)
-					contactGrid.reconfigure(contactStore, contactGrid.getColumnModel());
 			}
 		}));
 		
@@ -326,5 +329,14 @@ public class CreateCompany extends LayoutContainer {
 	
 	public Company getNewCompany() {
 		return newCompany;
+	}
+	
+	private ChangeEventSupport changeEventSupport = new ChangeEventSupport();
+	public void addChangeListener(ChangeListener... listener) {
+		changeEventSupport.addChangeListener(listener);
+	}
+	
+	public void removeChangeListener(ChangeListener... listener) {
+		changeEventSupport.removeChangeListener(listener);
 	}
 }

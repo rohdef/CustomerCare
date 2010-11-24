@@ -17,6 +17,8 @@ import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.core.El;
+import com.extjs.gxt.ui.client.data.ChangeEvent;
+import com.extjs.gxt.ui.client.data.ChangeListener;
 import com.extjs.gxt.ui.client.data.ModelData;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -340,11 +342,11 @@ public class CustomerView extends LayoutContainer {
 					}
 				});
 				
-				createCompanyWindow.addListener(Events.Add, new Listener<BaseEvent>() {
-
-					public void handleEvent(BaseEvent be) {
-						createCompany.getNewCompany(); // TODO do something more sane
+				createCompany.addChangeListener(new ChangeListener() {
+					public void modelChanged(ChangeEvent event) {
+						companyStore.add((Company) event.getItem());
 					}
+					
 				});
 				
 				createCompanyWindow.add(createCompany);
@@ -355,8 +357,8 @@ public class CustomerView extends LayoutContainer {
 				createCompanyWindow.show();
 			}
 		});
-		
 		companyToolBar.add(newCompany);
+		
 		centerPanel.setTopComponent(companyToolBar);
 		
 		return centerPanel;

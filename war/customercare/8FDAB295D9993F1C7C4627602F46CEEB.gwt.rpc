@@ -1,12 +1,13 @@
 as.markon.client.DataService, false, false, false, false, _, 2253009750
 as.markon.viewmodel.City, true, true, false, false, as.markon.viewmodel.City/4129453831, 4129453831
-as.markon.viewmodel.Company, true, true, true, true, as.markon.viewmodel.Company/3470068438, 3470068438
-as.markon.viewmodel.Contact, true, true, false, false, as.markon.viewmodel.Contact/1386668935, 1386668935
+as.markon.viewmodel.Company, true, true, true, true, as.markon.viewmodel.Company/188225004, 188225004
+as.markon.viewmodel.Contact, true, true, true, true, as.markon.viewmodel.Contact/1411744270, 1411744270
 as.markon.viewmodel.Importance, true, true, true, true, as.markon.viewmodel.Importance/78768694, 78768694
 as.markon.viewmodel.Salesman, true, true, true, true, as.markon.viewmodel.Salesman/819910799, 819910799
 as.markon.viewmodel.Trade, true, true, true, true, as.markon.viewmodel.Trade/459216010, 459216010
 com.extjs.gxt.ui.client.core.FastMap, true, true, true, true, com.extjs.gxt.ui.client.core.FastMap/3488076414, 3488076414
 com.extjs.gxt.ui.client.core.FastSet, true, true, true, true, com.extjs.gxt.ui.client.core.FastSet/2139705081, 2139705081
+com.extjs.gxt.ui.client.data.BaseModel, true, false, true, false, com.extjs.gxt.ui.client.data.BaseModel/405059268, 405059268
 com.extjs.gxt.ui.client.data.BaseModelData, true, false, true, false, com.extjs.gxt.ui.client.data.BaseModelData/3541881726, 3541881726
 com.extjs.gxt.ui.client.data.RpcMap, true, true, true, true, com.extjs.gxt.ui.client.data.RpcMap/3441186752, 3441186752
 com.google.gwt.i18n.client.impl.DateRecord, true, true, true, true, com.google.gwt.i18n.client.impl.DateRecord/112389920, 112389920
