@@ -232,6 +232,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				while (tradeResult.next()) {
 					Trade trade = new Trade();
 					trade.setTrade(tradeResult.getString("tradename"));
+					trade.set("tradeid", tradeResult.getInt("tradeid"));
 
 					tradeMap.put(trade, tradeResult.getInt("tradeid"));
 					trades.add(trade);
@@ -420,6 +421,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			String storedCall = "{call updateCompany " +
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }";
 			
+			Trade trade = company.getTrade();
+			Integer tradeid = null;
+			if (trade != null)
+				tradeid = trade.get("tradeid");
+			
 			CallableStatement insertProc = c.prepareCall(storedCall);
 			insertProc.setInt(1, (Integer) company.get("companyid"));
 			insertProc.setString(2, company.getCompanyName());
@@ -428,7 +434,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setString(5, company.getPhone());
 			insertProc.setString(6, company.getMail());
 			insertProc.setBoolean(7, company.getAcceptsMails());
-			insertProc.setNull(8, Types.INTEGER); // Trade
+			insertProc.setInt(8, tradeid);
 			insertProc.setString(9, company.getImportance().name());
 			insertProc.setString(10, company.getComments());
 			

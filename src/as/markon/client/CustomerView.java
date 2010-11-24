@@ -79,8 +79,8 @@ public class CustomerView extends LayoutContainer {
 				new AsyncCallback<ArrayList<Company>>() {
 					public void onSuccess(ArrayList<Company> result) {
 						companyStore = new GroupingStore<Company>();
-						companyStore.add(result);
 						companyStore.setMonitorChanges(true);
+						companyStore.add(result);
 						companyStore.setDefaultSort("companyname", SortDir.ASC);
 						companyStore.groupBy("trade");
 						
@@ -491,13 +491,14 @@ public class CustomerView extends LayoutContainer {
 							SelectionChangedEvent<Contact> se) {
 						contactBinding.bind(se.getSelectedItem());
 					}
-				});
+		});
 
 		return contactsForm;
 	}
 
 	private FormPanel createEastCompanyForm() {
 		final FormPanel companyForm = new FormPanel();
+		final FormBinding binding = new FormBinding(companyForm, true);
 		companyForm.setHeading("Firmadata");
 
 		TextField<String> addressFld = new TextField<String>();
@@ -530,6 +531,16 @@ public class CustomerView extends LayoutContainer {
 						cityBox.setSelection(se.getSelection());
 					}
 				});
+		
+		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent<City> se) {
+				if (binding.getModel() != null && se.getSelectedItem() != null) {
+					binding.getModel().set("postal", se.getSelectedItem().getPostal());
+					binding.getModel().set("city", se.getSelectedItem().getCity());
+				}
+			}
+		});
 
 		cityBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
 			@Override
@@ -573,6 +584,7 @@ public class CustomerView extends LayoutContainer {
 		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
 		tradeBox.setFieldLabel("Branche:");
 		tradeBox.setDisplayField("trade");
+		tradeBox.setName("trade");
 		tradeBox.setTypeAhead(true);
 		tradeBox.setStore(tradeStore);
 		tradeBox.setTriggerAction(TriggerAction.ALL);
@@ -587,7 +599,8 @@ public class CustomerView extends LayoutContainer {
 			@Override
 			public void selectionChanged(
 					SelectionChangedEvent<SimpleComboValue<Importance>> se) {
-// FIXME NULL				((Company)companyForm.getModel()).setImportance(importanceBox.getSimpleValue());
+				if (binding.getModel() != null)
+					((Company)binding.getModel()).setImportance(importanceBox.getSimpleValue());
 			}
 		});
 		
@@ -599,10 +612,11 @@ public class CustomerView extends LayoutContainer {
 		commentsFld.setBorders(false);
 		companyForm.add(commentsFld);
 
-		final FormBinding binding = new FormBinding(companyForm, true);
 		binding.addListener(Events.UnBind, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
-				dataService.updateCompany((Company) binding.getModel(),
+				Company company = (Company) binding.getModel();
+				
+				dataService.updateCompany(company,
 						new AsyncCallback<Void>() {
 							public void onSuccess(Void result) {
 							}
@@ -618,6 +632,7 @@ public class CustomerView extends LayoutContainer {
 				new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
 						if (be.getSelection().size() == 1) {
+							binding.autoBind();
 							binding.bind(be.getSelectedItem());
 							importanceBox.setSimpleValue(be.getSelectedItem()
 									.getImportance());
