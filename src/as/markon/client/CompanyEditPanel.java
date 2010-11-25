@@ -3,8 +3,6 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.management.RuntimeErrorException;
-
 import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Importance;
