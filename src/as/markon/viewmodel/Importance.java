@@ -2,7 +2,7 @@ package as.markon.viewmodel;
 
 public enum Importance {
 	A("Guldkunde"),
-	B("Soelvkunde"),
+	B("Sølvkunde"),
 	C("Broncekunde"),
 	I("Ingen valgt");
 	private String value;

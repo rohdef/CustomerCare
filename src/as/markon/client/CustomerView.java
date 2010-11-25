@@ -352,17 +352,15 @@ public class CustomerView extends LayoutContainer {
 		t.printStackTrace();
 
 		Dialog errorMessage = new Dialog();
-		errorMessage.setTitle("Kunne ikke hente virksomhedsdata");
+		errorMessage.setTitle("Fejl i systemet");
 		errorMessage.setButtons(Dialog.OK);
 		errorMessage.setBodyStyle("pad-text");
 		errorMessage.setScrollMode(Scroll.AUTO);
 		errorMessage.setHideOnButtonClick(true);
-		errorMessage.addText("Beskeden fra systemet er:\n\"" + t.getMessage()
+		errorMessage.addText("Der er desværre sket en fejl :(\n\""
 				+ "\"\nsystemet skulle gerne have lavet en log\n"
 				+ "til ham den flinke på hjul.");
 
 		errorMessage.show();
-
-		// Log.debug(t);
 	}
 }
