@@ -291,8 +291,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				mail.setFrom(user);
 				mail.setSubject(subject);
 				mail.setHtmlMsg(message);
-				mail.setTextMsg("Dit mail-program understøtter desværre ikke html-beskeder. Du anbefales at opgradere dit mail-program.\n\n"
-						+ "Your mail program does not support html-messages. We recommend that you upgrade your program.");
+				mail.setTextMsg("Dit mail-program understøtter desværre ikke " +
+						"html-beskeder. Du anbefales at opgradere dit mail-program.\n\n"
+						+ "Your mail program does not support html-messages. We " +
+								"recommend that you upgrade your program.");
 
 				mail.setHostName("pasmtp.tele.dk");
 				mail.send();
@@ -451,6 +453,18 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	}
 
 	public void deleteCompany(Company company) {
-		// TODO implement db call
+		connect();
+
+		try {
+			String storedCall = "{call deleteCompany ( ? ) }";
+			
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, (Integer) company.get("companyid"));
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 }
