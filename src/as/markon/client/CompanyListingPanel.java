@@ -20,6 +20,7 @@ import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.GroupingStore;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
+import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.grid.CheckBoxSelectionModel;
@@ -46,6 +47,8 @@ public class CompanyListingPanel extends ContentPanel {
 	private Grid<Company> companyGrid;
 	private GroupingStore<Company> companyStore = new GroupingStore<Company>();
 
+	private CheckBoxSelectionModel<Company> sm;
+
 	public CompanyListingPanel() {
 		FitLayout centerLayout = new FitLayout();
 		this.setLayout(centerLayout);
@@ -53,7 +56,7 @@ public class CompanyListingPanel extends ContentPanel {
 		this.setBorders(false);
 		this.setHeading("Virksomheder");
 
-		final CheckBoxSelectionModel<Company> sm = new CheckBoxSelectionModel<Company>() {
+		sm = new CheckBoxSelectionModel<Company>() {
 			@Override
 			public void deselectAll() {
 				super.deselectAll();
@@ -238,6 +241,44 @@ public class CompanyListingPanel extends ContentPanel {
 			}
 		});
 		companyToolBar.add(newCompany);
+		
+		Button deleteCompaniesBtn = new Button();
+		deleteCompaniesBtn.setText("Slet markerede firmaer");
+		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				Dialog deleteDialog = new Dialog();
+				
+				deleteDialog.setTitle("Er du sikker på, at du vil slette?");
+				deleteDialog.addText("Advarsel! Du kan ikke fortryde denne handling!"); 
+				deleteDialog.addText("Er du sikker på, at du vil slette de markerede virksomheder?");
+				deleteDialog.setButtons(Dialog.YESNO);
+				deleteDialog.getButtonById(Dialog.YES).setText("Slet virksomheder");
+				deleteDialog.getButtonById(Dialog.NO).setText("Fortryd");
+				deleteDialog.setHideOnButtonClick(true);
+				
+				deleteDialog.getButtonById(Dialog.YES).addSelectionListener(
+						new SelectionListener<ButtonEvent>() {
+							@Override
+							public void componentSelected(ButtonEvent ce) {
+								 dataService.deleteCompanies(sm.getSelectedItems(),
+										 new AsyncCallback<Void>() {
+											public void onSuccess(Void result) {
+												for (Company company : sm.getSelectedItems())
+													companyStore.remove(company);
+											}
+											
+											public void onFailure(Throwable caught) {
+												// TODO show errormessage right now
+												throw new RuntimeException(caught);
+											}
+										});
+							}
+						});
+				deleteDialog.show();
+			}
+		});
+		companyToolBar.add(deleteCompaniesBtn);
 		
 		this.setTopComponent(companyToolBar);
 	}

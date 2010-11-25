@@ -23,6 +23,8 @@ public interface DataService extends RemoteService {
 	public ArrayList<Contact> getContactsFor(Salesman salesman, Company company);
 	public Integer createCompany(Company company, ArrayList<Contact> contacts, Salesman salesman);
 	public void updateCompany(Company company);
+	public void deleteCompanies(List<Company> companies);
+	public void deleteCompany(Company company);
 	
 	// This logically belong elsewhere, but it wouldn't work :(
 	public void sendMail(String user, String subject, String message, List<String> recipients);

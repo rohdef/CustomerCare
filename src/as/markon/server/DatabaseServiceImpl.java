@@ -444,4 +444,13 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			throw new RuntimeException(e);
 		}
 	}
+
+	public synchronized void deleteCompanies(List<Company> companies) {
+		for (Company c : companies)
+			deleteCompany(c);
+	}
+
+	public void deleteCompany(Company company) {
+		// TODO implement db call
+	}
 }
