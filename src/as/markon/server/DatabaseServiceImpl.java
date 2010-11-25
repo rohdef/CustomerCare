@@ -8,14 +8,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.mail.HtmlEmail;
 
-//import org.apache.commons.mail.HtmlEmail;
-//import org.apache.commons.mail.SimpleEmail;
-
-import com.google.gwt.thirdparty.guava.common.collect.HashBiMap;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import as.markon.client.DataService;
@@ -39,8 +36,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			driver = "org.postgresql.Driver", user = "Markon",
 			password = "123";
 
-	private HashBiMap<Trade, Integer> tradeMap;
-	private HashBiMap<Integer, City> cityMap;
+	private HashMap<Integer, Trade> tradeMap;
+	private HashMap<Integer, City> cityMap;
 
 	private ArrayList<Salesman> salespeople;
 
@@ -146,7 +143,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				noTrade.setTrade("Ingen branche valgt");
 				int tradeid = companyResults.getInt("tradeid");
 				if (!companyResults.wasNull())
-					c.setTrade(tradeMap.inverse().get(new Integer(tradeid)));
+					c.setTrade(tradeMap.get(new Integer(tradeid)));
 				else
 					c.setTrade(noTrade);
 
@@ -218,7 +215,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	public synchronized ArrayList<Trade> getTrades() {
 		if (tradeMap == null) {
-			tradeMap = HashBiMap.create();
+			tradeMap = new HashMap<Integer, Trade>();
 			trades = new ArrayList<Trade>();
 
 			String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
@@ -234,7 +231,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					trade.setTrade(tradeResult.getString("tradename"));
 					trade.set("tradeid", tradeResult.getInt("tradeid"));
 
-					tradeMap.put(trade, tradeResult.getInt("tradeid"));
+					tradeMap.put(tradeResult.getInt("tradeid"), trade);
 					trades.add(trade);
 				}
 			} catch (Exception e) {
@@ -255,7 +252,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public synchronized ArrayList<City> getCities() {
 		if (cities == null) {
 			cities = new ArrayList<City>();
-			cityMap = HashBiMap.create();
+			cityMap = new HashMap<Integer, City>();
 
 			try {
 				connect();
