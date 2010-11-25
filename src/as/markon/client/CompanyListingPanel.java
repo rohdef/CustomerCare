@@ -35,7 +35,7 @@ import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class CompanyListing extends ContentPanel {
+public class CompanyListingPanel extends ContentPanel {
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
 
 	private String checkedStyle = "x-grid3-group-check";
@@ -46,7 +46,7 @@ public class CompanyListing extends ContentPanel {
 	private Grid<Company> companyGrid;
 	private GroupingStore<Company> companyStore = new GroupingStore<Company>();
 
-	public CompanyListing() {
+	public CompanyListingPanel() {
 		FitLayout centerLayout = new FitLayout();
 		this.setLayout(centerLayout);
 		this.setFrame(false);
