@@ -29,4 +29,9 @@ public interface DataServiceAsync {
 	void deleteCompanies(List<Company> companies,
 			AsyncCallback<Void> callback);
 	void deleteCompany(Company company, AsyncCallback<Void> callback);
+	void deleteContacts(List<Contact> contacts, AsyncCallback<Void> callback);
+	void deleteContact(Contact contact, AsyncCallback<Void> callback);
+	void insertContact(Contact contact, int salesmanid, int companyid,
+			AsyncCallback<Void> callback);
+	void updateContact(Contact contact, AsyncCallback<Void> callback);
 }

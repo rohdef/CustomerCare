@@ -177,6 +177,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			Company company) {
 		try {
 			String contactQuery = "SELECT\n" +
+				"\tk.contactid" +
 				"\tk.contactname,\n" +
 				"\tk.title,\n" +
 				"\tk.phone,\n" +
@@ -197,6 +198,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			ArrayList<Contact> contacts = new ArrayList<Contact>();
 			while (contactResult.next()) {
 				Contact k = new Contact();
+				k.set("contactid", contactResult.getInt("contactid"));
 				k.setName(contactResult.getString("contactname"));
 				k.setTitle(contactResult.getString("title"));
 				k.setPhone(contactResult.getString("phone"));
@@ -343,7 +345,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void sendImportance(Importance i) {
 	}
 
-	public Integer createCompany(Company company, ArrayList<Contact> contacts, Salesman salesman) {
+	public synchronized Integer createCompany(Company company,
+			ArrayList<Contact> contacts, Salesman salesman) {
 		connect();
 
 		try {
@@ -367,45 +370,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			int companyid = insertProc.getInt(1);
 			int salesmanid = salesman.get("salesmanid");
 			
-			storedCall = "{? = call insertContact " +
-				"(?, ?, ?, ?, ?, ?, ?, ?) }";
-			insertProc = c.prepareCall(storedCall);
 			
-			for (Contact c : contacts) {
-				insertProc.registerOutParameter(1, Types.INTEGER);
-				
-				insertProc.setInt(2, companyid);
-				insertProc.setInt(3, salesmanid);
-				
-				String contactName = "";
-				String title = "";
-				String phone = "";
-				String mail = "";
-				Boolean acceptsmails = false;
-				String comments = "";
-				
-				if (c.getName() != null)
-					contactName = c.getName();
-				if (c.getTitle() != null)
-					title = c.getTitle();
-				if (c.getPhone() != null)
-					phone = c.getPhone();
-				if (c.getMail() != null)
-					mail = c.getMail();
-				if (c.getAcceptsMails() != null)
-					acceptsmails = c.getAcceptsMails();
-				if (c.getComments() != null)
-					comments = c.getComments();
-				
-				insertProc.setString(4, contactName);
-				insertProc.setString(5, title);
-				insertProc.setString(6, phone);
-				insertProc.setString(7, mail);
-				insertProc.setBoolean(8, acceptsmails);
-				insertProc.setString(9, comments);
-				
-				insertProc.execute();
-			}
+			for (Contact c : contacts)
+				insertContact(c, salesmanid, companyid);
 			
 			return companyid;
 		} catch (Exception e) {
@@ -460,6 +427,76 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			CallableStatement insertProc = c.prepareCall(storedCall);
 			insertProc.setInt(1, (Integer) company.get("companyid"));
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void insertContact(Contact contact, int salesmanid, int companyid) {
+		connect();
+		
+		try {
+			String storedCall = "{? = call insertContact " +
+			"(?, ?, ?, ?, ?, ?, ?, ?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.registerOutParameter(1, Types.INTEGER);
+			
+			insertProc.setInt(2, companyid);
+			insertProc.setInt(3, salesmanid);
+			
+			String contactName = "";
+			String title = "";
+			String phone = "";
+			String mail = "";
+			Boolean acceptsmails = false;
+			String comments = "";
+			
+			if (contact.getName() != null)
+				contactName = contact.getName();
+			if (contact.getTitle() != null)
+				title = contact.getTitle();
+			if (contact.getPhone() != null)
+				phone = contact.getPhone();
+			if (contact.getMail() != null)
+				mail = contact.getMail();
+			if (contact.getAcceptsMails() != null)
+				acceptsmails = contact.getAcceptsMails();
+			if (contact.getComments() != null)
+				comments = contact.getComments();
+			
+			insertProc.setString(4, contactName);
+			insertProc.setString(5, title);
+			insertProc.setString(6, phone);
+			insertProc.setString(7, mail);
+			insertProc.setBoolean(8, acceptsmails);
+			insertProc.setString(9, comments);
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void updateContact(Contact c) {
+		
+	}
+	
+	public synchronized void deleteContacts(List<Contact> contacts) {
+		for (Contact c : contacts)
+			deleteContact(c);
+	}
+	
+	public void deleteContact(Contact contact) {
+		connect();
+
+		try {
+			String storedCall = "{call deleteContact ( ? ) }";
+			
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, (Integer) contact.get("contactid"));
 			
 			insertProc.execute();
 		} catch (Exception e) {
