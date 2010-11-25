@@ -431,7 +431,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setString(5, company.getPhone());
 			insertProc.setString(6, company.getMail());
 			insertProc.setBoolean(7, company.getAcceptsMails());
-			insertProc.setInt(8, tradeid);
+			if (tradeid == null)
+				insertProc.setNull(8, Types.INTEGER);
+			else
+				insertProc.setInt(8, tradeid);
 			insertProc.setString(9, company.getImportance().name());
 			insertProc.setString(10, company.getComments());
 			
