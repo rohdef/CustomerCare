@@ -10,13 +10,11 @@ import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
-import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
-import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
@@ -26,12 +24,8 @@ import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.Text;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
-import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
-import com.extjs.gxt.ui.client.widget.form.FormPanel;
-import com.extjs.gxt.ui.client.widget.form.TextArea;
-import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
@@ -122,7 +116,7 @@ public class CustomerView extends LayoutContainer {
 		eastPanel.setHeaderVisible(false);
 
 		final CompanyEditPanel companyForm = new CompanyEditPanel();
-		final FormPanel contactForm = createEastContactsForm();
+		final ContactEditPanel contactForm = new ContactEditPanel();
 		final ContentPanel mailForm = createEastMailForm();
 
 		companyForm.setVisible(true);
@@ -149,112 +143,52 @@ public class CustomerView extends LayoutContainer {
 					}
 				});
 
-		// Bind company form
+		// Bind company and contacts form
 		companyListing
 				.addSelectionListener(new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
-						if (be.getSelection().size() == 1)
+						if (be.getSelection().size() == 1) {
 							companyForm.bindCompany(be.getSelectedItem());
-						else
+							contactForm.bindCompany(be.getSelectedItem());
+						} else {
 							companyForm.unbindCompany();
+							contactForm.unbindCompany();
+						}
 					}
 				});
 
 		return eastPanel;
 	}
 
-	private FormPanel createEastContactsForm() {
-		FormPanel contactsForm = new FormPanel();
-		contactsForm.setHeading("Kontakter");
-
-		final ListStore<Contact> emptyStore = new ListStore<Contact>();
-
-		final ComboBox<Contact> contactsBox = new ComboBox<Contact>();
-		contactsBox.setFieldLabel("Kontaktliste");
-		contactsBox.setDisplayField("contactname");
-		contactsBox.setTypeAhead(true);
-		contactsBox.setStore(emptyStore);
-		contactsBox.setTriggerAction(TriggerAction.ALL);
-		contactsForm.add(contactsBox);
-
-		TextField<String> nameFld = new TextField<String>();
-		nameFld.setBorders(false);
-		nameFld.setFieldLabel("Navn");
-		nameFld.setName("contactname");
-		contactsForm.add(nameFld);
-
-		TextField<String> titleFld = new TextField<String>();
-		titleFld.setBorders(false);
-		titleFld.setFieldLabel("Titel");
-		titleFld.setName("title");
-		contactsForm.add(titleFld);
-
-		TextField<String> phoneFld = new TextField<String>();
-		phoneFld.setBorders(false);
-		phoneFld.setFieldLabel("Telefon");
-		phoneFld.setName("phone");
-		contactsForm.add(phoneFld);
-
-		TextField<String> mailFld = new TextField<String>();
-		mailFld.setBorders(false);
-		mailFld.setFieldLabel("Mail");
-		mailFld.setName("mail");
-		contactsForm.add(mailFld);
-
-		CheckBox acceptsMailsBox = new CheckBox();
-		acceptsMailsBox.setFieldLabel("Ønsker mails");
-		acceptsMailsBox.setName("acceptsmails");
-		contactsForm.add(acceptsMailsBox);
-
-		TextArea commentFld = new TextArea();
-		commentFld.setBorders(false);
-		commentFld.setFieldLabel("Kommentarer");
-		commentFld.setName("comments");
-		contactsForm.add(commentFld);
-
-		companyListing
-				.addSelectionListener(new Listener<SelectionChangedEvent<Company>>() {
-					public void handleEvent(SelectionChangedEvent<Company> be) {
-						if (be.getSelection().size() > 0) {
-							contactsBox.clear();
-
-							contactsBox.setStore(emptyStore);
-
-							dataService.getContactsFor(Global.getInstance()
-									.getCurrentSalesman(),
-									be.getSelectedItem(),
-									new AsyncCallback<ArrayList<Contact>>() {
-
-										public void onSuccess(
-												ArrayList<Contact> result) {
-											ListStore<Contact> contactStore = new ListStore<Contact>();
-											contactStore.add(result);
-											contactsBox.setStore(contactStore);
-										}
-
-										public void onFailure(Throwable caught) {
-											krHandleError(caught);
-										}
-									});
-
-						} else
-							contactsBox.setStore(emptyStore);
-					}
-				});
-
-		final FormBinding contactBinding = new FormBinding(contactsForm, true);
-
-		contactsBox
-				.addSelectionChangedListener(new SelectionChangedListener<Contact>() {
-					@Override
-					public void selectionChanged(
-							SelectionChangedEvent<Contact> se) {
-						contactBinding.bind(se.getSelectedItem());
-					}
-				});
-
-		return contactsForm;
-	}
+//		companyListing
+//				.addSelectionListener(new Listener<SelectionChangedEvent<Company>>() {
+//					public void handleEvent(SelectionChangedEvent<Company> be) {
+//						if (be.getSelection().size() > 0) {
+//							contactsBox.clear();
+//
+//							contactsBox.setStore(emptyStore);
+//
+//							dataService.getContactsFor(Global.getInstance()
+//									.getCurrentSalesman(),
+//									be.getSelectedItem(),
+//									new AsyncCallback<ArrayList<Contact>>() {
+//
+//										public void onSuccess(
+//												ArrayList<Contact> result) {
+//											ListStore<Contact> contactStore = new ListStore<Contact>();
+//											contactStore.add(result);
+//											contactsBox.setStore(contactStore);
+//										}
+//
+//										public void onFailure(Throwable caught) {
+//											krHandleError(caught);
+//										}
+//									});
+//
+//						} else
+//							contactsBox.setStore(emptyStore);
+//					}
+//				});
 
 	private ContentPanel createEastMailForm() {
 		final ArrayList<ComboBox<MailContact>> boxes = new ArrayList<ComboBox<MailContact>>();
