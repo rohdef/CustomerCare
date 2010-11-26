@@ -245,8 +245,9 @@ public class CompanyListingPanel extends ContentPanel {
 		});
 		companyToolBar.add(newCompany);
 		
-		Button deleteCompaniesBtn = new Button();
+		final Button deleteCompaniesBtn = new Button();
 		deleteCompaniesBtn.setText("Slet markerede firmaer");
+		deleteCompaniesBtn.disable();
 		deleteCompaniesBtn.setIcon(IconHelper.createPath("images/delete.gif"));
 		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -256,6 +257,16 @@ public class CompanyListingPanel extends ContentPanel {
 			}
 		});
 		companyToolBar.add(deleteCompaniesBtn);
+		
+		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
+				new Listener<SelectionChangedEvent<Company>>() {
+					public void handleEvent(SelectionChangedEvent<Company> be) {
+						if (be.getSelection().size() == 0 )
+							deleteCompaniesBtn.disable();
+						else
+							deleteCompaniesBtn.enable();
+					}
+			});
 		
 		this.setTopComponent(companyToolBar);
 	}

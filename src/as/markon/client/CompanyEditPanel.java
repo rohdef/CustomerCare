@@ -156,8 +156,8 @@ public class CompanyEditPanel extends FormPanel {
 		importanceBox.add(Arrays.asList(Importance.values()));
 		importanceBox.setTriggerAction(TriggerAction.ALL);
 
-		importanceBox
-				.addSelectionChangedListener(new SelectionChangedListener<SimpleComboValue<Importance>>() {
+		importanceBox.addSelectionChangedListener(
+				new SelectionChangedListener<SimpleComboValue<Importance>>() {
 					@Override
 					public void selectionChanged(
 							SelectionChangedEvent<SimpleComboValue<Importance>> se) {
@@ -188,8 +188,11 @@ public class CompanyEditPanel extends FormPanel {
 						throw new RuntimeException(caught);
 					}
 				});
+				setReadOnly(true);
 			}
 		});
+		
+		this.setReadOnly(true);
 	}
 
 	public void bindCompany(Company company) {
@@ -201,6 +204,8 @@ public class CompanyEditPanel extends FormPanel {
 		ArrayList<City> citySelect = new ArrayList<City>();
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
+		
+		this.setReadOnly(false);
 	}
 
 	public void unbindCompany() {
