@@ -1,6 +1,5 @@
 package as.markon.client;
 
-
 import java.util.ArrayList;
 
 import as.markon.viewmodel.Salesman;
@@ -16,7 +15,6 @@ import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.custom.Portal;
 import com.extjs.gxt.ui.client.widget.custom.Portlet;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

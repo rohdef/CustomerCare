@@ -60,15 +60,16 @@ public class CustomerView extends LayoutContainer {
 		HBoxLayoutData flex = new HBoxLayoutData(0, 15, 0, 0);
 		northPanel.add(new Text(), flex);
 
-		Button changeSalesmanBtn = new Button("Skift sælger",
+		Button changeSalesmanBtn = new Button("Skift logon",
 				new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
 						final Dialog salesmanDialog = new Dialog();
 						salesmanDialog.setButtons(Dialog.CANCEL);
 						salesmanDialog
-								.setHeading("Hvilken sælger ønsker du at se kartoteket for?");
+							.setHeading("Hvilken sælger ønsker du at se kartoteket for?");
 						salesmanDialog.setHideOnButtonClick(true);
+						salesmanDialog.setSize(400, 300);
 
 						Login l = new Login();
 						l.addListener(Events.Select,

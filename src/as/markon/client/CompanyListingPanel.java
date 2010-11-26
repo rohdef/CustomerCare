@@ -19,6 +19,7 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.GroupingStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.Window;
@@ -212,8 +213,10 @@ public class CompanyListingPanel extends ContentPanel {
 		this.add(companyGrid);
 		
 		ToolBar companyToolBar = new ToolBar();
+		
 		Button newCompany = new Button();
 		newCompany.setText("Opret ny virksomhed");
+		newCompany.setIcon(IconHelper.createPath("images/add.gif"));
 		newCompany.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -244,37 +247,11 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		Button deleteCompaniesBtn = new Button();
 		deleteCompaniesBtn.setText("Slet markerede firmaer");
+		deleteCompaniesBtn.setIcon(IconHelper.createPath("images/delete.gif"));
 		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
-				Dialog deleteDialog = new Dialog();
-				
-				deleteDialog.setTitle("Er du sikker på, at du vil slette?");
-				deleteDialog.addText("Advarsel! Du kan ikke fortryde denne handling!"); 
-				deleteDialog.addText("Er du sikker på, at du vil slette de markerede virksomheder?");
-				deleteDialog.setButtons(Dialog.YESNO);
-				deleteDialog.getButtonById(Dialog.YES).setText("Slet virksomheder");
-				deleteDialog.getButtonById(Dialog.NO).setText("Fortryd");
-				deleteDialog.setHideOnButtonClick(true);
-				
-				deleteDialog.getButtonById(Dialog.YES).addSelectionListener(
-						new SelectionListener<ButtonEvent>() {
-							@Override
-							public void componentSelected(ButtonEvent ce) {
-								 dataService.deleteCompanies(sm.getSelectedItems(),
-										 new AsyncCallback<Void>() {
-											public void onSuccess(Void result) {
-												for (Company company : sm.getSelectedItems())
-													companyStore.remove(company);
-											}
-											
-											public void onFailure(Throwable caught) {
-												// TODO show errormessage right now
-												throw new RuntimeException(caught);
-											}
-										});
-							}
-						});
+				Dialog deleteDialog = new DeleteDialog();
 				deleteDialog.show();
 			}
 		});
@@ -321,5 +298,36 @@ public class CompanyListingPanel extends ContentPanel {
 		findCheck(group).replaceStyleName(
 				checked ? uncheckedStyle : checkedStyle,
 				checked ? checkedStyle : uncheckedStyle);
+	}
+
+	private class DeleteDialog extends Dialog {
+		public DeleteDialog() {
+			this.setTitle("Er du sikker på, at du vil slette?");
+			this.addText("Advarsel! Du kan ikke fortryde denne handling!"); 
+			this.addText("Er du sikker på, at du vil slette de markerede virksomheder?");
+			this.setButtons(Dialog.YESNO);
+			this.getButtonById(Dialog.YES).setText("Slet virksomheder");
+			this.getButtonById(Dialog.NO).setText("Fortryd");
+			this.setHideOnButtonClick(true);
+			
+			this.getButtonById(Dialog.YES).addSelectionListener(
+				new SelectionListener<ButtonEvent>() {
+					@Override
+					public void componentSelected(ButtonEvent ce) {
+						 dataService.deleteCompanies(sm.getSelectedItems(),
+								 new AsyncCallback<Void>() {
+									public void onSuccess(Void result) {
+										for (Company company : sm.getSelectedItems())
+											companyStore.remove(company);
+									}
+									
+									public void onFailure(Throwable caught) {
+										// TODO show errormessage right now
+										throw new RuntimeException(caught);
+									}
+								});
+					}
+				});
+		}
 	}
 }

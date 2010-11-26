@@ -173,47 +173,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
-	public synchronized ArrayList<Contact> getContactsFor(Salesman salesman,
-			Company company) {
-		try {
-			String contactQuery = "SELECT\n" +
-				"\tk.contactid" +
-				"\tk.contactname,\n" +
-				"\tk.title,\n" +
-				"\tk.phone,\n" +
-				"\tk.mail,\n" +
-				"\tk.acceptsmails,\n" +
-				"\tk.comments\n" +
-				"\t\tFROM contacts k, salespeople s\n"
-				+ "\t\tWHERE s.salesmanid = " + salesman.get("salesmanid")
-				+ "\n" + "\t\tAND k.companyid = "
-				+ company.get("companyid") + "\n"
-				+ "\t\tAND k.salesmanid = s.salesmanid;";
 
-			connect();
-			Statement contactStatement = c.createStatement();
-			ResultSet contactResult = contactStatement
-					.executeQuery(contactQuery);
-
-			ArrayList<Contact> contacts = new ArrayList<Contact>();
-			while (contactResult.next()) {
-				Contact k = new Contact();
-				k.set("contactid", contactResult.getInt("contactid"));
-				k.setName(contactResult.getString("contactname"));
-				k.setTitle(contactResult.getString("title"));
-				k.setPhone(contactResult.getString("phone"));
-				k.setMail(contactResult.getString("mail"));
-				k.setComments(contactResult.getString("comments"));
-				k.setAcceptsMails(contactResult.getBoolean("acceptsmails"));
-
-				contacts.add(k);
-			}
-
-			return contacts;
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
-		}
-	}
 
 	public synchronized ArrayList<Trade> getTrades() {
 		if (tradeMap == null) {
@@ -345,6 +305,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void sendImportance(Importance i) {
 	}
 
+	//
+	// Companies
+	//
 	public synchronized Integer createCompany(Company company,
 			ArrayList<Contact> contacts, Salesman salesman) {
 		connect();
@@ -435,6 +398,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 	
+	//
+	// Contacts
+	//
 	public void insertContact(Contact contact, int salesmanid, int companyid) {
 		connect();
 		
@@ -480,8 +446,28 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 	
-	public void updateContact(Contact c) {
-		
+	public void updateContact(Contact contact) {
+		connect();
+
+		try {
+			String storedCall = "{call updateContact " +
+					"(?, ?, ?, ?, ?, ?, ?, ?) }";
+			
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, (Integer) contact.get("contactid"));
+			insertProc.setInt(2, (Integer) contact.getSalesman().get("salesmanid"));
+			insertProc.setString(3, contact.getName());
+			insertProc.setString(4, contact.getTitle());
+			insertProc.setString(5, contact.getPhone());
+			insertProc.setString(6, contact.getMail());
+			insertProc.setBoolean(7, contact.getAcceptsMails());
+			insertProc.setString(8, contact.getComments());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public synchronized void deleteContacts(List<Contact> contacts) {
@@ -502,6 +488,49 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
+		}
+	}
+
+	public synchronized ArrayList<Contact> getContactsFor(Salesman salesman,
+			Company company) {
+		try {
+			String contactQuery = "SELECT\n" +
+				"\tk.contactid,\n" +
+				"\tk.contactname,\n" +
+				"\tk.title,\n" +
+				"\tk.phone,\n" +
+				"\tk.mail,\n" +
+				"\tk.acceptsmails,\n" +
+				"\tk.comments\n" +
+				"\t\tFROM contacts k, salespeople s\n"
+				+ "\t\tWHERE s.salesmanid = " + salesman.get("salesmanid")
+				+ "\n" + "\t\tAND k.companyid = "
+				+ company.get("companyid") + "\n"
+				+ "\t\tAND k.salesmanid = s.salesmanid;";
+
+			connect();
+			Statement contactStatement = c.createStatement();
+			ResultSet contactResult = contactStatement
+					.executeQuery(contactQuery);
+
+			ArrayList<Contact> contacts = new ArrayList<Contact>();
+			while (contactResult.next()) {
+				Contact k = new Contact();
+				k.set("contactid", contactResult.getInt("contactid"));
+				k.setName(contactResult.getString("contactname"));
+				k.setTitle(contactResult.getString("title"));
+				k.setPhone(contactResult.getString("phone"));
+				k.setMail(contactResult.getString("mail"));
+				k.setComments(contactResult.getString("comments"));
+				k.setAcceptsMails(contactResult.getBoolean("acceptsmails"));
+				k.setSalesman(salesman);
+
+				contacts.add(k);
+			}
+
+			return contacts;
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 }

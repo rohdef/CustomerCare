@@ -82,4 +82,12 @@ public class Contact extends BaseModel implements IsSerializable {
 	public void setAcceptsMails(Boolean acceptsmails) {
 		set("acceptsmails", acceptsmails);
 	}
+	
+	public Salesman getSalesman() {
+		return get("salesman");
+	}
+	
+	public void setSalesman(Salesman salesman) {
+		set("salesman", salesman);
+	}
 }

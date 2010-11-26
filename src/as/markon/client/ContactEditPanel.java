@@ -4,19 +4,28 @@ import java.util.ArrayList;
 
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
+import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.binding.FormBinding;
+import com.extjs.gxt.ui.client.event.BaseEvent;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
+import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
+import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
+import com.extjs.gxt.ui.client.widget.Dialog;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
+import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-
 
 public class ContactEditPanel extends FormPanel {
 	private ListStore<Contact> emptyStore;
@@ -30,6 +39,7 @@ public class ContactEditPanel extends FormPanel {
 	private FormBinding contactBinding;
 	
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private Button changeSalesman;
 
 	public ContactEditPanel() {
 		this.setHeading("Kontakter");
@@ -43,7 +53,7 @@ public class ContactEditPanel extends FormPanel {
 		contactsBox.setStore(emptyStore);
 		contactsBox.setTriggerAction(TriggerAction.ALL);
 		this.add(contactsBox);
-
+		
 		nameFld = new TextField<String>();
 		nameFld.setBorders(false);
 		nameFld.setFieldLabel("Navn");
@@ -86,8 +96,87 @@ public class ContactEditPanel extends FormPanel {
 					@Override
 					public void selectionChanged(SelectionChangedEvent<Contact> se) {
 						contactBinding.bind(se.getSelectedItem());
+						setReadOnly(false);
+						changeSalesman.enable();
 					}
 				});
+		
+		contactBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				Contact contact = (Contact) contactBinding.getModel();
+				
+				dataService.updateContact(contact, new AsyncCallback<Void>() {
+					public void onSuccess(Void result) {
+					}
+					
+					public void onFailure(Throwable caught) {
+						throw new RuntimeException(caught);
+					}
+				});
+			}
+		});
+		
+		this.setReadOnly(true);	
+		this.setTopComponent(getToolbar());
+	}
+	
+	private ToolBar getToolbar() {
+		ToolBar toolbar = new ToolBar();
+		
+		changeSalesman = new Button();
+		changeSalesman.setText("Flyt til sælger");
+		changeSalesman.setIcon(IconHelper.createPath("images/user_go.gif"));
+		changeSalesman.disable();
+		changeSalesman.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				final Dialog setSalesmanDialog = new Dialog();
+				setSalesmanDialog.setTitle("Hvem ønsker du skal overtage kunden?");
+				setSalesmanDialog.setButtons(Dialog.OKCANCEL);
+				setSalesmanDialog.setHideOnButtonClick(true);
+				
+				FormPanel selectSalesmanPanel = new FormPanel();
+				selectSalesmanPanel.setAutoWidth(true);
+				selectSalesmanPanel.setHeaderVisible(false);
+				
+				final ListStore<Salesman> salesmanStore = new ListStore<Salesman>();
+				final ComboBox<Salesman> salesmanBox = new ComboBox<Salesman>();
+				salesmanBox.setDisplayField("salesman");
+				salesmanBox.setFieldLabel("Vælg sælger");
+				salesmanBox.setStore(salesmanStore);
+				salesmanBox.setAutoWidth(true);
+				dataService.getSalesmen(new AsyncCallback<ArrayList<Salesman>>() {
+					public void onSuccess(ArrayList<Salesman> result) {
+						salesmanStore.add(result);
+						salesmanBox.setForceSelection(true);
+						salesmanBox.select(Global.getInstance().getCurrentSalesman());
+					}
+					
+					public void onFailure(Throwable caught) {
+						throw new RuntimeException(caught);
+					}
+				});
+				selectSalesmanPanel.add(salesmanBox);
+				setSalesmanDialog.add(selectSalesmanPanel);
+				
+				setSalesmanDialog.getButtonById(Dialog.OK).setText("Skift saelger");
+				setSalesmanDialog.getButtonById(Dialog.CANCEL).setText("Anuller");
+				
+				setSalesmanDialog.getButtonById(Dialog.OK).addSelectionListener(
+						new SelectionListener<ButtonEvent>() {
+							@Override
+							public void componentSelected(ButtonEvent ce) {
+								Salesman salesman = salesmanBox.getValue();
+								((Contact)contactBinding.getModel()).setSalesman(salesman);
+							}
+						});
+				
+				setSalesmanDialog.show();
+			}
+		});
+		toolbar.add(changeSalesman);
+		
+		return toolbar;
 	}
 	
 	public void bindCompany(Company company) {
@@ -99,6 +188,7 @@ public class ContactEditPanel extends FormPanel {
 					ListStore<Contact> contactStore = new ListStore<Contact>();
 					contactStore.add(result);
 					contactsBox.setStore(contactStore);
+					contactsBox.setReadOnly(false);
 				}
 
 				public void onFailure(Throwable caught) {
@@ -108,8 +198,11 @@ public class ContactEditPanel extends FormPanel {
 
 	}
 	
-	
 	public void unbindCompany() {
 		contactsBox.setStore(emptyStore);
+		contactBinding.unbind();
+		this.setReadOnly(true);
+		contactsBox.clear();
+		changeSalesman.disable();
 	}
 }
