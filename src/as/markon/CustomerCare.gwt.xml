@@ -11,7 +11,17 @@
   <!--<inherits name='com.google.gwt.user.theme.chrome.Chrome'/>--> 
   <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
 
+
   <!-- Other module inherits                                      -->
+  <inherits name='com.google.gwt.logging.Logging' />
+    
+  <!-- Configure logging -->
+<!--  <set-property name="gwt.logging.logLevel" value="SEVERE"/> -->
+  <set-property name="gwt.logging.enabled" value="TRUE"/>
+  <set-property name="gwt.logging.popupHandler" value="DISABLED"/>
+  <set-property name="gwt.logging.firebugHandler" value="ENABLED" />
+<!--  <set-property name="gwt.logging.simpleRemoteHandler" value="ENABLED" />-->
+
 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='as.markon.client.CustomerCare'/>

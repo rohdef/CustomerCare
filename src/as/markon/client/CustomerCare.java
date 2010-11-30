@@ -21,7 +21,6 @@ public class CustomerCare implements EntryPoint {
 				RootPanel.get().add(new CustomerView(be.getModel()));
 			}
 		});
-		
 		RootPanel.get().add(l);
 	}
 }

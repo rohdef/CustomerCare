@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.mail.HtmlEmail;
+import org.apache.log4j.Logger;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -26,30 +27,30 @@ import as.markon.viewmodel.Trade;
 public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		DataService {
 	private static final long serialVersionUID = 1L;
+	private Logger logger = Logger.getLogger(DatabaseServiceImpl.class);
 
-	private Connection c;
 	private ArrayList<Company> companies;
 	private ArrayList<Trade> trades;
 	private ArrayList<City> cities;
+	private ArrayList<Salesman> salespeople;
 
+	private Connection c;
 	private String url = "jdbc:postgresql://localhost/", db = "Markon",
 			driver = "org.postgresql.Driver", user = "Markon",
-			password = "123";
+			password = "1234";
 
 	private HashMap<Integer, Trade> tradeMap;
 	private HashMap<Integer, City> cityMap;
-
-	private ArrayList<Salesman> salespeople;
 
 	public DatabaseServiceImpl() {
 		try {
 			Class.forName(driver).newInstance();
 		} catch (InstantiationException e) {
-			e.printStackTrace();
+			logger.fatal("Can not instantiate database driver", e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			logger.fatal("Permission problem for the database driver", e);
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			logger.fatal("Could not find the database driver", e);
 		}
 
 		connect();
@@ -62,7 +63,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 			c = DriverManager.getConnection(url + db, user, password);
 		} catch (SQLException e) {
-			throw new RuntimeException(e.getMessage());
+			logger.fatal("Database connection failed", e);
+			throw new RuntimeException("Kunne ikke oprette forbindelse til databasen.");
 		}
 	}
 
@@ -155,8 +157,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				companies.add(c);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
+			logger.fatal("Fetch customers for "+salesman.get("salesmanid"), e);
+			throw new RuntimeException("Kunne ikke hente kundelisten for "
+					+ salesman.getSalesman());
 		}
 
 		close();
@@ -168,12 +171,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		try {
 			c.close();
 		} catch (SQLException e) {
-			// TODO log
-			throw new RuntimeException(e.getMessage());
+			logger.error("Could not close database connection", e);
 		}
 	}
-
-
 
 	public synchronized ArrayList<Trade> getTrades() {
 		if (tradeMap == null) {
@@ -200,7 +200,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				tradeMap = null;
 				trades = null;
 
-				throw new RuntimeException(e.getMessage());
+				logger.fatal("Could not get trades", e);
+				throw new RuntimeException("Kunne ikke hente listen af brancer");
 			}
 		}
 
@@ -237,7 +238,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				cities = null;
 				cityMap = null;
 
-				throw new RuntimeException(e.getMessage());
+				logger.fatal("Get cities", e);
+				throw new RuntimeException("Kunne ikke hente listen af byer");
 			}
 		}
 
@@ -262,8 +264,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				mail.send();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
+			logger.fatal("Send mails", e);
+			throw new RuntimeException("Kunne ikke sende mail.");
 		}
 	}
 
@@ -292,7 +294,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			} catch (Exception e) {
 				salespeople = null;
 
-				throw new RuntimeException(e.getMessage());
+				logger.fatal("Get salespeople", e);
+				throw new RuntimeException("Kunne ikke hente listen af sælgere.");
 			}
 		}
 
@@ -339,7 +342,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			return companyid;
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			logger.fatal("Trying to insert company", e);
+			throw new RuntimeException("Kunne ikke oprette kunde.");
 		}
 	}
 
@@ -372,8 +376,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.execute();
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			logger.fatal("Update company: "+company.get("companyid"), e);
+			throw new RuntimeException("Kunne ikke opdatere: "+company.getCompanyName());
 		}
 	}
 
@@ -393,8 +397,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.execute();
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			logger.fatal("Delete company "+company.get("companyid"), e);
+			throw new RuntimeException("Kunne ikke slette: "+company.getCompanyName());
 		}
 	}
 	
@@ -442,7 +446,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.execute();
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			logger.fatal("Insert contact", e);
+			throw new RuntimeException("Kunne ikke oprette kontaktpersonen: "+contact.getName());
 		}
 	}
 	
@@ -465,8 +470,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.execute();
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			logger.fatal("Update contact "+contact.get("contactid"), e);
+			throw new RuntimeException("Kunne ikke opdatere kontaktpersonen: "+contact.getName());
 		}
 	}
 	
@@ -486,8 +491,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.execute();
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			logger.fatal("Delete contact "+contact.get("contactid"), e);
+			throw new RuntimeException("Kunne ikke slette kontakten: "+contact.getName());
 		}
 	}
 
@@ -530,7 +535,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 			return contacts;
 		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage());
+			logger.fatal("Get contacts for company "+company.get("companyid")+
+					" and salesman "+salesman.get("salesmanid"), e);
+			throw new RuntimeException("Kunne ikke hente kontaktpersonerne til: " +
+					company.getCompanyName());
 		}
 	}
 }
