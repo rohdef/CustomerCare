@@ -37,7 +37,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private Connection c;
 	private String url = "jdbc:postgresql://localhost/", db = "Markon",
 			driver = "org.postgresql.Driver", user = "Markon",
-			password = "1234";
+			password = "123";
 
 	private HashMap<Integer, Trade> tradeMap;
 	private HashMap<Integer, City> cityMap;

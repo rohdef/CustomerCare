@@ -58,24 +58,30 @@ public class ContactEditPanel extends FormPanel {
 		nameFld.setBorders(false);
 		nameFld.setFieldLabel("Navn");
 		nameFld.setName("contactname");
+		nameFld.setAllowBlank(false);
+		nameFld.setValidationDelay(0);
+		nameFld.setValidator(new VTypeValidator(VType.NAME));
 		this.add(nameFld);
 
 		titleFld = new TextField<String>();
 		titleFld.setBorders(false);
 		titleFld.setFieldLabel("Titel");
 		titleFld.setName("title");
+		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		this.add(titleFld);
 
 		phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
 		phoneFld.setName("phone");
+		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		this.add(phoneFld);
 
 		mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
+		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		this.add(mailFld);
 
 		acceptsMailsBox = new CheckBox();
@@ -195,7 +201,6 @@ public class ContactEditPanel extends FormPanel {
 					throw new RuntimeException(caught);
 				}
 			});
-
 	}
 	
 	public void unbindCompany() {

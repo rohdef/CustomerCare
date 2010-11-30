@@ -116,12 +116,14 @@ public class CompanyEditPanel extends FormPanel {
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
 		phoneFld.setName("phone");
+		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		this.add(phoneFld);
 
 		mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
+		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		this.add(mailFld);
 
 		acceptsMailsBox = new CheckBox();
@@ -149,6 +151,7 @@ public class CompanyEditPanel extends FormPanel {
 		tradeBox.setTypeAhead(true);
 		tradeBox.setStore(tradeStore);
 		tradeBox.setTriggerAction(TriggerAction.ALL);
+		tradeBox.setValidator(new VTypeValidator(VType.ALPHABET));
 		this.add(tradeBox);
 
 		importanceBox = new SimpleComboBox<Importance>();
