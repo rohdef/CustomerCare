@@ -68,105 +68,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
-	public synchronized ArrayList<Company> getCompanies(Salesman salesman) {
-		getTrades();
-		getCities();
-		getSalesmen();
-		int salesmanId = salesman.get("salesmanid");
-
-		try {
-			companies = new ArrayList<Company>();
-
-			connect();
-			Statement companyStatement;
-			companyStatement = c.createStatement();
-
-			String companyQuery = "SELECT DISTINCT\n"
-					+ "	c.companyid,\n"
-					+ "	c.companyname,\n"
-					+ "	c.address,\n"
-					+ "	c.postal,\n"
-					+ " c.city,\n"
-					+ "	c.phone,\n"
-					+ "	c.mail,\n"
-					+ "	c.importance,\n"
-					+ "	c.comments,\n"
-					+ " c.tradeid,\n"
-					+ " c.acceptsmails\n"
-					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
-					+ "		WHERE c.companyid = k.companyid\n"
-					+ "			AND k.salesmanid = s.salesmanid\n"
-					+ "			AND s.salesmanid = " + salesmanId + ";";
-
-			ResultSet companyResults;
-			companyResults = companyStatement.executeQuery(companyQuery);
-
-			while (companyResults.next()) {
-				Company c = new Company();
-
-				c.set("companyid", companyResults.getInt("companyid"));
-
-				String companyName = companyResults.getString("companyname");
-				if (companyName == null)
-					throw new RuntimeException(
-							"Data error occured, a company without name should not be possible.");
-				c.setCompanyName(companyName);
-
-				String companyAddress = companyResults.getString("address");
-				if (companyAddress == null)
-					companyAddress = "";
-				c.setAddress(companyAddress);
-
-				c.setPostal(companyResults.getInt("postal"));
-
-				String companyCity = companyResults.getString("city");
-				if (companyCity == null)
-					companyCity = "";
-				c.setCity(companyCity);
-
-				String companyPhone = companyResults.getString("phone");
-				if (companyPhone == null)
-					companyPhone = "";
-				c.setPhone(companyPhone);
-
-				String companyMail = companyResults.getString("mail");
-				if (companyMail == null)
-					companyMail = "";
-				c.setMail(companyMail);
-
-				String importanceChar = companyResults.getString("importance");
-				if (importanceChar == null)
-					importanceChar = "I";
-				c.setImportance(Importance.valueOf(importanceChar));
-
-				c.setComments(companyResults.getString("comments"));
-
-				Trade noTrade = new Trade();
-				noTrade.setTrade("Ingen branche valgt");
-				int tradeid = companyResults.getInt("tradeid");
-				if (!companyResults.wasNull())
-					c.setTrade(tradeMap.get(new Integer(tradeid)));
-				else
-					c.setTrade(noTrade);
-
-				Boolean acceptsmails = companyResults.getBoolean("acceptsmails");
-				if (acceptsmails == null)
-					acceptsmails = false;
-				c.setAcceptsMails(acceptsmails);
-				
-				companies.add(c);
-			}
-		} catch (SQLException e) {
-			logger.fatal("Fetch customers for "+salesman.get("salesmanid"), e);
-			throw new RuntimeException("Kunne ikke hente kundelisten for "
-					+ salesman.getSalesman());
-		}
-
-		close();
-
-		return companies;
-	}
-
 	public void close() {
 		try {
 			c.close();
@@ -311,6 +212,201 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	//
 	// Companies
 	//
+	public synchronized ArrayList<Company> getCompanies(Salesman salesman) {
+		getTrades();
+		getCities();
+		getSalesmen();
+		int salesmanId = salesman.get("salesmanid");
+
+		try {
+			companies = new ArrayList<Company>();
+
+			connect();
+			Statement companyStatement;
+			companyStatement = c.createStatement();
+
+			String companyQuery = "SELECT DISTINCT\n"
+					+ "	c.companyid,\n"
+					+ "	c.companyname,\n"
+					+ "	c.address,\n"
+					+ "	c.postal,\n"
+					+ " c.city,\n"
+					+ "	c.phone,\n"
+					+ "	c.mail,\n"
+					+ "	c.importance,\n"
+					+ "	c.comments,\n"
+					+ " c.tradeid,\n"
+					+ " c.acceptsmails\n"
+					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
+					+ "		WHERE c.companyid = k.companyid\n"
+					+ "			AND k.salesmanid = s.salesmanid\n"
+					+ "			AND s.salesmanid = " + salesmanId + ";";
+
+			ResultSet companyResults;
+			companyResults = companyStatement.executeQuery(companyQuery);
+
+			while (companyResults.next()) {
+				Company c = new Company();
+
+				c.set("companyid", companyResults.getInt("companyid"));
+
+				String companyName = companyResults.getString("companyname");
+				if (companyName == null)
+					throw new RuntimeException(
+							"Data error occured, a company without name should not be possible.");
+				c.setCompanyName(companyName);
+
+				String companyAddress = companyResults.getString("address");
+				if (companyAddress == null)
+					companyAddress = "";
+				c.setAddress(companyAddress);
+
+				c.setPostal(companyResults.getInt("postal"));
+
+				String companyCity = companyResults.getString("city");
+				if (companyCity == null)
+					companyCity = "";
+				c.setCity(companyCity);
+
+				String companyPhone = companyResults.getString("phone");
+				if (companyPhone == null)
+					companyPhone = "";
+				c.setPhone(companyPhone);
+
+				String companyMail = companyResults.getString("mail");
+				if (companyMail == null)
+					companyMail = "";
+				c.setMail(companyMail);
+
+				String importanceChar = companyResults.getString("importance");
+				if (importanceChar == null)
+					importanceChar = "I";
+				c.setImportance(Importance.valueOf(importanceChar));
+
+				c.setComments(companyResults.getString("comments"));
+
+				Trade noTrade = new Trade();
+				noTrade.setTrade("Ingen branche valgt");
+				int tradeid = companyResults.getInt("tradeid");
+				if (!companyResults.wasNull())
+					c.setTrade(tradeMap.get(new Integer(tradeid)));
+				else
+					c.setTrade(noTrade);
+
+				Boolean acceptsmails = companyResults.getBoolean("acceptsmails");
+				if (acceptsmails == null)
+					acceptsmails = false;
+				c.setAcceptsMails(acceptsmails);
+				
+				companies.add(c);
+			}
+		} catch (SQLException e) {
+			logger.fatal("Fetch customers for "+salesman.get("salesmanid"), e);
+			throw new RuntimeException("Kunne ikke hente kundelisten for "
+					+ salesman.getSalesman());
+		}
+
+		close();
+
+		return companies;
+	}
+	
+	public synchronized ArrayList<Company> getProspectCompanies() {
+		getTrades();
+		getCities();
+		getSalesmen();
+
+		try {
+			companies = new ArrayList<Company>();
+
+			connect();
+			Statement companyStatement;
+			companyStatement = c.createStatement();
+
+			String companyQuery = "SELECT DISTINCT\n"
+					+ "	c.companyid,\n"
+					+ "	c.companyname,\n"
+					+ "	c.address,\n"
+					+ "	c.postal,\n"
+					+ " c.city,\n"
+					+ "	c.phone,\n"
+					+ "	c.mail,\n"
+					+ "	c.importance,\n"
+					+ "	c.comments,\n"
+					+ " c.tradeid,\n"
+					+ " c.acceptsmails\n"
+					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
+					+ "		WHERE c.companyid NOT IN\n"
+					+ "			(SELECT k.companyid FROM contacts k);";
+
+			ResultSet companyResults;
+			companyResults = companyStatement.executeQuery(companyQuery);
+
+			while (companyResults.next()) {
+				Company c = new Company();
+
+				c.set("companyid", companyResults.getInt("companyid"));
+
+				String companyName = companyResults.getString("companyname");
+				if (companyName == null)
+					throw new RuntimeException(
+							"Data error occured, a company without name should not be possible.");
+				c.setCompanyName(companyName);
+
+				String companyAddress = companyResults.getString("address");
+				if (companyAddress == null)
+					companyAddress = "";
+				c.setAddress(companyAddress);
+
+				c.setPostal(companyResults.getInt("postal"));
+
+				String companyCity = companyResults.getString("city");
+				if (companyCity == null)
+					companyCity = "";
+				c.setCity(companyCity);
+
+				String companyPhone = companyResults.getString("phone");
+				if (companyPhone == null)
+					companyPhone = "";
+				c.setPhone(companyPhone);
+
+				String companyMail = companyResults.getString("mail");
+				if (companyMail == null)
+					companyMail = "";
+				c.setMail(companyMail);
+
+				String importanceChar = companyResults.getString("importance");
+				if (importanceChar == null)
+					importanceChar = "I";
+				c.setImportance(Importance.valueOf(importanceChar));
+
+				c.setComments(companyResults.getString("comments"));
+
+				Trade noTrade = new Trade();
+				noTrade.setTrade("Ingen branche valgt");
+				int tradeid = companyResults.getInt("tradeid");
+				if (!companyResults.wasNull())
+					c.setTrade(tradeMap.get(new Integer(tradeid)));
+				else
+					c.setTrade(noTrade);
+
+				Boolean acceptsmails = companyResults.getBoolean("acceptsmails");
+				if (acceptsmails == null)
+					acceptsmails = false;
+				c.setAcceptsMails(acceptsmails);
+				
+				companies.add(c);
+			}
+		} catch (SQLException e) {
+			logger.fatal("Get prospects", e);
+			throw new RuntimeException("Kunne ikke hente listen af potentielle kunder.");
+		}
+
+		close();
+
+		return companies;
+	}
+	
 	public synchronized Integer createCompany(Company company,
 			ArrayList<Contact> contacts, Salesman salesman) {
 		connect();

@@ -34,4 +34,5 @@ public interface DataServiceAsync {
 	void insertContact(Contact contact, int salesmanid, int companyid,
 			AsyncCallback<Void> callback);
 	void updateContact(Contact contact, AsyncCallback<Void> callback);
+	void getProspectCompanies(AsyncCallback<ArrayList<Company>> callback);
 }
