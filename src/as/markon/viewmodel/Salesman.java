@@ -38,6 +38,22 @@ public class Salesman extends BaseModelData {
 		set("salesman", salesman);
 	}
 	
+	public String getTitle() {
+		return get("title");
+	}
+	
+	public void setTitle(String title) {
+		set("title", title);
+	}
+	
+	public String getPhone() {
+		return get("phone");
+	}
+	
+	public void setPhone(String phone) {
+		set("phone", phone);
+	}
+	
 	public String getMail() {
 		return get("mail");
 	}

@@ -162,6 +162,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 								"recommend that you upgrade your program.");
 
 				mail.setHostName("pasmtp.tele.dk");
+				logger.info("Sending the mail\nSubject: "+subject+"\nMessage: "+mail
+						+"\n\nTo: "+recipiant+"\nFrom: "+user+"\n");
+				
 				mail.send();
 			}
 		} catch (Exception e) {
@@ -174,7 +177,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		if (salespeople == null) {
 			salespeople = new ArrayList<Salesman>();
 
-			String tradeSql = "SELECT s.salesmanid, s.salesman, s.mail FROM salespeople s;";
+			String tradeSql = "SELECT s.salesmanid, s.salesman, s.title, s.phone, s.mail\n" +
+					"FROM salespeople s;";
 
 			try {
 				connect();
@@ -185,8 +189,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 				while (salespeopleResult.next()) {
 					Salesman salesman = new Salesman();
-					salesman.setSalesman(salespeopleResult
-							.getString("salesman"));
+					salesman.setSalesman(salespeopleResult.getString("salesman"));
+					salesman.setTitle(salespeopleResult.getString("title"));
+					salesman.setPhone(salespeopleResult.getString("phone"));
 					salesman.setMail(salespeopleResult.getString("mail"));
 
 					salespeople.add(salesman);
@@ -419,7 +424,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.setString(2, company.getCompanyName());
 			insertProc.setString(3, company.getAddress());
-			insertProc.setInt(4, company.getPostal());
+			if (company.get("postal") != null)
+				insertProc.setInt(4, company.getPostal());
+			else
+				insertProc.setNull(4, Types.INTEGER);
 			insertProc.setString(5, company.getPhone());
 			insertProc.setString(6, company.getMail());
 			insertProc.setBoolean(7, company.getAcceptsMails());

@@ -8,6 +8,8 @@ import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
+import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.Dialog;
@@ -35,14 +37,47 @@ public class MailLayout extends LayoutContainer {
 		formPanel.setHeaderVisible(false);
 		formPanel.setLayout(new FormLayout(LabelAlign.TOP));
 
+		final ListStore<Salesman> salespeopleStore = new ListStore<Salesman>();
+		
+		final ComboBox<Salesman> senderBox = new ComboBox<Salesman>();
+		senderBox.setTriggerAction(TriggerAction.ALL);
+		dataService.getSalesmen(new AsyncCallback<ArrayList<Salesman>>() {
+			public void onSuccess(ArrayList<Salesman> result) {
+				salespeopleStore.add(result);
+				
+				ArrayList<Salesman> selection = new ArrayList<Salesman>();
+				selection.add(salespeopleStore.findModel(
+						Global.getInstance().getCurrentSalesman()));
+				senderBox.setSelection(selection);
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
+
+		senderBox.setFieldLabel("Afsender");
+		senderBox.setDisplayField("salesman");
+		senderBox.setStore(salespeopleStore);
+		
 		final TextField<String> subjectField = new TextField<String>();
 		subjectField.setFieldLabel("Emne");
 
 		final HtmlEditor contentEditor = new HtmlEditor();
 		contentEditor.setFieldLabel("Indhold");
 		contentEditor.setHeight(380);
+		
+		String initialValue = createInitialValue(Global.getInstance().getCurrentSalesman());
+		
+		contentEditor.setValue(initialValue);
+		senderBox.addSelectionChangedListener(new SelectionChangedListener<Salesman>() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent<Salesman> se) {
+				contentEditor.setValue(createInitialValue(se.getSelectedItem()));
+			}
+		});
 
 		FormData formData = new FormData("100%");
+		formPanel.add(senderBox, formData);
 		formPanel.add(subjectField, formData);
 		formPanel.add(contentEditor, formData);
 
@@ -57,7 +92,8 @@ public class MailLayout extends LayoutContainer {
 						for (MailContact mc : recipients)
 							recipientMails.add(mc.getMail());
 
-						sendMail(0, subject, message, recipientMails);
+						// FIXME should be reenabled later
+						sendMail(senderBox.getSelection().get(0), subject, message, recipientMails);
 					}
 				}));
 
@@ -106,66 +142,83 @@ public class MailLayout extends LayoutContainer {
 		this.add(formPanel);
 	}
 
-	private void sendMail(final int callCount, final String subject,
-			final String message, final List<String> recipientMails) {
-		if (callCount < 3) {
-			Dialog askUserAndPassword = new Dialog();
-			askUserAndPassword.setButtons(Dialog.OKCANCEL);
-			askUserAndPassword.setHideOnButtonClick(true);
-			askUserAndPassword.setModal(true);
-			askUserAndPassword.setHeading("Hvem vil du sende som?");
+	private String createInitialValue(Salesman salesman) {
+		String initialValue = "<html><body>";
+		initialValue += getStyle();
+		initialValue += "<br /><br />";
+		initialValue += getSignature(salesman);
+		initialValue += "</body></html>";
+		return initialValue;
+	}
+
+	private void sendMail(Salesman salesman, String subject,
+			String message, List<String> recipientMails) {
 			
-			FormPanel loginForm = new FormPanel();
-			loginForm.setAutoWidth(true);
-			loginForm.setLayout(new FitLayout());
-			loginForm.setHeaderVisible(false);
-			
-			final ListStore<Salesman> salesmanStore = new ListStore<Salesman>();
-			final ComboBox<Salesman> salesmanBox = new ComboBox<Salesman>();
-			
-			Global.getInstance().getDataService().getSalesmen(new AsyncCallback<ArrayList<Salesman>>() {
-				public void onSuccess(ArrayList<Salesman> result) {
-					salesmanStore.add(result);
-					salesmanBox.select(Global.getInstance().getCurrentSalesman());
+		String sender = salesman.getSalesman() + " <" + salesman.getMail() + ">";
+		
+		dataService.sendMail(sender, subject, message, recipientMails, 
+			new AsyncCallback<Void>() {
+				public void onSuccess(Void result) {
+					fireEvent(Events.Close);
 				}
-				
+						
 				public void onFailure(Throwable caught) {
-					caught.printStackTrace();
 				}
 			});
+	}
+
+	private String getStyle() {
+		String css = "<style type=\"text/css\">";
+		
+		css += "#signature { background: silver; }";
+		css += "#signature address { margin-bottom: 0.8em; font-style: normal; }";
+		
+		css += "</style>";
+		return css;
+	}
+	
+	private String getSignature(Salesman salesman) {
+		String signature = "<!-- SIGNATURE_START -->"
+			+ "<div id=\"signature\"><address>"
+			+ "Med venlig hilsen<br />"
+			+ "{navn}<br />"
+			+ "{titel}</address>"
 			
-			salesmanBox.setStore(salesmanStore);
-			salesmanBox.setDisplayField("salesman");
-			salesmanBox.setFieldLabel("Hvem vil du sende som?");
-			salesmanBox.setTriggerAction(TriggerAction.ALL);
-			salesmanBox.setAutoWidth(true);
-			loginForm.add(salesmanBox);
+			+ "<address>"
+			+ "<strong>MarkOn A/S</strong><br />"
+			+ "Lystrupvej 62<br />"
+			+ "DK-8240 Risskov<br />"
+			+ "Denmark<address>"
 			
-			askUserAndPassword.getButtonById(Dialog.OK).setText("Send");
-			askUserAndPassword.getButtonById(Dialog.OK).addSelectionListener(
-					new SelectionListener<ButtonEvent>() {
-						@Override
-						public void componentSelected(ButtonEvent ce) {
-							String sender = salesmanBox.getValue().getSalesman() +
-								"<" + salesmanBox.getValue().getMail() + ">";
-							dataService.sendMail(sender,
-									subject, message, recipientMails,
-									new AsyncCallback<Void>() {
-								
-								public void onSuccess(Void result) {
-									fireEvent(Events.Close);
-								}
-								
-								public void onFailure(Throwable caught) {
-									sendMail((callCount+1), subject, message, recipientMails);
-									caught.printStackTrace();
-								}
-							});
-						}
-			});
+			+ "<address>Direct: +45 8619 8686<br />"
+			+ "Mobile: {mobil}"
+			+ "</address>"
 			
-			askUserAndPassword.add(loginForm);
-			askUserAndPassword.show();
-		}
+			+ "<address>"
+			+ "Company tel.: +45 8619 8686<br />"
+			+ "Fax: +45 8619 1729"
+			+ "</address>"
+			
+			+ "<address>"
+			+ "Web: <a href=\"http://markon.as\">http://markon.as</a><br />"
+			+ "E-mail: <a href=\"mailto:{mail}\">{mail}</a><br />"
+			+ "Vat No.: DK 7330 2315<br />"
+			+ "PSI-member number: 9867<br />"
+			+ "</address>"
+			
+			+ "" // TODO Ignore vidste du for now
+			
+			+ "</div>"
+			+ "<!-- SIGNATURE_END -->";
+		
+		signature = signature.replaceAll("\\{navn\\}", salesman.getSalesman());
+		signature = signature.replaceAll("\\{mail\\}", salesman.getMail());
+		signature = signature.replaceAll("\\{titel\\}", salesman.getTitle());
+
+		if (salesman.getPhone() != null)
+			signature = signature.replaceAll("\\{mobil\\}", salesman.getPhone());
+//		signature = signature.replaceAll("\\{\\}", "");
+
+		return signature;
 	}
 }
