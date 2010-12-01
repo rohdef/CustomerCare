@@ -142,11 +142,13 @@ public class CreateCompany extends LayoutContainer {
 		TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setFieldLabel("Telefon:");
 		phoneFld.setName("phone");
+		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		formPanel.add(phoneFld);
 
 		TextField<String> mailFld = new TextField<String>();
 		mailFld.setFieldLabel("Mail:");
 		mailFld.setName("mail");
+		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		formPanel.add(mailFld);
 		
 		CheckBox acceptsMailsBox = new CheckBox();
@@ -174,6 +176,7 @@ public class CreateCompany extends LayoutContainer {
 		tradeBox.setTypeAhead(true);
 		tradeBox.setStore(tradeStore);
 		tradeBox.setTriggerAction(TriggerAction.ALL);
+		tradeBox.setValidator(new VTypeValidator(VType.ALPHABET));
 		formPanel.add(tradeBox);
 
 		final SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
@@ -244,24 +247,28 @@ public class CreateCompany extends LayoutContainer {
 		nameFld.setBorders(false);
 		nameFld.setFieldLabel("Navn");
 		nameFld.setName("contactname");
+		nameFld.setAllowBlank(false);
 		contactsPanel.add(nameFld);
 
 		TextField<String> titleFld = new TextField<String>();
 		titleFld.setBorders(false);
 		titleFld.setFieldLabel("Titel");
 		titleFld.setName("title");
+		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		contactsPanel.add(titleFld);
 
 		TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
 		phoneFld.setName("phone");
+		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		contactsPanel.add(phoneFld);
 
 		TextField<String> mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
+		mailFld.setValidator(new VTypeValidator(VType.PHONE));
 		contactsPanel.add(mailFld);
 		
 		CheckBox acceptsMailsBox = new CheckBox();
