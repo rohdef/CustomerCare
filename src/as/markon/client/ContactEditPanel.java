@@ -39,6 +39,7 @@ public class ContactEditPanel extends FormPanel {
 	private FormBinding contactBinding;
 	
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private LoadingDialog loader = new LoadingDialog();
 	private Button changeSalesman;
 
 	public ContactEditPanel() {
@@ -187,7 +188,8 @@ public class ContactEditPanel extends FormPanel {
 	
 	public void bindCompany(Company company) {
 		contactsBox.setStore(emptyStore);
-
+		loader.show();
+		
 		dataService.getContactsFor(Global.getInstance().getCurrentSalesman(), company,
 			new AsyncCallback<ArrayList<Contact>>() {
 				public void onSuccess(ArrayList<Contact> result) {
@@ -195,6 +197,8 @@ public class ContactEditPanel extends FormPanel {
 					contactStore.add(result);
 					contactsBox.setStore(contactStore);
 					contactsBox.setReadOnly(false);
+					
+					loader.hide();
 				}
 
 				public void onFailure(Throwable caught) {

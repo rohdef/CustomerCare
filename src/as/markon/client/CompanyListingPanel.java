@@ -39,16 +39,22 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CompanyListingPanel extends ContentPanel {
+	private LoadingDialog loader = new LoadingDialog();
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
 
 	private String checkedStyle = "x-grid3-group-check";
 	private String uncheckedStyle = "x-grid3-group-uncheck";
+	
+	private boolean loadingCustomers = true,
+		loadingProspects = true;
 	
 	private GroupingStore<Company> companyStore;
 
 	private Grid<Company> companyGrid;
 
 	public CompanyListingPanel() {
+		checkLoader();
+		
 		this.setLayout(new AccordionLayout());
 		this.setFrame(false);
 		this.setBorders(false);
@@ -204,9 +210,16 @@ public class CompanyListingPanel extends ContentPanel {
 		companyView.setGroupRenderer(new CustomGridGroupRenderer(cm));
 		
 		final GroupingStore<Company> companyStore = new GroupingStore<Company>();
+		
+		loadingProspects = true;
+		checkLoader();
+		
 		dataService.getProspectCompanies(new AsyncCallback<ArrayList<Company>>() {
 			public void onSuccess(ArrayList<Company> result) {
 				companyStore.add(result);
+				
+				loadingProspects = false;
+				checkLoader();
 			}
 			
 			public void onFailure(Throwable caught) {
@@ -234,6 +247,9 @@ public class CompanyListingPanel extends ContentPanel {
 	public void salesmanChanged() {
 		Salesman salesman = Global.getInstance().getCurrentSalesman();
 		
+		loadingCustomers = true;
+		checkLoader();
+		
 		dataService.getCompanies(salesman,
 				new AsyncCallback<ArrayList<Company>>() {
 					public void onSuccess(ArrayList<Company> result) {
@@ -246,6 +262,9 @@ public class CompanyListingPanel extends ContentPanel {
 						if (companyGrid != null)
 							companyGrid.reconfigure(companyStore,
 									companyGrid.getColumnModel());
+						
+						loadingCustomers = false;
+						checkLoader();
 					}
 
 					public void onFailure(Throwable caught) {
@@ -262,6 +281,12 @@ public class CompanyListingPanel extends ContentPanel {
 		companyGrid.getSelectionModel().deselect(company);
 	}
 	
+	private void checkLoader() {
+		if (loadingCustomers || loadingProspects)
+			loader.show();
+		else
+			loader.hide();
+	}
 
 	private class DeleteDialog extends Dialog {
 		public DeleteDialog(final CheckBoxSelectionModel<Company> sm) {
@@ -438,4 +463,5 @@ public class CompanyListingPanel extends ContentPanel {
 					+ ")";
 		}
 	}
+
 }

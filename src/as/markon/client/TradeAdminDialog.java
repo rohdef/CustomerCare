@@ -23,7 +23,9 @@ import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class TradeAdminDialog extends Dialog {
-
+	private LoadingDialog loader = new LoadingDialog();
+	private boolean loadingTrades = true;
+	
 	public TradeAdminDialog() {
 		setModal(true);
 		setHeading("Administrer brancher");
@@ -58,6 +60,7 @@ public class TradeAdminDialog extends Dialog {
 		tradeGrid.setColumnReordering(true);
 		tradeGrid.setStripeRows(true);
 		tradeGrid.setHeight(350);
+		tradeGrid.getView().setEmptyText("Der er ingen bracher i listen.");
 		
 		this.add(tradeGrid);
 		
@@ -110,6 +113,9 @@ public class TradeAdminDialog extends Dialog {
 				public void onSuccess(ArrayList<Trade> result) {
 					for (Trade t : result)
 						tradeStore.add(t);
+					
+					loadingTrades = false;
+					checkLoader();
 				}
 			
 				public void onFailure(Throwable caught) {
@@ -117,6 +123,19 @@ public class TradeAdminDialog extends Dialog {
 		});
 		
 		this.add(addTradePanel);
+	}
+	
+	@Override
+	public void show() {
+		super.show();
+		checkLoader();
+	}
+	
+	public void checkLoader() {
+		if (loadingTrades)
+			loader.show();
+		else
+			loader.hide();
 	}
 	
 	private class DeleteCellRenderer implements GridCellRenderer<Trade> {

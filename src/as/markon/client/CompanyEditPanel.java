@@ -29,6 +29,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public class CompanyEditPanel extends FormPanel {
 	private DataServiceAsync dataService = Global.getInstance()
 			.getDataService();
+	
 	private ListStore<City> cityStore;
 	private FormBinding binding;
 	private SimpleComboBox<Importance> importanceBox;

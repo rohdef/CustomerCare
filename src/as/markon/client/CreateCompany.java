@@ -23,6 +23,7 @@ import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
+import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
@@ -45,6 +46,9 @@ public class CreateCompany extends LayoutContainer {
 	public static EventType CompanyCreated = new EventType();
 	
 	private DataServiceAsync dataService;
+	private LoadingDialog loader = new LoadingDialog();
+	private boolean loadingCities = true, loadingTrades = true;
+	
 	private Company newCompany;
 	private ListStore<Contact> contactStore;
 	private Grid<Contact> contactGrid;
@@ -57,7 +61,6 @@ public class CreateCompany extends LayoutContainer {
 		newCompany.setAcceptsMails(false);
 		
 		contactStore = new ListStore<Contact>();
-		contactStore.setMonitorChanges(true);
 		
 		this.setLayout(new HBoxLayout());
 		
@@ -68,9 +71,22 @@ public class CreateCompany extends LayoutContainer {
 		contacts.setHeight(470);
 		contacts.setLayout(new VBoxLayout());
 		contacts.add(createNewContactsPanel(), new VBoxLayoutData());
-//		contacts.add(getContactList(), new VBoxLayoutData());
+		contacts.add(getContactList(), new VBoxLayoutData());
 		
 		this.add(contacts);
+	}
+	
+	@Override
+	public void show() {
+		super.show();
+		checkLoader();
+	}
+	
+	private void checkLoader() {
+		if (loadingCities || loadingTrades)
+			loader.show();
+		else
+			loader.hide();
 	}
 
 	private FormPanel createNewCompanyPanel() {
@@ -96,6 +112,9 @@ public class CreateCompany extends LayoutContainer {
 			public void onSuccess(ArrayList<City> result) {
 				cityStore.add(result);
 				cityStore.sort("postal", SortDir.ASC);
+				
+				loadingCities = false;
+				checkLoader();
 			}
 
 			public void onFailure(Throwable caught) {
@@ -162,13 +181,15 @@ public class CreateCompany extends LayoutContainer {
 			public void onSuccess(ArrayList<Trade> result) {
 				tradeStore.removeAll();
 				tradeStore.add(result);
+				
+				loadingTrades = false;
+				checkLoader();
 			}
 
 			public void onFailure(Throwable caught) {
-				throw new RuntimeException(caught);
 			}
 		});
-
+		
 		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
 		tradeBox.setFieldLabel("Branche:");
 		tradeBox.setDisplayField("trade");
@@ -203,37 +224,10 @@ public class CreateCompany extends LayoutContainer {
 		binding.autoBind();
 		binding.bind(newCompany);
 
-		formPanel.addButton(new Button("Opret firma",
-				new SelectionListener<ButtonEvent>() {
-					@Override
-					public void componentSelected(ButtonEvent ce) {
-						
-						dataService.createCompany(newCompany,
-								new ArrayList<Contact>(contactStore.getModels()),
-								Global.getInstance().getCurrentSalesman(),
-								new AsyncCallback<Integer>() {
-							public void onSuccess(Integer result) {
-								newCompany.set("companyid", result);
-								
-								changeEventSupport.notify(
-										new ChangeEvent(ChangeEventSource.Add, newCompany));
-								fireEvent(Events.Close);
-							}
-							
-							public void onFailure(Throwable caught) {
-								throw new RuntimeException(caught);
-							}
-						});
-					}
-				}));
+		formPanel.addButton(getCreateCompanyButton());
 		
-		formPanel.addButton(new Button("Anuller", new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				fireEvent(Events.Close);
-			}
-		}));
-
+		formPanel.addButton(getCancelButton());
+		
 		return formPanel;
 	}
 	
@@ -243,72 +237,56 @@ public class CreateCompany extends LayoutContainer {
 		contactsPanel.setWidth("50%");
 		contactsPanel.setBorders(false);
 		
-		TextField<String> nameFld = new TextField<String>();
+		final TextField<String> nameFld = new TextField<String>();
 		nameFld.setBorders(false);
 		nameFld.setFieldLabel("Navn");
-		nameFld.setName("contactname");
 		nameFld.setAllowBlank(false);
 		contactsPanel.add(nameFld);
 
-		TextField<String> titleFld = new TextField<String>();
+		final TextField<String> titleFld = new TextField<String>();
 		titleFld.setBorders(false);
 		titleFld.setFieldLabel("Titel");
-		titleFld.setName("title");
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		contactsPanel.add(titleFld);
 
-		TextField<String> phoneFld = new TextField<String>();
+		final TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
-		phoneFld.setName("phone");
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		contactsPanel.add(phoneFld);
 
-		TextField<String> mailFld = new TextField<String>();
+		final TextField<String> mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
-		mailFld.setName("mail");
 		mailFld.setValidator(new VTypeValidator(VType.PHONE));
 		contactsPanel.add(mailFld);
 		
-		CheckBox acceptsMailsBox = new CheckBox();
+		final CheckBox acceptsMailsBox = new CheckBox();
 		acceptsMailsBox.setFieldLabel("Ønsker mails");
-		acceptsMailsBox.setName("acceptsmails");
 		contactsPanel.add(acceptsMailsBox);
 
-		TextArea commentFld = new TextArea();
+		final TextArea commentFld = new TextArea();
 		commentFld.setBorders(false);
 		commentFld.setFieldLabel("Kommentarer");
-		commentFld.setName("comments");
 		contactsPanel.add(commentFld);
 		
-		final FormBinding binding = new FormBinding(contactsPanel);
-		binding.autoBind();
-		Contact emptyContact = new Contact();
-		emptyContact.setName("");
-		emptyContact.setTitle("");
-		emptyContact.setPhone("");
-		emptyContact.setMail("");
-		emptyContact.setAcceptsMails(false);
-		emptyContact.setComments("");
-		binding.bind(emptyContact);
-		
-		contactsPanel.addButton(new Button("Tilfoej kontakt", new SelectionListener<ButtonEvent>() {
+		Button addContactBtn = new Button("Tilfoej kontakt", new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
-				Contact newContact = (Contact) binding.getModel();
-				contactStore.add(newContact);
+				Contact newContact = new Contact();
+				newContact.setName(nameFld.getValue());
+				newContact.setTitle(titleFld.getValue());
+				newContact.setPhone(phoneFld.getValue());
+				newContact.setMail(mailFld.getValue());
+				newContact.setAcceptsMails(acceptsMailsBox.getValue());
+				newContact.setComments(commentFld.getValue());
 
-				Contact emptyContact = new Contact();
-				emptyContact.setName("");
-				emptyContact.setTitle("");
-				emptyContact.setPhone("");
-				emptyContact.setMail("");
-				emptyContact.setAcceptsMails(false);
-				emptyContact.setComments("");
-				binding.bind(emptyContact);
+				contactStore.add(newContact);
+				contactsPanel.clear();
 			}
-		}));
+		});
+		addContactBtn.setType("submit");
+		contactsPanel.addButton(addContactBtn);
 		
 		return contactsPanel;
 	}
@@ -317,7 +295,7 @@ public class CreateCompany extends LayoutContainer {
 		ContentPanel contactsPanel = new ContentPanel();
 		contactsPanel.setWidth("50%");
 		contactsPanel.setHeading("Kontakter");
-		contactsPanel.setHeight(100);
+		contactsPanel.setHeight(130);
 		
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		configs.add(new ColumnConfig("contactname", "Navn", 125));
@@ -326,8 +304,11 @@ public class CreateCompany extends LayoutContainer {
 		ColumnModel cm = new ColumnModel(configs);
 		
 		contactGrid = new Grid<Contact>(contactStore, cm);
-		contactGrid.setStripeRows(true);
 		contactGrid.setBorders(false);
+		contactGrid.setStripeRows(true);
+		contactGrid.setHeight(120);
+		
+		contactGrid.getView().setEmptyText("Ingen kontakter oprettet endnu.");
 		
 		contactsPanel.add(contactGrid);
 		
@@ -345,5 +326,68 @@ public class CreateCompany extends LayoutContainer {
 	
 	public void removeChangeListener(ChangeListener... listener) {
 		changeEventSupport.removeChangeListener(listener);
+	}
+
+	public Button getCreateCompanyButton() {
+		return new Button("Opret firma",
+				new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				if (contactStore.getCount() > 0)
+					createCompany();
+				else {
+					Dialog confirmDialog = new Dialog();
+					confirmDialog.setButtons(Dialog.YESNO);
+					confirmDialog.setHideOnButtonClick(true);
+					
+					confirmDialog.setHeading("Ønsker du at oprette som kundekandidat?");
+					confirmDialog.addText("Vil du oprette en virksomhed uden kontakter.");
+					confirmDialog.addText("En virksomhed uden kontakter vil dukke op som" +
+							"en kunde kanidat.");
+					
+					confirmDialog.getButtonById(Dialog.NO).setText("Fortryd");
+					confirmDialog.getButtonById(Dialog.YES).setText("Opret kundekandidat");
+					confirmDialog.getButtonById(Dialog.YES).addSelectionListener(
+							new SelectionListener<ButtonEvent>() {
+								@Override
+								public void componentSelected(ButtonEvent ce) {
+									createCompany();
+								}
+							});
+				}
+			}
+		});
+	}
+	
+	public Button getCancelButton() {
+		return new Button("Anuller", new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				fireEvent(Events.Close);
+			}
+		});
+	}
+	
+	private void createCompany() {
+		loader.show();
+		
+		dataService.createCompany(newCompany,
+				new ArrayList<Contact>(contactStore.getModels()),
+				Global.getInstance().getCurrentSalesman(),
+				new AsyncCallback<Integer>() {
+			public void onSuccess(Integer result) {
+				newCompany.set("companyid", result);
+				
+				changeEventSupport.notify(
+						new ChangeEvent(ChangeEventSource.Add, newCompany));
+				
+				loader.hide();
+				fireEvent(Events.Close);
+			}
+			
+			public void onFailure(Throwable caught) {
+				throw new RuntimeException(caught);
+			}
+		});
 	}
 }
