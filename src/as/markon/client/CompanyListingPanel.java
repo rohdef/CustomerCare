@@ -111,18 +111,6 @@ public class CompanyListingPanel extends ContentPanel {
 				deleteDialog.show();
 			}
 		});
-		companyToolBar.add(deleteCompaniesBtn);
-		
-		final Button tradeAdminBtn = new Button();
-		tradeAdminBtn.setText("Administrer brancher");
-		tradeAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				TradeAdminDialog dialog = new TradeAdminDialog();
-				dialog.show();
-			}
-		});
-		companyToolBar.add(tradeAdminBtn);
 		
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
@@ -133,6 +121,32 @@ public class CompanyListingPanel extends ContentPanel {
 							deleteCompaniesBtn.enable();
 					}
 			});
+		
+		companyToolBar.add(deleteCompaniesBtn);
+		
+		final Button tradeAdminBtn = new Button();
+		tradeAdminBtn.setText("Administrer brancher");
+		tradeAdminBtn.setIcon(IconHelper.createPath("images/trades.gif"));
+		tradeAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				TradeAdminDialog dialog = new TradeAdminDialog();
+				dialog.show();
+			}
+		});
+		companyToolBar.add(tradeAdminBtn);
+		
+		final Button salesmanAdminBtn = new Button();
+		salesmanAdminBtn.setText("Administrer sælgere");
+		salesmanAdminBtn.setIcon(IconHelper.createPath("images/salesmen.gif"));
+		salesmanAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				SalesmanAdminWindow window = new SalesmanAdminWindow();
+				window.show();
+			}
+		});
+		companyToolBar.add(salesmanAdminBtn);
 		
 		return companyToolBar;
 	}
@@ -239,7 +253,6 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		panel.setHeight(550);
 		panel.add(companyGrid);
-		panel.setTopComponent(createToolbar(companyGrid, companyStore, sm));
 		
 		return panel;
 	}
