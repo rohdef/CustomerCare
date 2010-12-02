@@ -39,6 +39,10 @@ public class Trade extends BaseModelData implements IsSerializable {
 		set("trade", trade);
 	}
 	
+	public int getId() {
+		return get("tradeid");
+	}
+	
 	@Override
 	public String toString() {
 		return get("trade");

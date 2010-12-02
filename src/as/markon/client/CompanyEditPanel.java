@@ -182,7 +182,6 @@ public class CompanyEditPanel extends FormPanel {
 		binding.addListener(Events.UnBind, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
 				Company company = (Company) binding.getModel();
-
 				dataService.updateCompany(company, new AsyncCallback<Void>() {
 					public void onSuccess(Void result) {
 					}

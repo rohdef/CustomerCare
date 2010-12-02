@@ -77,38 +77,68 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	}
 
 	public synchronized ArrayList<Trade> getTrades() {
-		if (tradeMap == null) {
-			tradeMap = new HashMap<Integer, Trade>();
-			trades = new ArrayList<Trade>();
+		tradeMap = new HashMap<Integer, Trade>();
+		trades = new ArrayList<Trade>();
 
-			String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
+		String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
 
-			try {
-				connect();
+		try {
+			connect();
 
-				Statement tradeStatement = c.createStatement();
-				ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
+			Statement tradeStatement = c.createStatement();
+			ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
 
-				while (tradeResult.next()) {
-					Trade trade = new Trade();
-					trade.setTrade(tradeResult.getString("tradename"));
-					trade.set("tradeid", tradeResult.getInt("tradeid"));
+			while (tradeResult.next()) {
+				Trade trade = new Trade();
+				trade.setTrade(tradeResult.getString("tradename"));
+				trade.set("tradeid", tradeResult.getInt("tradeid"));
 
-					tradeMap.put(tradeResult.getInt("tradeid"), trade);
-					trades.add(trade);
-				}
-			} catch (Exception e) {
-				tradeMap = null;
-				trades = null;
-
-				logger.fatal("Could not get trades", e);
-				throw new RuntimeException("Kunne ikke hente listen af brancer");
+				tradeMap.put(tradeResult.getInt("tradeid"), trade);
+				trades.add(trade);
 			}
-		}
+		} catch (Exception e) {
+			tradeMap = null;
+			trades = null;
 
+			logger.fatal("Could not get trades", e);
+			throw new RuntimeException("Kunne ikke hente listen af brancer");
+		}
 		return trades;
 	}
 
+	public void addTrade(Trade trade) {
+		connect();
+		
+		try {
+			String storedCall = "{call insertTrade (?, ?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			
+			insertProc.setInt(1, trade.getId());
+			insertProc.setString(2, trade.getTrade());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			logger.fatal("Insert trade", e);
+			throw new RuntimeException("Kunne ikke oprette branchen: "+trade.getTrade());
+		}
+	}
+	
+	public void deleteTrade(Trade trade) {
+		connect();
+		
+		try {
+			String storedCall = "{call deleteTrade (?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			
+			insertProc.setInt(1, trade.getId());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			logger.fatal("Delete trade", e);
+			throw new RuntimeException("Kunne ikke slettet branchen: "+trade.getTrade());
+		}
+	}
+	
 	public Importance getImportance(String name) {
 		return Importance.valueOf(name);
 	}

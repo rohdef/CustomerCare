@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import as.markon.viewmodel.Company;
-import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
@@ -108,6 +107,17 @@ public class CompanyListingPanel extends ContentPanel {
 		});
 		companyToolBar.add(deleteCompaniesBtn);
 		
+		final Button tradeAdminBtn = new Button();
+		tradeAdminBtn.setText("Administrer brancher");
+		tradeAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				TradeAdminDialog dialog = new TradeAdminDialog();
+				dialog.show();
+			}
+		});
+		companyToolBar.add(tradeAdminBtn);
+		
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
@@ -145,9 +155,11 @@ public class CompanyListingPanel extends ContentPanel {
 		companyGrid.setBorders(false);
 		companyGrid.setColumnLines(true);
 		companyGrid.setColumnReordering(true);
+		companyGrid.setLoadMask(true);
 		companyGrid.setStripeRows(true);
 		companyGrid.addPlugin(sm);
 		companyGrid.setSelectionModel(sm);
+		companyGrid.getView().setEmptyText("Der er ingen virksomheder i listen.");
 		
 		panel.setHeight(550);
 		panel.add(companyGrid);

@@ -170,7 +170,7 @@ public class MailLayout extends LayoutContainer {
 	private String getStyle() {
 		String css = "<style type=\"text/css\">";
 		
-		css += "#signature { background: silver; }";
+		css += "#signature { background: #DEDEDE; }";
 		css += "#signature address { margin-bottom: 0.8em; font-style: normal; }";
 		
 		css += "</style>";

@@ -17,6 +17,8 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface DataService extends RemoteService {
 	public void close();
 	public ArrayList<Trade> getTrades();
+	public void addTrade(Trade trade);
+	public void deleteTrade(Trade trade);
 	public ArrayList<City> getCities();
 	public ArrayList<Salesman> getSalesmen();
 	
@@ -41,5 +43,4 @@ public interface DataService extends RemoteService {
 	// Gah, there should be a better way to register types for serialization
 	public Importance getImportance(String name);
 	public void sendImportance(Importance i);
-	public void sendTrade(Trade t);
 }
