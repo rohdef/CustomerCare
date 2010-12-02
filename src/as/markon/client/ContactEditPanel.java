@@ -183,6 +183,18 @@ public class ContactEditPanel extends FormPanel {
 		});
 		toolbar.add(changeSalesman);
 		
+		Button addContactBtn = new Button();
+		addContactBtn.setText("Tilføj kontakt");
+		addContactBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
+		addContactBtn.disable();
+		toolbar.add(addContactBtn);
+		
+		Button deleteContactBtn = new Button();
+		deleteContactBtn.setText("Slet markerede kontakt");
+		deleteContactBtn.setIcon(IconHelper.createPath("images/user_delete.gif"));
+		deleteContactBtn.disable();
+		toolbar.add(deleteContactBtn);
+		
 		return toolbar;
 	}
 	
