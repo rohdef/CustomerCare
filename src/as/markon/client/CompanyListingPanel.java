@@ -139,6 +139,7 @@ public class CompanyListingPanel extends ContentPanel {
 		final Button salesmanAdminBtn = new Button();
 		salesmanAdminBtn.setText("Administrer sælgere");
 		salesmanAdminBtn.setIcon(IconHelper.createPath("images/salesmen.gif"));
+		salesmanAdminBtn.disable();
 		salesmanAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {

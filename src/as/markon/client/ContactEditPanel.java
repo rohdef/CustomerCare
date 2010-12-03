@@ -42,6 +42,8 @@ public class ContactEditPanel extends FormPanel {
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
 	private LoadingDialog loader = new LoadingDialog();
 	private Button changeSalesman;
+	private Company company;
+	private Button addContactBtn;
 
 	public ContactEditPanel() {
 		this.setHeading("Kontakter");
@@ -184,10 +186,27 @@ public class ContactEditPanel extends FormPanel {
 		});
 		toolbar.add(changeSalesman);
 		
-		Button addContactBtn = new Button();
+		addContactBtn = new Button();
 		addContactBtn.setText("Tilføj kontakt");
 		addContactBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
 		addContactBtn.disable();
+		addContactBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				CreateContactWindow createContact =
+					new CreateContactWindow((Integer) Global.getInstance()
+							.getCurrentSalesman().get("salesmanid"),
+							(Integer) company.get("companyid"));
+				
+				createContact.addListener(Events.Hide, new Listener<BaseEvent>() {
+					public void handleEvent(BaseEvent be) {
+						bindCompany(company);
+					}
+				});
+				
+				createContact.show();
+			}
+		});
 		toolbar.add(addContactBtn);
 		
 		final Button deleteContactBtn = new Button();
@@ -248,8 +267,10 @@ public class ContactEditPanel extends FormPanel {
 	}
 	
 	public void bindCompany(Company company) {
+		this.company = company;
 		contactsBox.setStore(emptyStore);
 		loader.show();
+		addContactBtn.enable();
 		
 		dataService.getContactsFor(Global.getInstance().getCurrentSalesman(), company,
 			new AsyncCallback<ArrayList<Contact>>() {
@@ -269,6 +290,7 @@ public class ContactEditPanel extends FormPanel {
 	}
 	
 	public void unbindCompany() {
+		addContactBtn.disable();
 		contactsBox.setStore(emptyStore);
 		contactBinding.unbind();
 		this.setReadOnly(true);
