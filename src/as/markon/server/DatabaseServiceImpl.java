@@ -76,68 +76,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
-	public synchronized ArrayList<Trade> getTrades() {
-		tradeMap = new HashMap<Integer, Trade>();
-		trades = new ArrayList<Trade>();
-
-		String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
-
-		try {
-			connect();
-
-			Statement tradeStatement = c.createStatement();
-			ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
-
-			while (tradeResult.next()) {
-				Trade trade = new Trade();
-				trade.setTrade(tradeResult.getString("tradename"));
-				trade.set("tradeid", tradeResult.getInt("tradeid"));
-
-				tradeMap.put(tradeResult.getInt("tradeid"), trade);
-				trades.add(trade);
-			}
-		} catch (Exception e) {
-			tradeMap = null;
-			trades = null;
-
-			logger.fatal("Could not get trades", e);
-			throw new RuntimeException("Kunne ikke hente listen af brancer");
-		}
-		return trades;
-	}
-
-	public void addTrade(Trade trade) {
-		connect();
-		
-		try {
-			String storedCall = "{call insertTrade (?, ?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			
-			insertProc.setInt(1, trade.getId());
-			insertProc.setString(2, trade.getTrade());
-			
-			insertProc.execute();
-		} catch (Exception e) {
-			logger.fatal("Insert trade", e);
-			throw new RuntimeException("Kunne ikke oprette branchen: "+trade.getTrade());
-		}
-	}
-	
-	public void deleteTrade(Trade trade) {
-		connect();
-		
-		try {
-			String storedCall = "{call deleteTrade (?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			
-			insertProc.setInt(1, trade.getId());
-			
-			insertProc.execute();
-		} catch (Exception e) {
-			logger.fatal("Delete trade", e);
-			throw new RuntimeException("Kunne ikke slettet branchen: "+trade.getTrade());
-		}
-	}
 	
 	public Importance getImportance(String name) {
 		return Importance.valueOf(name);
@@ -201,44 +139,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Send mails", e);
 			throw new RuntimeException("Kunne ikke sende mail.");
 		}
-	}
-
-	public synchronized ArrayList<Salesman> getSalesmen() {
-		if (salespeople == null) {
-			salespeople = new ArrayList<Salesman>();
-
-			String tradeSql = "SELECT s.salesmanid, s.salesman, s.title, s.phone, s.mail\n" +
-					"FROM salespeople s;";
-
-			try {
-				connect();
-
-				Statement salespeopleStatement = c.createStatement();
-				ResultSet salespeopleResult = salespeopleStatement
-						.executeQuery(tradeSql);
-
-				while (salespeopleResult.next()) {
-					Salesman salesman = new Salesman();
-					salesman.setSalesman(salespeopleResult.getString("salesman"));
-					salesman.setTitle(salespeopleResult.getString("title"));
-					salesman.setPhone(salespeopleResult.getString("phone"));
-					salesman.setMail(salespeopleResult.getString("mail"));
-
-					salespeople.add(salesman);
-					salesman.set("salesmanid", salespeopleResult.getInt("salesmanid"));
-				}
-			} catch (Exception e) {
-				salespeople = null;
-
-				logger.fatal("Get salespeople", e);
-				throw new RuntimeException("Kunne ikke hente listen af sælgere.");
-			}
-		}
-
-		return salespeople;
-	}
-
-	public void sendTrade(Trade t) {
 	}
 
 	public void sendImportance(Importance i) {
@@ -673,6 +573,178 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					" and salesman "+salesman.get("salesmanid"), e);
 			throw new RuntimeException("Kunne ikke hente kontaktpersonerne til: " +
 					company.getCompanyName());
+		}
+	}
+
+	//
+	// Salespeople
+	//
+	public synchronized ArrayList<Salesman> getSalesmen() {
+		if (salespeople == null) {
+			salespeople = new ArrayList<Salesman>();
+
+			String tradeSql = "SELECT s.salesmanid, s.salesman, s.title, s.phone, s.mail\n" +
+					"FROM salespeople s;";
+
+			try {
+				connect();
+
+				Statement salespeopleStatement = c.createStatement();
+				ResultSet salespeopleResult = salespeopleStatement
+						.executeQuery(tradeSql);
+
+				while (salespeopleResult.next()) {
+					Salesman salesman = new Salesman();
+					salesman.setSalesman(salespeopleResult.getString("salesman"));
+					salesman.setTitle(salespeopleResult.getString("title"));
+					salesman.setPhone(salespeopleResult.getString("phone"));
+					salesman.setMail(salespeopleResult.getString("mail"));
+
+					salespeople.add(salesman);
+					salesman.set("salesmanid", salespeopleResult.getInt("salesmanid"));
+				}
+			} catch (Exception e) {
+				salespeople = null;
+
+				logger.fatal("Get salespeople", e);
+				throw new RuntimeException("Kunne ikke hente listen af sælgere.");
+			}
+		}
+
+		return salespeople;
+	}
+	
+	public int insertSalesman(Salesman salesman) {
+		connect();
+		
+		try {
+			String storedCall = "{? = call insertSalesman " +
+			"(?, ?, ?, ?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.registerOutParameter(1, Types.INTEGER);
+			
+			String phone = "";
+			
+			String name = salesman.getSalesman();
+			String title = salesman.getTitle();
+			if (salesman.getPhone() != null)
+				phone = salesman.getPhone();
+			String mail = salesman.getMail();
+			
+			insertProc.setString(2, name);
+			insertProc.setString(3, title);
+			insertProc.setString(4, phone);
+			insertProc.setString(5, mail);
+			
+			insertProc.execute();
+			
+			return insertProc.getInt(1);
+		} catch (Exception e) {
+			logger.fatal("Insert s", e);
+			throw new RuntimeException("Kunne ikke oprette sælgeren: "+salesman.getSalesman());
+		}
+	}
+	
+	public void updateSalesman(Salesman salesman) {
+		connect();
+
+		try {
+			String storedCall = "{call updateSalesman " +
+					"(?, ?, ?, ?, ?) }";
+			
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, (Integer) salesman.get("salesmanid"));
+			insertProc.setString(2, salesman.getSalesman());
+			insertProc.setString(3, salesman.getTitle());
+			insertProc.setString(4, salesman.getPhone());
+			insertProc.setString(5, salesman.getMail());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			logger.fatal("Update salesman "+salesman.get("salesmanid"), e);
+			throw new RuntimeException("Kunne ikke opdatere sælgeren: "+salesman.getSalesman());
+		}
+	}
+	
+	public void deleteSalesman(Salesman salesman) {
+		connect();
+
+		try {
+			String storedCall = "{call deleteSalesman ( ? ) }";
+			
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, (Integer) salesman.get("salesmanid"));
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			logger.fatal("Delete salesman "+salesman.get("contactid"), e);
+			throw new RuntimeException("Kunne ikke slette sælgeren: "+salesman.getSalesman());
+		}
+	}
+	
+	//
+	// Trades
+	//
+	public synchronized ArrayList<Trade> getTrades() {
+		tradeMap = new HashMap<Integer, Trade>();
+		trades = new ArrayList<Trade>();
+
+		String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
+
+		try {
+			connect();
+
+			Statement tradeStatement = c.createStatement();
+			ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
+
+			while (tradeResult.next()) {
+				Trade trade = new Trade();
+				trade.setTrade(tradeResult.getString("tradename"));
+				trade.set("tradeid", tradeResult.getInt("tradeid"));
+
+				tradeMap.put(tradeResult.getInt("tradeid"), trade);
+				trades.add(trade);
+			}
+		} catch (Exception e) {
+			tradeMap = null;
+			trades = null;
+
+			logger.fatal("Could not get trades", e);
+			throw new RuntimeException("Kunne ikke hente listen af brancer");
+		}
+		return trades;
+	}
+
+	public void addTrade(Trade trade) {
+		connect();
+		
+		try {
+			String storedCall = "{call insertTrade (?, ?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			
+			insertProc.setInt(1, trade.getId());
+			insertProc.setString(2, trade.getTrade());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			logger.fatal("Insert trade", e);
+			throw new RuntimeException("Kunne ikke oprette branchen: "+trade.getTrade());
+		}
+	}
+	
+	public void deleteTrade(Trade trade) {
+		connect();
+		
+		try {
+			String storedCall = "{call deleteTrade (?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);
+			
+			insertProc.setInt(1, trade.getId());
+			
+			insertProc.execute();
+		} catch (Exception e) {
+			logger.fatal("Delete trade", e);
+			throw new RuntimeException("Kunne ikke slette branchen: "+trade.getTrade());
 		}
 	}
 }

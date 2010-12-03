@@ -36,4 +36,7 @@ public interface DataServiceAsync {
 	void getProspectCompanies(AsyncCallback<ArrayList<Company>> callback);
 	void addTrade(Trade trade, AsyncCallback<Void> callback);
 	void deleteTrade(Trade trade, AsyncCallback<Void> callback);
+	void deleteSalesman(Salesman salesman, AsyncCallback<Void> callback);
+	void updateSalesman(Salesman salesman, AsyncCallback<Void> callback);
+	void insertSalesman(Salesman salesman, AsyncCallback<Integer> callback);
 }

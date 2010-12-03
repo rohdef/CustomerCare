@@ -16,11 +16,8 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("data")
 public interface DataService extends RemoteService {
 	public void close();
-	public ArrayList<Trade> getTrades();
-	public void addTrade(Trade trade);
-	public void deleteTrade(Trade trade);
+
 	public ArrayList<City> getCities();
-	public ArrayList<Salesman> getSalesmen();
 	
 	// Companies
 	public ArrayList<Company> getCompanies(Salesman salesman);
@@ -36,6 +33,17 @@ public interface DataService extends RemoteService {
 	public void deleteContact(Contact contact);
 	public void insertContact(Contact contact, int salesmanid, int companyid);
 	public void updateContact(Contact contact);
+	
+	// Salespeople
+	public ArrayList<Salesman> getSalesmen();
+	public int insertSalesman(Salesman salesman);
+	public void updateSalesman(Salesman salesman);
+	public void deleteSalesman(Salesman salesman);
+	
+	// Trades
+	public ArrayList<Trade> getTrades();
+	public void addTrade(Trade trade);
+	public void deleteTrade(Trade trade);
 	
 	// This logically belong elsewhere, but it wouldn't work :(
 	public void sendMail(String user, String subject, String message, List<String> recipients);
