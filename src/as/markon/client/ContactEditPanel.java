@@ -29,6 +29,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ContactEditPanel extends FormPanel {
 	private ListStore<Contact> emptyStore;
+	private ListStore<Contact> contactStore;
 	private ComboBox<Contact> contactsBox;
 	private TextField<String> nameFld;
 	private TextField<String> titleFld;
@@ -189,10 +190,58 @@ public class ContactEditPanel extends FormPanel {
 		addContactBtn.disable();
 		toolbar.add(addContactBtn);
 		
-		Button deleteContactBtn = new Button();
+		final Button deleteContactBtn = new Button();
 		deleteContactBtn.setText("Slet markerede kontakt");
 		deleteContactBtn.setIcon(IconHelper.createPath("images/user_delete.gif"));
 		deleteContactBtn.disable();
+		deleteContactBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				Dialog deleteDialog = new Dialog();
+				deleteDialog.setHideOnButtonClick(true);
+				deleteDialog.setButtons(Dialog.YESNO);
+				deleteDialog.setHeading("Er du sikker på, at du vil slette "+
+						contactBinding.getModel().get("contactname"));
+				deleteDialog.addText("Vil du slette "+
+						contactBinding.getModel().get("contactname")+
+						"? Denne handling kan ikke fortrydes!");
+				
+				deleteDialog.getButtonById(Dialog.NO).setText("Fortyd");
+				deleteDialog.getButtonById(Dialog.YES).setText("Slet kontakten");
+				deleteDialog.getButtonById(Dialog.YES).addSelectionListener(
+						new SelectionListener<ButtonEvent>() {
+							@Override
+							public void componentSelected(ButtonEvent ce) {
+								dataService.deleteContact((Contact)contactBinding.getModel(),
+										new AsyncCallback<Void>() {
+											public void onSuccess(Void result) {
+												contactStore.remove(
+														(Contact)contactBinding.getModel());
+												contactBinding.unbind();
+											}
+											
+											public void onFailure(Throwable caught) {
+											}
+										});
+							}
+						});
+				
+				deleteDialog.show();
+			}
+		});
+		
+		contactBinding.addListener(Events.Bind, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				deleteContactBtn.enable();
+			}
+		});
+		
+		contactBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				deleteContactBtn.disable();
+			}
+		});
+		
 		toolbar.add(deleteContactBtn);
 		
 		return toolbar;
@@ -205,7 +254,7 @@ public class ContactEditPanel extends FormPanel {
 		dataService.getContactsFor(Global.getInstance().getCurrentSalesman(), company,
 			new AsyncCallback<ArrayList<Contact>>() {
 				public void onSuccess(ArrayList<Contact> result) {
-					ListStore<Contact> contactStore = new ListStore<Contact>();
+					contactStore = new ListStore<Contact>();
 					contactStore.add(result);
 					contactsBox.setStore(contactStore);
 					contactsBox.setReadOnly(false);

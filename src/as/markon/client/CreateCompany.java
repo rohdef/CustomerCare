@@ -354,6 +354,7 @@ public class CreateCompany extends LayoutContainer {
 									createCompany();
 								}
 							});
+					confirmDialog.show();
 				}
 			}
 		});
