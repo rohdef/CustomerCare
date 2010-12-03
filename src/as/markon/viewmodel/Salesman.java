@@ -1,8 +1,8 @@
 package as.markon.viewmodel;
 
-import com.extjs.gxt.ui.client.data.BaseModelData;
+import com.extjs.gxt.ui.client.data.BaseModel;
 
-public class Salesman extends BaseModelData {
+public class Salesman extends BaseModel {
 	private static final long serialVersionUID = 1L;
 	
 	@Override
