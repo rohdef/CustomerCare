@@ -121,10 +121,10 @@ public class CompanyListingPanel extends ContentPanel {
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange,
 				new Listener<SelectionChangedEvent<Company>>() {
 					public void handleEvent(SelectionChangedEvent<Company> be) {
-						if (be.getSelection().size() == 0 )
-							deleteCompaniesBtn.disable();
-						else
+						if (be.getSelection().size() == 1 )
 							deleteCompaniesBtn.enable();
+						else
+							deleteCompaniesBtn.disable();
 					}
 			});
 		
