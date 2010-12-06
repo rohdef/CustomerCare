@@ -70,7 +70,16 @@ public class CreateCompany extends LayoutContainer {
 		contacts.setAutoWidth(true);
 		contacts.setHeight(470);
 		contacts.setLayout(new VBoxLayout());
-		contacts.add(createNewContactsPanel(), new VBoxLayoutData());
+		
+		CreateContactPanel createNewContactPanel = new CreateContactPanel();
+		createNewContactPanel.addNewContactListener(new NewContactListener() {
+			
+			public void handleEvent(NewContactEvent be) {
+				contactStore.add(be.getContact());
+			}
+		});
+		
+		contacts.add(createNewContactPanel, new VBoxLayoutData());
 		contacts.add(getContactList(), new VBoxLayoutData());
 		
 		this.add(contacts);
@@ -229,66 +238,6 @@ public class CreateCompany extends LayoutContainer {
 		formPanel.addButton(getCancelButton());
 		
 		return formPanel;
-	}
-	
-	private FormPanel createNewContactsPanel() {
-		final FormPanel contactsPanel = new FormPanel();
-		contactsPanel.setHeading("Kontaktoplysninger");
-		contactsPanel.setWidth("50%");
-		contactsPanel.setBorders(false);
-		
-		final TextField<String> nameFld = new TextField<String>();
-		nameFld.setBorders(false);
-		nameFld.setFieldLabel("Navn");
-		nameFld.setAllowBlank(false);
-		contactsPanel.add(nameFld);
-
-		final TextField<String> titleFld = new TextField<String>();
-		titleFld.setBorders(false);
-		titleFld.setFieldLabel("Titel");
-		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
-		contactsPanel.add(titleFld);
-
-		final TextField<String> phoneFld = new TextField<String>();
-		phoneFld.setBorders(false);
-		phoneFld.setFieldLabel("Telefon");
-		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
-		contactsPanel.add(phoneFld);
-
-		final TextField<String> mailFld = new TextField<String>();
-		mailFld.setBorders(false);
-		mailFld.setFieldLabel("Mail");
-		mailFld.setValidator(new VTypeValidator(VType.PHONE));
-		contactsPanel.add(mailFld);
-		
-		final CheckBox acceptsMailsBox = new CheckBox();
-		acceptsMailsBox.setFieldLabel("Ønsker mails");
-		contactsPanel.add(acceptsMailsBox);
-
-		final TextArea commentFld = new TextArea();
-		commentFld.setBorders(false);
-		commentFld.setFieldLabel("Kommentarer");
-		contactsPanel.add(commentFld);
-		
-		Button addContactBtn = new Button("Tilfoej kontakt", new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				Contact newContact = new Contact();
-				newContact.setName(nameFld.getValue());
-				newContact.setTitle(titleFld.getValue());
-				newContact.setPhone(phoneFld.getValue());
-				newContact.setMail(mailFld.getValue());
-				newContact.setAcceptsMails(acceptsMailsBox.getValue());
-				newContact.setComments(commentFld.getValue());
-
-				contactStore.add(newContact);
-				contactsPanel.clear();
-			}
-		});
-		addContactBtn.setType("submit");
-		contactsPanel.addButton(addContactBtn);
-		
-		return contactsPanel;
 	}
 	
 	private ContentPanel getContactList() {
