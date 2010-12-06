@@ -584,7 +584,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			salespeople = new ArrayList<Salesman>();
 
 			String tradeSql = "SELECT s.salesmanid, s.salesman, s.title, s.phone, s.mail\n" +
-					"FROM salespeople s;";
+					"FROM salespeople s ORDER BY s.salesmanid;";
 
 			try {
 				connect();
