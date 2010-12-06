@@ -378,6 +378,13 @@ public class CreateCompany extends LayoutContainer {
 				new AsyncCallback<Integer>() {
 			public void onSuccess(Integer result) {
 				newCompany.set("companyid", result);
+				newCompany.set("prospect", contactStore.getCount()==0);
+				
+				if (newCompany.getTrade() == null) {
+					Trade noTrade = new Trade();
+					noTrade.setTrade("Ingen branche valgt");
+					newCompany.setTrade(noTrade);
+				}
 				
 				changeEventSupport.notify(
 						new ChangeEvent(ChangeEventSource.Add, newCompany));

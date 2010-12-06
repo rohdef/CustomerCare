@@ -52,6 +52,7 @@ public class CompanyListingPanel extends ContentPanel {
 
 	private Grid<Company> companyGrid;
 	private Grid<Company> prospectGrid;
+	private GroupingStore<Company> prospectStore;
 
 	public CompanyListingPanel() {
 		checkLoader();
@@ -86,7 +87,11 @@ public class CompanyListingPanel extends ContentPanel {
 				
 				createCompany.addChangeListener(new ChangeListener() {
 					public void modelChanged(ChangeEvent event) {
-						storeToAddTo.add((Company) event.getItem());
+						Company company = (Company) event.getSource();
+						if ((Boolean)company.get("prospect"))
+							prospectStore.add(company);
+						else
+							companyStore.add(company);
 					}
 					
 				});
@@ -230,13 +235,16 @@ public class CompanyListingPanel extends ContentPanel {
 		ColumnModel cm = createColumnConfigs(sm);
 		companyView.setGroupRenderer(new CustomGridGroupRenderer(cm));
 		
-		final GroupingStore<Company> companyStore = new GroupingStore<Company>();
+		prospectStore = new GroupingStore<Company>();
 		
 		loadingProspects = true;
 		checkLoader();
 		dataService.getProspectCompanies(new AsyncCallback<ArrayList<Company>>() {
 			public void onSuccess(ArrayList<Company> result) {
-				companyStore.add(result);
+				prospectStore.setMonitorChanges(true);
+				prospectStore.add(result);
+				prospectStore.setDefaultSort("companyname", SortDir.ASC);
+				prospectStore.groupBy("trade");
 				
 				loadingProspects = false;
 				checkLoader();
@@ -246,7 +254,7 @@ public class CompanyListingPanel extends ContentPanel {
 			}
 		});
 		
-		prospectGrid = new Grid<Company>(companyStore, cm);
+		prospectGrid = new Grid<Company>(prospectStore, cm);
 		prospectGrid.setAutoExpandColumn("companyname");
 		prospectGrid.setView(companyView);
 		prospectGrid.setBorders(false);

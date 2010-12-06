@@ -152,7 +152,6 @@ public class CompanyEditPanel extends FormPanel {
 		tradeBox.setTypeAhead(true);
 		tradeBox.setStore(tradeStore);
 		tradeBox.setTriggerAction(TriggerAction.ALL);
-		tradeBox.setValidator(new VTypeValidator(VType.ALPHABET));
 		this.add(tradeBox);
 
 		importanceBox = new SimpleComboBox<Importance>();
