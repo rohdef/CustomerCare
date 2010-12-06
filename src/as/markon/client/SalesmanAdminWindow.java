@@ -58,7 +58,7 @@ public class SalesmanAdminWindow extends Window {
 		salespeopleGrid = new Grid<Salesman>(salespeopleStore, cm);
 		salespeopleGrid.setAutoHeight(true);
 		salespeopleGrid.setBorders(false);
-		salespeopleGrid.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+//		salespeopleGrid.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		salespeopleGrid.setStripeRows(true);
 		salespeopleGrid.getView().setEmptyText("Der er ingen salgsfolk i listen.");
 		
