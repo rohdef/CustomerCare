@@ -51,6 +51,7 @@ public class CompanyListingPanel extends ContentPanel {
 	private GroupingStore<Company> companyStore;
 
 	private Grid<Company> companyGrid;
+	private Grid<Company> prospectGrid;
 
 	public CompanyListingPanel() {
 		checkLoader();
@@ -181,6 +182,12 @@ public class CompanyListingPanel extends ContentPanel {
 		companyGrid.setSelectionModel(sm);
 		companyGrid.getView().setEmptyText("Der er ingen virksomheder i listen.");
 		
+		panel.addListener(Events.Collapse, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				companyGrid.getSelectionModel().deselectAll();
+			}
+		});
+		
 		panel.setHeight(550);
 		panel.add(companyGrid);
 		panel.setTopComponent(createToolbar(companyGrid, companyStore, sm));
@@ -227,7 +234,6 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		loadingProspects = true;
 		checkLoader();
-		
 		dataService.getProspectCompanies(new AsyncCallback<ArrayList<Company>>() {
 			public void onSuccess(ArrayList<Company> result) {
 				companyStore.add(result);
@@ -240,19 +246,24 @@ public class CompanyListingPanel extends ContentPanel {
 			}
 		});
 		
+		prospectGrid = new Grid<Company>(companyStore, cm);
+		prospectGrid.setAutoExpandColumn("companyname");
+		prospectGrid.setView(companyView);
+		prospectGrid.setBorders(false);
+		prospectGrid.setColumnLines(true);
+		prospectGrid.setColumnReordering(true);
+		prospectGrid.setStripeRows(true);
+		prospectGrid.addPlugin(sm);
+		prospectGrid.setSelectionModel(sm);
 
-		Grid<Company> companyGrid = new Grid<Company>(companyStore, cm);
-		companyGrid.setAutoExpandColumn("companyname");
-		companyGrid.setView(companyView);
-		companyGrid.setBorders(false);
-		companyGrid.setColumnLines(true);
-		companyGrid.setColumnReordering(true);
-		companyGrid.setStripeRows(true);
-		companyGrid.addPlugin(sm);
-		companyGrid.setSelectionModel(sm);
+		panel.addListener(Events.Collapse, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				prospectGrid.getSelectionModel().deselectAll();
+			}
+		});
 		
 		panel.setHeight(550);
-		panel.add(companyGrid);
+		panel.add(prospectGrid);
 		
 		return panel;
 	}
@@ -288,6 +299,7 @@ public class CompanyListingPanel extends ContentPanel {
 	
 	public void addSelectionListener(Listener<SelectionChangedEvent<Company>> listener) {
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange, listener);
+		prospectGrid.getSelectionModel().addListener(Events.SelectionChange, listener);
 	}
 	
 	public void deselectCompany(Company company) {
