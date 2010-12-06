@@ -70,6 +70,7 @@ public class CompanyListingPanel extends ContentPanel {
 			final GroupingStore<Company> storeToAddTo,
 			final CheckBoxSelectionModel<Company> sm) {
 		ToolBar companyToolBar = new ToolBar();
+		companyToolBar.setEnableOverflow(false);
 		
 		Button newCompany = new Button();
 		newCompany.setText("Opret ny virksomhed");
