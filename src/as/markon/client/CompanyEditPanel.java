@@ -9,21 +9,28 @@ import as.markon.viewmodel.Importance;
 import as.markon.viewmodel.Trade;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.binding.FormBinding;
+import com.extjs.gxt.ui.client.binding.Bindings;
+import com.extjs.gxt.ui.client.binding.FieldBinding;
 import com.extjs.gxt.ui.client.event.BaseEvent;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
+import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
+import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
+import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CompanyEditPanel extends FormPanel {
@@ -31,7 +38,9 @@ public class CompanyEditPanel extends FormPanel {
 			.getDataService();
 	
 	private ListStore<City> cityStore;
-	private FormBinding binding;
+	private Company original;
+//	private FormBinding binding;
+	private Bindings binding;
 	private SimpleComboBox<Importance> importanceBox;
 	private ComboBox<Trade> tradeBox;
 	private ListStore<Trade> tradeStore;
@@ -42,9 +51,13 @@ public class CompanyEditPanel extends FormPanel {
 	private ComboBox<City> postalBox;
 	private TextField<String> addressFld;
 
+	private Button saveBtn;
+
+	private FormButtonBinding buttonBinding;
+
 	public CompanyEditPanel() {
 		this.setHeading("Firmadata");
-		binding = new FormBinding(this, true);
+		binding = new Bindings();
 
 		cityStore = new ListStore<City>();
 		dataService.getCities(new AsyncCallback<ArrayList<City>>() {
@@ -118,7 +131,11 @@ public class CompanyEditPanel extends FormPanel {
 		phoneFld.setFieldLabel("Telefon");
 		phoneFld.setName("phone");
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
+		phoneFld.setAutoValidate(true);
 		this.add(phoneFld);
+		
+		FieldBinding fb = new FieldBinding(phoneFld, "phone");
+		binding.addFieldBinding(fb);
 
 		mailFld = new TextField<String>();
 		mailFld.setBorders(false);
@@ -133,11 +150,13 @@ public class CompanyEditPanel extends FormPanel {
 		this.add(acceptsMailsBox);
 
 		tradeStore = new ListStore<Trade>();
-
+		tradeBox = new ComboBox<Trade>();
 		dataService.getTrades(new AsyncCallback<ArrayList<Trade>>() {
 			public void onSuccess(ArrayList<Trade> result) {
-				tradeStore.removeAll();
 				tradeStore.add(result);
+				Trade t = new Trade();
+				t.setTrade("Ingen branche valgt");
+				tradeStore.add(t);
 			}
 
 			public void onFailure(Throwable caught) {
@@ -145,7 +164,6 @@ public class CompanyEditPanel extends FormPanel {
 			}
 		});
 
-		tradeBox = new ComboBox<Trade>();
 		tradeBox.setFieldLabel("Branche:");
 		tradeBox.setDisplayField("trade");
 		tradeBox.setName("trade");
@@ -153,7 +171,7 @@ public class CompanyEditPanel extends FormPanel {
 		tradeBox.setStore(tradeStore);
 		tradeBox.setTriggerAction(TriggerAction.ALL);
 		this.add(tradeBox);
-
+		
 		importanceBox = new SimpleComboBox<Importance>();
 		importanceBox.setFieldLabel("Gruppe:");
 		importanceBox.add(Arrays.asList(Importance.values()));
@@ -178,34 +196,31 @@ public class CompanyEditPanel extends FormPanel {
 		commentsFld.setName("comments");
 		commentsFld.setBorders(false);
 		this.add(commentsFld);
-
+		
 		binding.addListener(Events.UnBind, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
-				Company company = (Company) binding.getModel();
-				dataService.updateCompany(company, new AsyncCallback<Void>() {
-					public void onSuccess(Void result) {
-					}
-
-					public void onFailure(Throwable caught) {
-						throw new RuntimeException(caught);
-					}
-				});
 				setReadOnly(true);
 			}
 		});
 		
+		this.setTopComponent(getToolBar());
 		this.setReadOnly(true);
 	}
 
 	public void bindCompany(Company company) {
-		binding.autoBind();
-		binding.bind(company);
-		importanceBox.setSimpleValue(company.getImportance());
-
-		City city = cityStore.findModel("postal", company.getPostal());
+		this.original = company;
+		
+		Company dataClone = new Company();
+		dataClone.setProperties(company.getProperties());
+		
+		binding.bind(dataClone);
+		importanceBox.setSimpleValue(dataClone.getImportance());
+		
+		City city = cityStore.findModel("postal", dataClone.getPostal());
 		ArrayList<City> citySelect = new ArrayList<City>();
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
+		buttonBinding.addButton(saveBtn);
 		
 		this.setReadOnly(false);
 	}
@@ -215,5 +230,44 @@ public class CompanyEditPanel extends FormPanel {
 		importanceBox.clear();
 		cityBox.clear();
 		postalBox.clear();
+		original = null;
+
+		buttonBinding.removeButton(saveBtn);
+		saveBtn.disable();
+	}
+
+	private ToolBar getToolBar() {
+		ToolBar toolBar = new ToolBar();
+		
+		saveBtn = new Button("Gem");
+		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
+		saveBtn.disable();
+		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				save();
+			}
+		});
+		toolBar.add(saveBtn);
+		
+		buttonBinding = new FormButtonBinding(this);
+		
+		return toolBar;
+	}
+	
+
+	private void save() {
+		final Company updated = (Company) binding.getModel();
+		final Company theOriginal = original;
+		
+		dataService.updateCompany(updated, new AsyncCallback<Void>() {
+			public void onSuccess(Void result) {
+				theOriginal.setProperties(updated.getProperties());
+			}
+			
+			public void onFailure(Throwable caught) {
+				throw new RuntimeException(caught);
+			}
+		});
 	}
 }

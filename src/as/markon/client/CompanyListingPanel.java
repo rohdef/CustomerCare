@@ -216,6 +216,9 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		column = new ColumnConfig("trade", "Branche", 125);
 		configs.add(column);
+		
+		column = new ColumnConfig("phone", "Telefon", 50);
+		configs.add(column);
 
 		return new ColumnModel(configs);
 	}
