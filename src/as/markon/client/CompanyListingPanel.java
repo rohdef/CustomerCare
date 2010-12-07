@@ -69,6 +69,12 @@ public class CompanyListingPanel extends ContentPanel {
 	private ToolBar createToolbar(Grid<Company> companyGrid,
 			final GroupingStore<Company> storeToAddTo,
 			final CheckBoxSelectionModel<Company> sm) {
+		return createToolbar(companyGrid, storeToAddTo, sm, false);
+	}
+	
+	private ToolBar createToolbar(Grid<Company> companyGrid,
+			final GroupingStore<Company> storeToAddTo,
+			final CheckBoxSelectionModel<Company> sm, boolean prospect) {
 		ToolBar companyToolBar = new ToolBar();
 		companyToolBar.setEnableOverflow(false);
 		
@@ -114,7 +120,7 @@ public class CompanyListingPanel extends ContentPanel {
 		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
-				Dialog deleteDialog = new DeleteDialog(sm);
+				Dialog deleteDialog = new DeleteDialog(sm, storeToAddTo);
 				deleteDialog.show();
 			}
 		});
@@ -131,29 +137,31 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		companyToolBar.add(deleteCompaniesBtn);
 		
-		final Button tradeAdminBtn = new Button();
-		tradeAdminBtn.setText("Administrer brancher");
-		tradeAdminBtn.setIcon(IconHelper.createPath("images/trades.gif"));
-		tradeAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				TradeAdminDialog dialog = new TradeAdminDialog();
-				dialog.show();
-			}
-		});
-		companyToolBar.add(tradeAdminBtn);
-		
-		final Button salesmanAdminBtn = new Button();
-		salesmanAdminBtn.setText("Administrer sælgere");
-		salesmanAdminBtn.setIcon(IconHelper.createPath("images/salesmen.gif"));
-		salesmanAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				SalesmanAdminWindow window = new SalesmanAdminWindow();
-				window.show();
-			}
-		});
-		companyToolBar.add(salesmanAdminBtn);
+		if (!prospect) {
+			final Button tradeAdminBtn = new Button();
+			tradeAdminBtn.setText("Administrer brancher");
+			tradeAdminBtn.setIcon(IconHelper.createPath("images/trades.gif"));
+			tradeAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+				@Override
+				public void componentSelected(ButtonEvent ce) {
+					TradeAdminDialog dialog = new TradeAdminDialog();
+					dialog.show();
+				}
+			});
+			companyToolBar.add(tradeAdminBtn);
+			
+			final Button salesmanAdminBtn = new Button();
+			salesmanAdminBtn.setText("Administrer sælgere");
+			salesmanAdminBtn.setIcon(IconHelper.createPath("images/salesmen.gif"));
+			salesmanAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+				@Override
+				public void componentSelected(ButtonEvent ce) {
+					SalesmanAdminWindow window = new SalesmanAdminWindow();
+					window.show();
+				}
+			});
+			companyToolBar.add(salesmanAdminBtn);
+		}
 		
 		return companyToolBar;
 	}
@@ -276,6 +284,7 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		panel.setHeight(550);
 		panel.add(prospectGrid);
+		panel.setTopComponent(createToolbar(prospectGrid, prospectStore, sm, true));
 		
 		return panel;
 	}
@@ -326,12 +335,13 @@ public class CompanyListingPanel extends ContentPanel {
 	}
 
 	private class DeleteDialog extends Dialog {
-		public DeleteDialog(final CheckBoxSelectionModel<Company> sm) {
+		public DeleteDialog(final CheckBoxSelectionModel<Company> sm,
+				final GroupingStore<Company> companyStore) {
 			this.setTitle("Er du sikker på, at du vil slette?");
 			this.addText("Advarsel! Du kan ikke fortryde denne handling!"); 
-			this.addText("Er du sikker på, at du vil slette de markerede virksomheder?");
+			this.addText("Er du sikker på, at du vil slette den markerede virksomhed?");
 			this.setButtons(Dialog.YESNO);
-			this.getButtonById(Dialog.YES).setText("Slet virksomheder");
+			this.getButtonById(Dialog.YES).setText("Slet virksomhed");
 			this.getButtonById(Dialog.NO).setText("Fortryd");
 			this.setHideOnButtonClick(true);
 			
@@ -347,7 +357,6 @@ public class CompanyListingPanel extends ContentPanel {
 									}
 									
 									public void onFailure(Throwable caught) {
-										// TODO show errormessage right now
 										throw new RuntimeException(caught);
 									}
 								});

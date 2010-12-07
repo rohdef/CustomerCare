@@ -44,6 +44,7 @@ public class ContactEditPanel extends FormPanel {
 	private Button changeSalesman;
 	private Company company;
 	private Button addContactBtn;
+	private Button saveBtn;
 
 	public ContactEditPanel() {
 		this.setHeading("Kontakter");
@@ -111,27 +112,36 @@ public class ContactEditPanel extends FormPanel {
 					}
 				});
 		
-		contactBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
-			public void handleEvent(BaseEvent be) {
-				Contact contact = (Contact) contactBinding.getModel();
-				
-				dataService.updateContact(contact, new AsyncCallback<Void>() {
-					public void onSuccess(Void result) {
-					}
-					
-					public void onFailure(Throwable caught) {
-						throw new RuntimeException(caught);
-					}
-				});
-			}
-		});
-		
 		this.setReadOnly(true);	
 		this.setTopComponent(getToolbar());
 	}
 	
+	private void save() {
+		Contact contact = (Contact) contactBinding.getModel();
+		
+		dataService.updateContact(contact, new AsyncCallback<Void>() {
+			public void onSuccess(Void result) {
+			}
+			
+			public void onFailure(Throwable caught) {
+				throw new RuntimeException(caught);
+			}
+		});
+	}
+	
 	private ToolBar getToolbar() {
 		ToolBar toolbar = new ToolBar();
+		
+		saveBtn = new Button("Gem");
+		saveBtn.disable();
+		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
+		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				save();
+			}
+		});
+		toolbar.add(saveBtn);
 		
 		changeSalesman = new Button();
 		changeSalesman.setText("Flyt til sælger");

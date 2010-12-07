@@ -13,10 +13,12 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
@@ -24,10 +26,10 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;
+import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class SalesmanAdminWindow extends Window {
-
 	private Grid<Salesman> salespeopleGrid;
 	private DataServiceAsync dataService;
 	private boolean loadingSalespeople = false;
@@ -36,6 +38,7 @@ public class SalesmanAdminWindow extends Window {
 	private FormPanel editorArea;
 	private FormPanel createArea;
 	private FormBinding editBinding;
+	private FormButtonBinding editButtonBinding;
 
 	public SalesmanAdminWindow() {
 		this.setHeading("Administrer sælgere");
@@ -57,7 +60,6 @@ public class SalesmanAdminWindow extends Window {
 		salespeopleGrid = new Grid<Salesman>(salespeopleStore, cm);
 		salespeopleGrid.setAutoHeight(true);
 		salespeopleGrid.setBorders(false);
-//		salespeopleGrid.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		salespeopleGrid.setStripeRows(true);
 		salespeopleGrid.getView().setEmptyText("Der er ingen salgsfolk i listen.");
 		
@@ -118,23 +120,27 @@ public class SalesmanAdminWindow extends Window {
 		nameFld.setFieldLabel("Navn:");
 		nameFld.setAllowBlank(false);
 		nameFld.setValidator(new VTypeValidator(VType.NAME));
+		nameFld.setAutoValidate(true);
 		editArea.add(nameFld);
 
 		final TextField<String> titleFld = new TextField<String>();
 		titleFld.setFieldLabel("Titel:");
 		titleFld.setAllowBlank(false);
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
+		titleFld.setAutoValidate(true);
 		editArea.add(titleFld);
 
 		final TextField<String> mailFld = new TextField<String>();
 		mailFld.setFieldLabel("E-mail");
 		mailFld.setAllowBlank(false);
 		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
+		mailFld.setAutoValidate(true);
 		editArea.add(mailFld);
 
 		final TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setFieldLabel("Mobil:");
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
+		phoneFld.setAutoValidate(true);
 		editArea.add(phoneFld);
 
 		Button createBtn = new Button();
@@ -161,6 +167,9 @@ public class SalesmanAdminWindow extends Window {
 		});
 		editArea.add(createBtn);
 		
+		FormButtonBinding buttonBinding = new FormButtonBinding(editArea);
+		buttonBinding.addButton(createBtn);
+		
 		return editArea;
 	}
 	
@@ -174,6 +183,7 @@ public class SalesmanAdminWindow extends Window {
 		nameFld.setFieldLabel("Navn:");
 		nameFld.setName("salesman");
 		nameFld.setAllowBlank(false);
+		nameFld.setAutoValidate(true);
 		nameFld.setValidator(new VTypeValidator(VType.NAME));
 		editArea.add(nameFld);
 
@@ -181,6 +191,7 @@ public class SalesmanAdminWindow extends Window {
 		titleFld.setFieldLabel("Titel:");
 		titleFld.setName("title");
 		titleFld.setAllowBlank(false);
+		titleFld.setAutoValidate(true);
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		editArea.add(titleFld);
 
@@ -188,33 +199,46 @@ public class SalesmanAdminWindow extends Window {
 		mailFld.setFieldLabel("E-mail");
 		mailFld.setName("mail");
 		mailFld.setAllowBlank(false);
+		mailFld.setAutoValidate(true);
 		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		editArea.add(mailFld);
 
 		TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setFieldLabel("Mobil:");
 		phoneFld.setName("phone");
+		phoneFld.setAutoValidate(true);
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		editArea.add(phoneFld);
 		
 		editBinding = new FormBinding(editArea);
 		editBinding.autoBind();
 		
-		editBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
-			public void handleEvent(BaseEvent be) {
-				dataService.updateSalesman((Salesman) editBinding.getModel(),
-						new AsyncCallback<Void>() {
-							public void onSuccess(Void result) {
-							}
-							
-							public void onFailure(Throwable caught) {
-							}
-						});
+		editButtonBinding = new FormButtonBinding(editArea);
+		
+		editArea.setTopComponent(getEditToolBar());
+
+		return editArea;
+	}
+	
+	private ToolBar getEditToolBar() {
+		ToolBar toolBar = new ToolBar();
+		
+		Button saveBtn = new Button();
+		saveBtn.setText("Gem ændringer");
+		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
+		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				save();
 			}
 		});
+		toolBar.add(saveBtn);
+		editButtonBinding.addButton(saveBtn);
 		
-		Button deleteBtn = new Button();
+		final Button deleteBtn = new Button();
 		deleteBtn.setText("Slet sælger");
+		deleteBtn.disable();
+		deleteBtn.setIcon(IconHelper.createPath("images/user_delete.gif"));
 		deleteBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -233,16 +257,7 @@ public class SalesmanAdminWindow extends Window {
 						new SelectionListener<ButtonEvent>() {
 							@Override
 							public void componentSelected(ButtonEvent ce) {
-								dataService.deleteSalesman((Salesman) editBinding.getModel(),
-										new AsyncCallback<Void>() {
-											public void onSuccess(Void result) {
-												salespeopleStore.remove(
-														(Salesman)editBinding.getModel());
-											}
-											
-											public void onFailure(Throwable caught) {
-											}
-										});
+								delete();
 							}
 						});
 				
@@ -250,9 +265,44 @@ public class SalesmanAdminWindow extends Window {
 			}
 		});
 		
-		editArea.add(deleteBtn);
-
-		return editArea;
+		editBinding.addListener(Events.Bind, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				deleteBtn.enable();
+			}
+		});
+		editBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				deleteBtn.disable();
+			}
+		});
+		
+		toolBar.add(deleteBtn);
+		
+		return toolBar;
+	}
+	
+	private void save() {
+		dataService.updateSalesman((Salesman) editBinding.getModel(),
+				new AsyncCallback<Void>() {
+					public void onSuccess(Void result) {
+					}
+					
+					public void onFailure(Throwable caught) {
+					}
+				});
+	}
+	
+	private void delete() {
+		dataService.deleteSalesman((Salesman) editBinding.getModel(),
+				new AsyncCallback<Void>() {
+					public void onSuccess(Void result) {
+						salespeopleStore.remove(
+								(Salesman)editBinding.getModel());
+					}
+					
+					public void onFailure(Throwable caught) {
+					}
+				});
 	}
 	
 	private void checkLoading() {
