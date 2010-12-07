@@ -10,6 +10,7 @@ import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.FormPanel.LabelAlign;
 import com.extjs.gxt.ui.client.widget.form.TextField;
@@ -75,6 +76,7 @@ public class TradeAdminDialog extends Dialog {
 		final TextField<String> idFld = new TextField<String>();
 		idFld.setFieldLabel("Brancheid");
 		idFld.setValidator(new VTypeValidator(VType.NUMERIC));
+		idFld.setAutoValidate(true);
 		idFld.setAllowBlank(false);
 		addTradePanel.add(idFld);
 		
@@ -82,6 +84,7 @@ public class TradeAdminDialog extends Dialog {
 		tradeFld.setFieldLabel("Branchenavn");
 		tradeFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		tradeFld.setAllowBlank(false);
+		tradeFld.setAutoValidate(true);
 		addTradePanel.add(tradeFld);
 		
 		Button addBtn = new Button();
@@ -107,6 +110,9 @@ public class TradeAdminDialog extends Dialog {
 			}
 		});
 		addTradePanel.add(addBtn);
+		
+		FormButtonBinding buttonBinding = new FormButtonBinding(addTradePanel);
+		buttonBinding.addButton(addBtn);
 		
 		Global.getInstance().getDataService().getTrades(
 			new AsyncCallback<ArrayList<Trade>>() {

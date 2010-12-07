@@ -142,6 +142,7 @@ public class CompanyEditPanel extends FormPanel {
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
 		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
+		mailFld.setAutoValidate(true);
 		this.add(mailFld);
 
 		acceptsMailsBox = new CheckBox();

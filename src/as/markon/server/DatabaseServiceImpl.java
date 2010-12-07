@@ -646,7 +646,12 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.execute();
 			
-			return insertProc.getInt(1);
+			int salesmanid = insertProc.getInt(1);
+			salesman.set("salesmanid", salesmanid);
+			
+			salespeople.add(salesman);
+			
+			return salesmanid;
 		} catch (Exception e) {
 			logger.fatal("Insert s", e);
 			throw new RuntimeException("Kunne ikke oprette sælgeren: "+salesman.getSalesman());
@@ -668,6 +673,14 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setString(5, salesman.getMail());
 			
 			insertProc.execute();
+			
+			for (Salesman s : salespeople) {
+				if (s.get("salesmanid").equals(salesman.get("salesmanid"))) {
+					s.setProperties(salesman.getProperties());
+					break;
+				}
+			}
+				
 		} catch (Exception e) {
 			logger.fatal("Update salesman "+salesman.get("salesmanid"), e);
 			throw new RuntimeException("Kunne ikke opdatere sælgeren: "+salesman.getSalesman());

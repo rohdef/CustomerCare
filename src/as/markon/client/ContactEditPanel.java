@@ -21,6 +21,7 @@ import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
+import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
@@ -64,6 +65,7 @@ public class ContactEditPanel extends FormPanel {
 		nameFld.setFieldLabel("Navn");
 		nameFld.setName("contactname");
 		nameFld.setAllowBlank(false);
+		nameFld.setAutoValidate(true);
 		nameFld.setValidationDelay(0);
 		nameFld.setValidator(new VTypeValidator(VType.NAME));
 		this.add(nameFld);
@@ -72,6 +74,7 @@ public class ContactEditPanel extends FormPanel {
 		titleFld.setBorders(false);
 		titleFld.setFieldLabel("Titel");
 		titleFld.setName("title");
+		titleFld.setAutoValidate(true);
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		this.add(titleFld);
 
@@ -79,6 +82,7 @@ public class ContactEditPanel extends FormPanel {
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
 		phoneFld.setName("phone");
+		phoneFld.setAutoValidate(true);
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		this.add(phoneFld);
 
@@ -86,6 +90,7 @@ public class ContactEditPanel extends FormPanel {
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
 		mailFld.setName("mail");
+		mailFld.setAutoValidate(true);
 		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		this.add(mailFld);
 
@@ -131,6 +136,7 @@ public class ContactEditPanel extends FormPanel {
 	
 	private ToolBar getToolbar() {
 		ToolBar toolbar = new ToolBar();
+		FormButtonBinding buttonBinding = new FormButtonBinding(this);
 		
 		saveBtn = new Button("Gem");
 		saveBtn.disable();
@@ -142,6 +148,7 @@ public class ContactEditPanel extends FormPanel {
 			}
 		});
 		toolbar.add(saveBtn);
+		buttonBinding.addButton(saveBtn);
 		
 		changeSalesman = new Button();
 		changeSalesman.setText("Flyt til sælger");
@@ -195,6 +202,7 @@ public class ContactEditPanel extends FormPanel {
 			}
 		});
 		toolbar.add(changeSalesman);
+		buttonBinding.addButton(changeSalesman);
 		
 		addContactBtn = new Button();
 		addContactBtn.setText("Tilføj kontakt");
