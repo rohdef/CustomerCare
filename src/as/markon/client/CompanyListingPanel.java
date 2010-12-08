@@ -313,6 +313,7 @@ public class CompanyListingPanel extends ContentPanel {
 					}
 
 					public void onFailure(Throwable caught) {
+						caught.printStackTrace();
 						throw new RuntimeException(caught);
 					}
 				});

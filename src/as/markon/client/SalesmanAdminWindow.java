@@ -30,6 +30,7 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class SalesmanAdminWindow extends Window {
+	private Salesman originalSalesman;
 	private Grid<Salesman> salespeopleGrid;
 	private DataServiceAsync dataService;
 	private boolean loadingSalespeople = false;
@@ -103,15 +104,22 @@ public class SalesmanAdminWindow extends Window {
 		salespeopleGrid.getSelectionModel().addListener(Events.SelectionChange, 
 				new Listener<SelectionChangedEvent<Salesman>>() {
 					public void handleEvent(SelectionChangedEvent<Salesman> be) {
+						if (be.getSelection().size() == 0)
+							return;
+						
 						editorArea.expand();
 						createArea.collapse();
-						editBinding.bind(be.getSelectedItem());
+						
+						originalSalesman = be.getSelectedItem();
+						Salesman editSalesman = new Salesman();
+						editSalesman.setProperties(originalSalesman.getProperties());
+						editBinding.bind(editSalesman);
 					}
 		});
 	}
 	
 	private FormPanel getCreateArea() {
-		FormPanel editArea = new FormPanel();
+		final FormPanel editArea = new FormPanel();
 		editArea.setHeading("Opret ny sælger");
 		editArea.setFrame(false);
 		editArea.setBorders(false);
@@ -145,6 +153,7 @@ public class SalesmanAdminWindow extends Window {
 
 		Button createBtn = new Button();
 		createBtn.setText("Opret sælger");
+		createBtn.setText("Submit");
 		createBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -158,6 +167,7 @@ public class SalesmanAdminWindow extends Window {
 					public void onSuccess(Integer result) {
 						newSalesman.set("salesmanid", result);
 						salespeopleStore.add(newSalesman);
+						editArea.clear();
 					}
 					
 					public void onFailure(Throwable caught) {
@@ -210,8 +220,7 @@ public class SalesmanAdminWindow extends Window {
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		editArea.add(phoneFld);
 		
-		editBinding = new FormBinding(editArea);
-		editBinding.autoBind();
+		editBinding = new FormBinding(editArea, true);
 		
 		editButtonBinding = new FormButtonBinding(editArea);
 		
@@ -267,7 +276,10 @@ public class SalesmanAdminWindow extends Window {
 		
 		editBinding.addListener(Events.Bind, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
-				deleteBtn.enable();
+				if (Global.getInstance().getCurrentSalesman().equals(editBinding.getModel()))
+					deleteBtn.disable();
+				else
+					deleteBtn.enable();
 			}
 		});
 		editBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
@@ -285,6 +297,8 @@ public class SalesmanAdminWindow extends Window {
 		dataService.updateSalesman((Salesman) editBinding.getModel(),
 				new AsyncCallback<Void>() {
 					public void onSuccess(Void result) {
+						originalSalesman.setProperties(editBinding.getModel()
+								.getProperties());
 					}
 					
 					public void onFailure(Throwable caught) {
@@ -293,14 +307,16 @@ public class SalesmanAdminWindow extends Window {
 	}
 	
 	private void delete() {
-		dataService.deleteSalesman((Salesman) editBinding.getModel(),
+		dataService.deleteSalesman(originalSalesman,
 				new AsyncCallback<Void>() {
 					public void onSuccess(Void result) {
-						salespeopleStore.remove(
-								(Salesman)editBinding.getModel());
+						salespeopleStore.remove(originalSalesman);
+						editBinding.unbind();
+						originalSalesman = null;
 					}
 					
 					public void onFailure(Throwable caught) {
+						caught.printStackTrace();
 					}
 				});
 	}

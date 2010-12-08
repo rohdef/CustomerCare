@@ -22,10 +22,10 @@ public class Salesman extends BaseModel {
 		if (getClass() != obj.getClass())
 			return false;
 		Salesman other = (Salesman) obj;
-		if (getMail()  == null) {
-			if (other.getMail() != null)
+		if (get("salesmanid")  == null) {
+			if (other.get("salesmanid") != null)
 				return false;
-		} else if (!getMail().equals(other.getMail()))
+		} else if (!get("salesmanid").equals(other.get("salesmanid")))
 			return false;
 		return true;
 	}

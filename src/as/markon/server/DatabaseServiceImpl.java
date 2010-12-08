@@ -270,9 +270,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "	c.comments,\n"
 					+ " c.tradeid,\n"
 					+ " c.acceptsmails\n"
-					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
+					+ "		FROM companieswithcities c\n"
 					+ "		WHERE c.companyid NOT IN\n"
-					+ "			(SELECT k.companyid FROM contacts k);";
+					+ "			(SELECT k.companyid FROM contacts k\n"
+					+ "				WHERE k.salesmanid IS NOT null);";
 
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
@@ -697,6 +698,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setInt(1, (Integer) salesman.get("salesmanid"));
 			
 			insertProc.execute();
+			salespeople.remove(salesman);
 		} catch (Exception e) {
 			logger.fatal("Delete salesman "+salesman.get("contactid"), e);
 			throw new RuntimeException("Kunne ikke slette sælgeren: "+salesman.getSalesman());
