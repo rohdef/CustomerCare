@@ -4,6 +4,7 @@ import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
+import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
@@ -17,6 +18,7 @@ import com.extjs.gxt.ui.client.widget.Text;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
+import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
@@ -70,8 +72,10 @@ public class CustomerView extends LayoutContainer {
 							.setHeading("Hvilken sælger ønsker du at se kartoteket for?");
 						salesmanDialog.setHideOnButtonClick(true);
 						salesmanDialog.setSize(400, 300);
-
+						salesmanDialog.setScrollMode(Scroll.AUTO);
 						Login l = new Login();
+						l.setLayout(new FitLayout());
+						
 						l.addListener(Events.Select,
 								new Listener<SelectionEvent<Salesman>>() {
 									public void handleEvent(
@@ -83,6 +87,7 @@ public class CustomerView extends LayoutContainer {
 
 						salesmanDialog.add(l);
 						salesmanDialog.show();
+						l.setHeight(salesmanDialog.getInnerHeight());
 					}
 				});
 
