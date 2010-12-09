@@ -218,7 +218,7 @@ public class ContactEditPanel extends FormPanel {
 				
 				createContact.addListener(Events.Hide, new Listener<BaseEvent>() {
 					public void handleEvent(BaseEvent be) {
-						bindCompany(company);
+						bindCompany(company, Global.getInstance().getCurrentSalesman());
 					}
 				});
 				
@@ -284,13 +284,13 @@ public class ContactEditPanel extends FormPanel {
 		return toolbar;
 	}
 	
-	public void bindCompany(Company company) {
+	public void bindCompany(Company company, Salesman contactSalesman) {
 		this.company = company;
 		contactsBox.setStore(emptyStore);
 		loader.show();
 		addContactBtn.enable();
 		
-		dataService.getContactsFor(Global.getInstance().getCurrentSalesman(), company,
+		dataService.getContactsFor(contactSalesman, company,
 			new AsyncCallback<ArrayList<Contact>>() {
 				public void onSuccess(ArrayList<Contact> result) {
 					contactStore = new ListStore<Contact>();

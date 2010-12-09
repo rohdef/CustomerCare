@@ -13,8 +13,10 @@ import com.extjs.gxt.ui.client.data.ChangeListener;
 import com.extjs.gxt.ui.client.data.ModelData;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
+import com.extjs.gxt.ui.client.event.ComponentEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.GridEvent;
+import com.extjs.gxt.ui.client.event.KeyListener;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
@@ -24,6 +26,7 @@ import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.CheckBoxSelectionModel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
@@ -31,8 +34,11 @@ import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridGroupRenderer;
 import com.extjs.gxt.ui.client.widget.grid.GroupColumnData;
 import com.extjs.gxt.ui.client.widget.grid.GroupingView;
+import com.extjs.gxt.ui.client.widget.grid.filters.GridFilters;
+import com.extjs.gxt.ui.client.widget.grid.filters.StringFilter;
 import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.toolbar.LabelToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.Element;
@@ -53,6 +59,7 @@ public class CompanyListingPanel extends ContentPanel {
 	private Grid<Company> companyGrid;
 	private Grid<Company> prospectGrid;
 	private GroupingStore<Company> prospectStore;
+	private ContentPanel prospectListing;
 
 	public CompanyListingPanel() {
 		checkLoader();
@@ -63,20 +70,34 @@ public class CompanyListingPanel extends ContentPanel {
 		this.setHeaderVisible(false);
 		
 		this.add(createCustomerListing());
-		this.add(createProspectListing());
-	}
-
-	private ToolBar createToolbar(Grid<Company> companyGrid,
-			final GroupingStore<Company> storeToAddTo,
-			final CheckBoxSelectionModel<Company> sm) {
-		return createToolbar(companyGrid, storeToAddTo, sm, false);
+		prospectListing = createProspectListing();
+		this.add(prospectListing);
 	}
 	
-	private ToolBar createToolbar(Grid<Company> companyGrid,
+	public boolean isShowingProspects() {
+		return prospectListing.isExpanded();
+	}
+
+ 	private ToolBar createToolbar(Grid<Company> companyGrid,
 			final GroupingStore<Company> storeToAddTo,
-			final CheckBoxSelectionModel<Company> sm, boolean prospect) {
+			final CheckBoxSelectionModel<Company> sm,
+			final StringFilter filter,
+			boolean prospect) {
 		ToolBar companyToolBar = new ToolBar();
 		companyToolBar.setEnableOverflow(false);
+		
+		companyToolBar.add(new LabelToolItem("Søg: "));
+		
+		final TextField<String> searchFld = new TextField<String>();
+		searchFld.setWidth(100);
+		searchFld.addKeyListener(new KeyListener() {
+			@Override
+			public void handleEvent(ComponentEvent e) {
+				super.handleEvent(e);
+				filter.setValue(searchFld.getValue());
+			}
+		});
+		companyToolBar.add(searchFld);
 		
 		Button newCompany = new Button();
 		newCompany.setText("Opret ny virksomhed");
@@ -173,6 +194,12 @@ public class CompanyListingPanel extends ContentPanel {
 		panel.setBorders(false);
 		panel.setHeading("Kundeliste");
 		
+		GridFilters filters = new GridFilters();
+		filters.setLocal(true);
+		
+		StringFilter companyNameFilter = new StringFilter("companyname");
+		filters.addFilter(companyNameFilter);
+		
 		GroupingView companyView = new CustomGroupingView();
 		companyView.setShowGroupedColumn(false);
 		companyView.setForceFit(true);
@@ -193,6 +220,7 @@ public class CompanyListingPanel extends ContentPanel {
 		companyGrid.setLoadMask(true);
 		companyGrid.setStripeRows(true);
 		companyGrid.addPlugin(sm);
+		companyGrid.addPlugin(filters);
 		companyGrid.setSelectionModel(sm);
 		companyGrid.getView().setEmptyText("Der er ingen virksomheder i listen.");
 		
@@ -204,7 +232,8 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		panel.setHeight(550);
 		panel.add(companyGrid);
-		panel.setTopComponent(createToolbar(companyGrid, companyStore, sm));
+		panel.setTopComponent(createToolbar(companyGrid, companyStore, sm,
+				companyNameFilter, false));
 		
 		return panel;
 	}
@@ -237,6 +266,12 @@ public class CompanyListingPanel extends ContentPanel {
 		panel.setFrame(false);
 		panel.setBorders(false);
 		panel.setHeading("Kundekandidater");
+		
+		GridFilters filters = new GridFilters();
+		filters.setLocal(true);
+		
+		StringFilter companyNameFilter = new StringFilter("companyname");
+		filters.addFilter(companyNameFilter);
 		
 		GroupingView companyView = new CustomGroupingView();
 		companyView.setShowGroupedColumn(false);
@@ -274,6 +309,7 @@ public class CompanyListingPanel extends ContentPanel {
 		prospectGrid.setColumnReordering(true);
 		prospectGrid.setStripeRows(true);
 		prospectGrid.addPlugin(sm);
+		prospectGrid.addPlugin(filters);
 		prospectGrid.setSelectionModel(sm);
 
 		panel.addListener(Events.Collapse, new Listener<BaseEvent>() {
@@ -284,7 +320,8 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		panel.setHeight(550);
 		panel.add(prospectGrid);
-		panel.setTopComponent(createToolbar(prospectGrid, prospectStore, sm, true));
+		panel.setTopComponent(createToolbar(prospectGrid, prospectStore, sm,
+				companyNameFilter, true));
 		
 		return panel;
 	}

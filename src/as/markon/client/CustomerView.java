@@ -137,13 +137,16 @@ public class CustomerView extends LayoutContainer {
 				
 				if (be.getSelection().size() == 1) {
 					companyForm.bindCompany(be.getSelectedItem());
-					contactForm.bindCompany(be.getSelectedItem());
+					
+					Salesman contactSalesman = companyListing.isShowingProspects() ? null : 
+						Global.getInstance().getCurrentSalesman();
+					contactForm.bindCompany(be.getSelectedItem(), contactSalesman);
 				} else if (be.getSelection().size() > 1) {
 					mailForm.bindCompanies(be.getSelection());
 				}
 			}
 		});
-		
+	
 		mailForm.addDeleteListener(new DeleteCompanyListener() {
 			public void handleEvent(DeleteCompanyEvent be) {
 				companyListing.deselectCompany(be.getCompany());

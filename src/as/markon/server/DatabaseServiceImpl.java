@@ -550,11 +550,13 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				"\tk.mail,\n" +
 				"\tk.acceptsmails,\n" +
 				"\tk.comments\n" +
-				"\t\tFROM contacts k, salespeople s\n"
-				+ "\t\tWHERE s.salesmanid = " + salesman.get("salesmanid")
-				+ "\n" + "\t\tAND k.companyid = "
-				+ company.get("companyid") + "\n"
-				+ "\t\tAND k.salesmanid = s.salesmanid;";
+				"\t\tFROM contacts k\n" +
+				"\t\tWHERE k.companyid = " + company.get("companyid") + "\n";
+			
+			if (salesman != null)
+				contactQuery += "\t\tAND k.salesmanid = " + salesman.get("salesmanid") + ";";
+			else
+				contactQuery += "\t\tAND k.salesmanid IS NULL;";
 
 			connect();
 			Statement contactStatement = c.createStatement();
