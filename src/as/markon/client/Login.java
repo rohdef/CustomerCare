@@ -1,5 +1,8 @@
 package as.markon.client;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 import as.markon.viewmodel.Salesman;
@@ -17,6 +20,7 @@ import com.extjs.gxt.ui.client.widget.custom.Portal;
 import com.extjs.gxt.ui.client.widget.custom.Portlet;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Image;
 
 public class Login extends LayoutContainer implements Observable {
 	public Login() {
@@ -71,6 +75,10 @@ public class Login extends LayoutContainer implements Observable {
 			this.salesman = s;
 			this.setHeading(s.getSalesman());
 			
+			Image profileImage = new Image("http://gravatar.com/avatar/"+
+					salesman.getMailMd5());
+			this.add(profileImage);
+			
 			Button b = new Button();
 			b.setText(s.getSalesman());
 			b.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -79,8 +87,9 @@ public class Login extends LayoutContainer implements Observable {
 					fireEvent(Events.Select, new SelectionEvent<Salesman>(this, salesman));
 				}
 			});
-			
 			this.add(b);
 		}
 	}
+	
+
 }

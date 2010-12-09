@@ -68,11 +68,14 @@ public class CustomerView extends LayoutContainer {
 					public void componentSelected(ButtonEvent ce) {
 						final Dialog salesmanDialog = new Dialog();
 						salesmanDialog.setButtons(Dialog.CANCEL);
+						salesmanDialog.getButtonById(Dialog.CANCEL)
+							.setText("Anuller");
 						salesmanDialog
 							.setHeading("Hvilken sælger ønsker du at se kartoteket for?");
 						salesmanDialog.setHideOnButtonClick(true);
-						salesmanDialog.setSize(400, 300);
+						salesmanDialog.setSize(600, 450);
 						salesmanDialog.setScrollMode(Scroll.AUTO);
+						salesmanDialog.setResizable(false);
 						Login l = new Login();
 						l.setLayout(new FitLayout());
 						

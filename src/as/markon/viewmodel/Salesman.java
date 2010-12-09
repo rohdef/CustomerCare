@@ -61,4 +61,8 @@ public class Salesman extends BaseModel {
 	public void setMail(String mail) {
 		set("mail", mail);
 	}
+	
+	public String getMailMd5() {
+		return get("mailmd5");
+	}
 }
