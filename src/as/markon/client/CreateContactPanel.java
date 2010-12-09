@@ -26,24 +26,28 @@ public class CreateContactPanel extends FormPanel {
 		nameFld.setBorders(false);
 		nameFld.setFieldLabel("Navn");
 		nameFld.setAllowBlank(false);
+		nameFld.setAutoValidate(true);
 		this.add(nameFld);
 
 		final TextField<String> titleFld = new TextField<String>();
 		titleFld.setBorders(false);
 		titleFld.setFieldLabel("Titel");
+		titleFld.setAutoValidate(true);
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		this.add(titleFld);
 
 		final TextField<String> phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
 		phoneFld.setFieldLabel("Telefon");
+		phoneFld.setAutoValidate(true);
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		this.add(phoneFld);
 
 		final TextField<String> mailFld = new TextField<String>();
 		mailFld.setBorders(false);
 		mailFld.setFieldLabel("Mail");
-		mailFld.setValidator(new VTypeValidator(VType.PHONE));
+		mailFld.setAutoValidate(true);
+		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		this.add(mailFld);
 		
 		final CheckBox acceptsMailsBox = new CheckBox();
