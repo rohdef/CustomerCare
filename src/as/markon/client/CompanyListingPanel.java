@@ -40,6 +40,7 @@ import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.LabelToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -78,7 +79,7 @@ public class CompanyListingPanel extends ContentPanel {
 		return prospectListing.isExpanded();
 	}
 
- 	private ToolBar createToolbar(Grid<Company> companyGrid,
+ 	private ToolBar createToolbar(final Grid<Company> companyGrid,
 			final GroupingStore<Company> storeToAddTo,
 			final CheckBoxSelectionModel<Company> sm,
 			final StringFilter filter,
@@ -182,10 +183,35 @@ public class CompanyListingPanel extends ContentPanel {
 				}
 			});
 			companyToolBar.add(salesmanAdminBtn);
+			
+			final Button printTest = new Button("Print");
+			printTest.addSelectionListener(new SelectionListener<ButtonEvent>() {
+				@Override
+				public void componentSelected(ButtonEvent ce) {
+					PdfServiceAsync pdf = GWT.create(PdfService.class);
+					pdf.createPdf(companyGrid.getSelectionModel().getSelectedItems(),
+							new AsyncCallback<Integer>() {
+								public void onSuccess(Integer result) {
+									String url = "./customercare/pdfdownload?labelsessid="
+										+result;
+									String title = "Printer";
+									openUrl(url, title);
+								}
+								
+								public void onFailure(Throwable caught) {
+								}
+							});
+				}
+			});
+			//companyToolBar.add(printTest);
 		}
 		
 		return companyToolBar;
 	}
+ 	
+ 	private static native void openUrl(String url, String name) /*-{
+ 		$wnd.open(url, name);
+ 	}-*/;
 
 	private ContentPanel createCustomerListing() {
 		ContentPanel panel = new ContentPanel();
