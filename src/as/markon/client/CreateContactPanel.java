@@ -59,7 +59,7 @@ public class CreateContactPanel extends FormPanel {
 		commentFld.setFieldLabel("Kommentarer");
 		this.add(commentFld);
 		
-		Button addContactBtn = new Button("Tilfoej kontakt", new SelectionListener<ButtonEvent>() {
+		Button addContactBtn = new Button("Tilføj kontakt", new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				Contact newContact = new Contact();
