@@ -3,7 +3,7 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import as.markon.viewmodel.MailContact;
+import as.markon.viewmodel.MailRecipient;
 import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -28,7 +28,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class MailLayout extends LayoutContainer {
 	private DataServiceAsync dataService;
-	public MailLayout(final List<MailContact> recipients) {
+	public MailLayout(final List<MailRecipient> recipients) {
 		dataService = Global.getInstance().getDataService();
 		this.setLayout(new FitLayout());
 
@@ -89,7 +89,7 @@ public class MailLayout extends LayoutContainer {
 						String message = contentEditor.getValue();
 
 						ArrayList<String> recipientMails = new ArrayList<String>();
-						for (MailContact mc : recipients)
+						for (MailRecipient mc : recipients)
 							recipientMails.add(mc.getMail());
 
 						// FIXME should be reenabled later

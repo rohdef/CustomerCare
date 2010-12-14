@@ -24,6 +24,7 @@ import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Importance;
+import as.markon.viewmodel.LabelRecipient;
 import as.markon.viewmodel.Salesman;
 import as.markon.viewmodel.Trade;
 
@@ -808,8 +809,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 
 
-	public Integer createPdf(ArrayList<Company> companies,
-			ArrayList<Contact> contacts) {
+	public Integer createPdf(ArrayList<LabelRecipient> recipients) {
 		connect();
 		Integer batchid = 0;
 		
@@ -823,21 +823,34 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			batchid = (int) batchIdProc.getLong(1);
 			
 			String storedCall = "{ call labelQueueAddCompany (?, ?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);			
-			insertProc.setInt(1, batchid);
-			
-			for (Company company : companies) {
-				insertProc.setInt(2, (Integer) company.get("companyid"));
-				insertProc.execute();
-			}
+			CallableStatement companyProc = c.prepareCall(storedCall);			
+			companyProc.setInt(1, batchid);
 			
 			storedCall = "{ call labelQueueAddContact (?, ?) }";
-			insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, batchid);
+			CallableStatement contactProc = c.prepareCall(storedCall);
+			contactProc.setInt(1, batchid);
 			
-			for (Contact contact : contacts) {
-				insertProc.setInt(2, (Integer) contact.get("contactid"));
-				insertProc.execute();
+			for (LabelRecipient recipient : recipients) {
+				Company company = recipient.getCompany();
+				Contact contact = recipient.getContact();
+				
+				if (company != null && contact != null) {
+					String error = "Invalid LabelRecipeint recieved"
+						+ " both contact nor company was set";
+					logger.fatal(error);
+					throw new IllegalArgumentException(error);
+				} else if (company != null) {
+					companyProc.setInt(2, (Integer) company.get("companyid"));
+					companyProc.execute();
+				} else if (contact != null) {
+					contactProc.setInt(2, (Integer) contact.get("contactid"));
+					contactProc.execute();
+				} else {
+					String error = "Invalid LabelRecipeint recieved"
+						+ " neither contact nor company was set";
+					logger.fatal(error);
+					throw new NullPointerException(error);
+				}
 			}
 			
 			c.close();

@@ -105,14 +105,17 @@ public class CustomerView extends LayoutContainer {
 		final CompanyEditPanel companyForm = new CompanyEditPanel();
 		final ContactEditPanel contactForm = new ContactEditPanel();
 		final SelectMailRecipiantsPanel mailForm = new SelectMailRecipiantsPanel();
+		final SelectLabelRecipiantsPanel labelForm = new SelectLabelRecipiantsPanel();
 
 		companyForm.setVisible(true);
 		contactForm.setVisible(true);
 		mailForm.setVisible(false);
+		labelForm.setVisible(false);
 
 		eastPanel.add(companyForm);
 		eastPanel.add(contactForm);
 		eastPanel.add(mailForm);
+		eastPanel.add(labelForm);
 
 		// Show and hide areas appropiately
 		companyListing.addSelectionListener(
@@ -123,10 +126,11 @@ public class CustomerView extends LayoutContainer {
 						companyForm.hide();
 						contactForm.hide();
 						mailForm.show();
+						labelForm.show();
 					} else {
 						companyForm.show();
 						contactForm.show();
-						mailForm.hide();
+						labelForm.hide();
 					}
 				}
 			});
@@ -137,6 +141,7 @@ public class CustomerView extends LayoutContainer {
 				companyForm.unbindCompany();
 				contactForm.unbindCompany();
 				mailForm.unbindCompanies();
+				labelForm.unbindCompanies();
 				
 				if (be.getSelection().size() == 1) {
 					companyForm.bindCompany(be.getSelectedItem());
@@ -146,15 +151,18 @@ public class CustomerView extends LayoutContainer {
 					contactForm.bindCompany(be.getSelectedItem(), contactSalesman);
 				} else if (be.getSelection().size() > 1) {
 					mailForm.bindCompanies(be.getSelection());
+					labelForm.bindCompanies(be.getSelection());
 				}
 			}
 		});
 	
-		mailForm.addDeleteListener(new DeleteCompanyListener() {
+		DeleteCompanyListener deleteListener = new DeleteCompanyListener() {
 			public void handleEvent(DeleteCompanyEvent be) {
 				companyListing.deselectCompany(be.getCompany());
 			}
-		});
+		};
+		mailForm.addDeleteListener(deleteListener);
+		labelForm.addDeleteListener(deleteListener);
 
 		return eastPanel;
 	}

@@ -1,11 +1,11 @@
 package as.markon.viewmodel;
 
-import com.extjs.gxt.ui.client.data.BaseModelData;
+import com.extjs.gxt.ui.client.data.BaseModel;
 
-public class MailContact extends BaseModelData {
+public class MailRecipient extends BaseModel {
 	private static final long serialVersionUID = 1L;
 
-	public MailContact(String name, String mail) {
+	public MailRecipient(String name, String mail) {
 		setName(name);
 		setMail(mail);
 	}

@@ -7,6 +7,7 @@ import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Importance;
+import as.markon.viewmodel.LabelRecipient;
 import as.markon.viewmodel.Salesman;
 import as.markon.viewmodel.Trade;
 
@@ -39,6 +40,6 @@ public interface DataServiceAsync {
 	void deleteSalesman(Salesman salesman, AsyncCallback<Void> callback);
 	void updateSalesman(Salesman salesman, AsyncCallback<Void> callback);
 	void insertSalesman(Salesman salesman, AsyncCallback<Integer> callback);
-	void createPdf(ArrayList<Company> companies, ArrayList<Contact> contacts,
+	void createPdf(ArrayList<LabelRecipient> recipients,
 			AsyncCallback<Integer> callback);
 }
