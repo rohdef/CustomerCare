@@ -26,6 +26,7 @@ import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ContactEditPanel extends FormPanel {
@@ -228,7 +229,7 @@ public class ContactEditPanel extends FormPanel {
 		toolbar.add(addContactBtn);
 		
 		final Button deleteContactBtn = new Button();
-		deleteContactBtn.setText("Slet markerede kontakt");
+		deleteContactBtn.setText("Slet kontakt");
 		deleteContactBtn.setIcon(IconHelper.createPath("images/user_delete.gif"));
 		deleteContactBtn.disable();
 		deleteContactBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -267,19 +268,37 @@ public class ContactEditPanel extends FormPanel {
 			}
 		});
 		
+		toolbar.add(deleteContactBtn);
+		
+		final Button sendMailBtn = new Button("Send mail");
+		sendMailBtn.setIcon(IconHelper.createPath("images/email.gif"));
+		sendMailBtn.disable();
+		sendMailBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				Window.open("mailto:"+((Contact)contactBinding.getModel()).getMail(),
+						"_blank", "");
+			}
+		});
+		toolbar.add(sendMailBtn);
+		
 		contactBinding.addListener(Events.Bind, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
 				deleteContactBtn.enable();
+				sendMailBtn.enable();
 			}
 		});
 		
 		contactBinding.addListener(Events.UnBind, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
 				deleteContactBtn.disable();
+				sendMailBtn.disable();
 			}
 		});
 		
-		toolbar.add(deleteContactBtn);
+		
+		
+		
 		
 		return toolbar;
 	}

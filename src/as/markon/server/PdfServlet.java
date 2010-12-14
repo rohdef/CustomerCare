@@ -131,9 +131,8 @@ public class PdfServlet extends HttpServlet {
 					"\tk.contactname\n" +
 					"\tFROM labelqueue q, contacts k, companies c, postalcodes p\n" +
 					"\tWHERE q.companyid = c.companyid AND q.contactid = k.contactid " +
-					"\tAND c.postal=p.postal";
+					"\tAND c.postal=p.postal AND q.batchid="+batchId+";";
 			
-			logger.info("Executing query:\n"+companyQuery);
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 
@@ -158,9 +157,7 @@ public class PdfServlet extends HttpServlet {
 			String companyQuery = "SELECT c.companyname, c.address, c.postal, p.city\n" +
 					"\tFROM labelqueue q, companies c, postalcodes p\n" +
 					"\tWHERE q.companyid = c.companyid AND q.contactid IS NULL " +
-					"\tAND c.postal=p.postal;";
-			
-			logger.info(companyQuery);
+					"\tAND c.postal=p.postal AND batchid="+batchId+";";
 			
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);

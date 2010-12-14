@@ -47,6 +47,7 @@ public interface DataService extends RemoteService {
 	
 	// This logically belong elsewhere, but it wouldn't work :(
 	public void sendMail(String user, String subject, String message, List<String> recipients);
+	public Integer createPdf(ArrayList<Company> companies, ArrayList<Contact> contacts);
 	
 	// Gah, there should be a better way to register types for serialization
 	public Importance getImportance(String name);

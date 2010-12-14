@@ -39,4 +39,6 @@ public interface DataServiceAsync {
 	void deleteSalesman(Salesman salesman, AsyncCallback<Void> callback);
 	void updateSalesman(Salesman salesman, AsyncCallback<Void> callback);
 	void insertSalesman(Salesman salesman, AsyncCallback<Integer> callback);
+	void createPdf(ArrayList<Company> companies, ArrayList<Contact> contacts,
+			AsyncCallback<Integer> callback);
 }

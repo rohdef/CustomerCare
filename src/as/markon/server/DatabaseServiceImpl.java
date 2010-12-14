@@ -64,7 +64,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			if (c != null && !c.isClosed())
 				return;
 
+			logger.info("Connecting to database");
 			c = DriverManager.getConnection(url + db, user, password);
+			logger.info("Connected");
 		} catch (SQLException e) {
 			logger.fatal("Database connection failed", e);
 			throw new RuntimeException("Kunne ikke oprette forbindelse til databasen.");
@@ -73,7 +75,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	public void close() {
 		try {
+			logger.info("Closing database");
 			c.close();
+			logger.info("Connection closed");
 		} catch (SQLException e) {
 			logger.error("Could not close database connection", e);
 		}
@@ -121,6 +125,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void sendMail(String user, String subject, String message,
 			List<String> recipients) {
 		try {
+			logger.info("Starting to send mails");
+			
 			for (String recipiant : recipients) {
 				HtmlEmail mail = new HtmlEmail();
 				mail.addTo(recipiant);
@@ -726,6 +732,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			Statement tradeStatement = c.createStatement();
 			ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
 
+			logger.info("Getting trades");
 			while (tradeResult.next()) {
 				Trade trade = new Trade();
 				trade.setTrade(tradeResult.getString("tradename"));
@@ -734,6 +741,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				tradeMap.put(tradeResult.getInt("tradeid"), trade);
 				trades.add(trade);
 			}
+			logger.info(trades.size() + " trades fetched");
 		} catch (Exception e) {
 			tradeMap = null;
 			trades = null;
@@ -798,4 +806,46 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		      return null;
 		  }
 		}
+
+
+	public Integer createPdf(ArrayList<Company> companies,
+			ArrayList<Contact> contacts) {
+		connect();
+		Integer batchid = 0;
+		
+		try {
+			
+			String batchIdCall = "{ ? = call nextval('labelqueue_batchid_seq') }";
+			CallableStatement batchIdProc = c.prepareCall(batchIdCall);
+			
+			batchIdProc.registerOutParameter(1, Types.BIGINT);
+			batchIdProc.execute();
+			batchid = (int) batchIdProc.getLong(1);
+			
+			String storedCall = "{ call labelQueueAddCompany (?, ?) }";
+			CallableStatement insertProc = c.prepareCall(storedCall);			
+			insertProc.setInt(1, batchid);
+			
+			for (Company company : companies) {
+				insertProc.setInt(2, (Integer) company.get("companyid"));
+				insertProc.execute();
+			}
+			
+			storedCall = "{ call labelQueueAddContact (?, ?) }";
+			insertProc = c.prepareCall(storedCall);
+			insertProc.setInt(1, batchid);
+			
+			for (Contact contact : contacts) {
+				insertProc.setInt(2, (Integer) contact.get("contactid"));
+				insertProc.execute();
+			}
+			
+			c.close();
+		} catch (Exception e) {
+			logger.fatal("Trying to queue company for mail", e);
+			throw new RuntimeException("Kunne ikke oprette post-data.");
+		}
+		
+		return batchid;
+	}
 }

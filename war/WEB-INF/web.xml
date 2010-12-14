@@ -14,18 +14,9 @@
     <servlet-name>dataServlet</servlet-name>
     <servlet-class>as.markon.server.DatabaseServiceImpl</servlet-class>
   </servlet>
-  
   <servlet-mapping>
     <servlet-name>dataServlet</servlet-name>
     <url-pattern>/customercare/data</url-pattern>
-  </servlet-mapping>
-  <servlet>
-  	<servlet-name>PdfService</servlet-name>
-  	<servlet-class>as.markon.server.PdfServiceImpl</servlet-class>
-  </servlet>
-  <servlet-mapping>
-  	<servlet-name>PdfService</servlet-name>
-  	<url-pattern>/customercare/pdf</url-pattern>
   </servlet-mapping>
   
   <servlet>

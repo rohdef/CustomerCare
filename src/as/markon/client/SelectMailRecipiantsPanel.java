@@ -2,6 +2,8 @@ package as.markon.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
@@ -29,6 +31,7 @@ import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class SelectMailRecipiantsPanel extends FormPanel {
+	private static Logger logger = Logger.getLogger(SelectMailRecipiantsPanel.class.getName());
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
 	private ArrayList<ComboBox<MailContact>> boxes;
 	private Grid<Company> mtGrid;
@@ -80,6 +83,29 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		mtGrid.setStripeRows(true);
 		this.add(mtGrid);
 
+//		this.addButton(new Button("Print labels", new SelectionListener<ButtonEvent>() {
+//			@Override
+//			public void componentSelected(ButtonEvent ce) {
+//				logger.log(Level.INFO, "Starting pdf call");
+//				dataService.createPdf(companies,
+//						contacts,
+//						new AsyncCallback<Integer>() {
+//							public void onSuccess(Integer result) {
+//								String url = "./customercare/pdfdownload?labelsessid="
+//									+result;
+//								String title = "Printer";
+//								openUrl(url, title);
+//							}
+//							
+//							public void onFailure(Throwable caught) {
+//								logger.log(Level.SEVERE,
+//										"Creating the pdf model failed",
+//										caught);
+//							}
+//						});
+//			}
+//		}));
+		
 		this.addButton(new Button("Skriv mail",
 				new SelectionListener<ButtonEvent>() {
 					@Override
@@ -204,4 +230,8 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 	public void removeDeleteListener(DeleteCompanyListener listener) {
 		deleteListeners.remove(listener);
 	}
+	
+	private static native void openUrl(String url, String name) /*-{
+		$wnd.open(url, name);
+	}-*/;
 }

@@ -2,6 +2,7 @@ package as.markon.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Salesman;
@@ -40,12 +41,12 @@ import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.LabelToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CompanyListingPanel extends ContentPanel {
+	private static Logger logger = Logger.getLogger(CompanyListingPanel.class.getName());
 	private LoadingDialog loader = new LoadingDialog();
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
 
@@ -183,36 +184,11 @@ public class CompanyListingPanel extends ContentPanel {
 				}
 			});
 			companyToolBar.add(salesmanAdminBtn);
-			
-			final Button printTest = new Button("Print");
-			printTest.addSelectionListener(new SelectionListener<ButtonEvent>() {
-				@Override
-				public void componentSelected(ButtonEvent ce) {
-					PdfServiceAsync pdf = GWT.create(PdfService.class);
-					pdf.createPdf(companyGrid.getSelectionModel().getSelectedItems(),
-							new AsyncCallback<Integer>() {
-								public void onSuccess(Integer result) {
-									String url = "./customercare/pdfdownload?labelsessid="
-										+result;
-									String title = "Printer";
-									openUrl(url, title);
-								}
-								
-								public void onFailure(Throwable caught) {
-								}
-							});
-				}
-			});
-			//companyToolBar.add(printTest);
 		}
 		
 		return companyToolBar;
 	}
  	
- 	private static native void openUrl(String url, String name) /*-{
- 		$wnd.open(url, name);
- 	}-*/;
-
 	private ContentPanel createCustomerListing() {
 		ContentPanel panel = new ContentPanel();
 		panel.setLayout(new FitLayout());
@@ -312,6 +288,7 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		loadingProspects = true;
 		checkLoader();
+		logger.info("Fetching prospect companies");
 		dataService.getProspectCompanies(new AsyncCallback<ArrayList<Company>>() {
 			public void onSuccess(ArrayList<Company> result) {
 				prospectStore.setMonitorChanges(true);
@@ -358,6 +335,7 @@ public class CompanyListingPanel extends ContentPanel {
 		loadingCustomers = true;
 		checkLoader();
 		
+		logger.info("Getting customer listing");
 		dataService.getCompanies(salesman,
 				new AsyncCallback<ArrayList<Company>>() {
 					public void onSuccess(ArrayList<Company> result) {

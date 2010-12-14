@@ -9,8 +9,8 @@ import as.markon.viewmodel.Importance;
 import as.markon.viewmodel.Trade;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.binding.Bindings;
 import com.extjs.gxt.ui.client.binding.FieldBinding;
+import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
@@ -31,6 +31,7 @@ import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CompanyEditPanel extends FormPanel {
@@ -39,8 +40,7 @@ public class CompanyEditPanel extends FormPanel {
 	
 	private ListStore<City> cityStore;
 	private Company original;
-//	private FormBinding binding;
-	private Bindings binding;
+	private FormBinding binding;
 	private SimpleComboBox<Importance> importanceBox;
 	private ComboBox<Trade> tradeBox;
 	private ListStore<Trade> tradeStore;
@@ -55,9 +55,11 @@ public class CompanyEditPanel extends FormPanel {
 
 	private FormButtonBinding buttonBinding;
 
+	private Button mailBtn;
+
 	public CompanyEditPanel() {
 		this.setHeading("Firmadata");
-		binding = new Bindings();
+		binding = new FormBinding(this);
 
 		cityStore = new ListStore<City>();
 		dataService.getCities(new AsyncCallback<ArrayList<City>>() {
@@ -206,6 +208,7 @@ public class CompanyEditPanel extends FormPanel {
 		
 		this.setTopComponent(getToolBar());
 		this.setReadOnly(true);
+		binding.autoBind();
 	}
 
 	public void bindCompany(Company company) {
@@ -222,6 +225,7 @@ public class CompanyEditPanel extends FormPanel {
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
 		buttonBinding.addButton(saveBtn);
+		mailBtn.enable();
 		
 		this.setReadOnly(false);
 	}
@@ -235,6 +239,7 @@ public class CompanyEditPanel extends FormPanel {
 
 		buttonBinding.removeButton(saveBtn);
 		saveBtn.disable();
+		mailBtn.disable();
 	}
 
 	private ToolBar getToolBar() {
@@ -251,11 +256,21 @@ public class CompanyEditPanel extends FormPanel {
 		});
 		toolBar.add(saveBtn);
 		
+		mailBtn = new Button("Send mail");
+		mailBtn.setIcon(IconHelper.createPath("images/email.gif"));
+		mailBtn.disable();
+		mailBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				Window.open("mailto:"+mailFld.getValue(), "", "");
+			}
+		});
+		toolBar.add(mailBtn);
+		
 		buttonBinding = new FormButtonBinding(this);
 		
 		return toolBar;
 	}
-	
 
 	private void save() {
 		final Company updated = (Company) binding.getModel();
