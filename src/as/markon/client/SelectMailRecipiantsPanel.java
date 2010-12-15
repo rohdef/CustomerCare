@@ -94,7 +94,14 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 							@SuppressWarnings("unchecked")
 							ComboBox<MailRecipient> combo = (ComboBox<MailRecipient>) mtGrid
 									.getView().getWidget(i, 1);
-							recipients.add(combo.getValue());
+							MailRecipient recipient = combo.getValue();
+							if (recipient == null)
+								logger.log(Level.FINER, "\tIgnoring company, contact not set.");
+							else {
+								logger.log(Level.FINER, "\tAdding recipient: " + 
+										recipient.getName() + "<" + recipient.getMail() + ">");
+								recipients.add(recipient);
+							}
 						}
 						logger.log(Level.INFO, recipients.size() + " mail recipients recorded");
 
