@@ -33,7 +33,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private static final long serialVersionUID = 1L;
 	private Logger logger = Logger.getLogger(DatabaseServiceImpl.class);
 
-	private ArrayList<Company> companies;
 	private ArrayList<Trade> trades;
 	private ArrayList<City> cities;
 	private ArrayList<Salesman> salespeople;
@@ -91,6 +90,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	public synchronized ArrayList<City> getCities() {
 		if (cities == null) {
+			logger.info("Preparing to fetch cities");
+			
 			cities = new ArrayList<City>();
 			cityMap = new HashMap<Integer, City>();
 
@@ -100,17 +101,24 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				Statement cityStatement = c.createStatement();
 
 				String citySql = "SELECT p.postal, p.city FROM postalcodes p;";
+				logger.info("Fetching cities");
+				logger.debug("\tThe sql being used is: " + citySql);
 				ResultSet cityResults = cityStatement.executeQuery(citySql);
 
 				while (cityResults.next()) {
+					logger.debug("\tCity fetched:");
 					int postal = cityResults.getInt("postal");
+					logger.debug("\t\tPostal: "+postal);
+					String cityname = cityResults.getString("city");
+					logger.debug("\t\tCity name: "+cityname);
 					City c = new City();
 					c.setPostal(postal);
-					c.setCity(cityResults.getString("city"));
+					c.setCity(cityname);
 
 					cities.add(c);
 					cityMap.put(postal, c);
 				}
+				logger.info("\t"+cities.size() + " cities fetched");
 			} catch (Exception e) {
 				cities = null;
 				cityMap = null;
@@ -140,8 +148,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 								"recommend that you upgrade your program.");
 
 				mail.setHostName("pasmtp.tele.dk");
-				logger.info("Sending the mail\nSubject: "+subject+"\nMessage: "+mail
-						+"\n\nTo: "+recipiant+"\nFrom: "+user+"\n");
+				logger.debug("\tSending the mail\n\t\tSubject: "+subject+"\n\t\tMessage: "+mail
+						+"\n\n\t\tTo: "+recipiant+"\n\t\tFrom: "+user+"\n");
 				
 				mail.send();
 			}
@@ -158,14 +166,14 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	// Companies
 	//
 	public synchronized ArrayList<Company> getCompanies(Salesman salesman) {
+		logger.info("Fetching companies");
 		getTrades();
 		getCities();
 		getSalesmen();
 		int salesmanId = salesman.get("salesmanid");
+		logger.debug("\tThe salesman id is: "+salesmanId);
 
 		try {
-			companies = new ArrayList<Company>();
-
 			connect();
 			Statement companyStatement;
 			companyStatement = c.createStatement();
@@ -177,93 +185,102 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "	c.postal,\n"
 					+ " c.city,\n"
 					+ "	c.phone,\n"
-					+ "	c.mail,\n"
 					+ "	c.importance,\n"
 					+ "	c.comments,\n"
-					+ " c.tradeid,\n"
-					+ " c.acceptsmails\n"
+					+ " c.tradeid\n"
 					+ "		FROM salespeople s, companieswithcities c, contacts k\n"
 					+ "		WHERE c.companyid = k.companyid\n"
 					+ "			AND k.salesmanid = s.salesmanid\n"
 					+ "			AND s.salesmanid = " + salesmanId + ";";
+			logger.debug("\tThe sql being used is: "+companyQuery);			
 
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 
-			while (companyResults.next()) {
-				Company c = new Company();
-
-				c.set("companyid", companyResults.getInt("companyid"));
-
-				String companyName = companyResults.getString("companyname");
-				if (companyName == null)
-					throw new RuntimeException(
-							"Data error occured, a company without name should not be possible.");
-				c.setCompanyName(companyName);
-
-				String companyAddress = companyResults.getString("address");
-				if (companyAddress == null)
-					companyAddress = "";
-				c.setAddress(companyAddress);
-
-				c.setPostal(companyResults.getInt("postal"));
-
-				String companyCity = companyResults.getString("city");
-				if (companyCity == null)
-					companyCity = "";
-				c.setCity(companyCity);
-
-				String companyPhone = companyResults.getString("phone");
-				if (companyPhone == null)
-					companyPhone = "";
-				c.setPhone(companyPhone);
-
-				String companyMail = companyResults.getString("mail");
-				if (companyMail == null)
-					companyMail = "";
-				c.setMail(companyMail);
-
-				String importanceChar = companyResults.getString("importance");
-				if (importanceChar == null)
-					importanceChar = "I";
-				c.setImportance(Importance.valueOf(importanceChar));
-
-				c.setComments(companyResults.getString("comments"));
-
-				Trade noTrade = new Trade();
-				noTrade.setTrade("Ingen branche valgt");
-				int tradeid = companyResults.getInt("tradeid");
-				if (!companyResults.wasNull())
-					c.setTrade(tradeMap.get(new Integer(tradeid)));
-				else
-					c.setTrade(noTrade);
-
-				Boolean acceptsmails = companyResults.getBoolean("acceptsmails");
-				if (acceptsmails == null)
-					acceptsmails = false;
-				c.setAcceptsMails(acceptsmails);
-				
-				companies.add(c);
-			}
+			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
+			logger.info(companies.size() + " companies fetched");
+			return companies;
 		} catch (SQLException e) {
 			logger.fatal("Fetch customers for "+salesman.get("salesmanid"), e);
 			throw new RuntimeException("Kunne ikke hente kundelisten for "
 					+ salesman.getSalesman());
 		}
+		
+	}
 
-		close();
+	private ArrayList<Company> fillCompanyArrayList(ResultSet companyResults)
+			throws SQLException {
+		ArrayList<Company> companies = new ArrayList<Company>();
+		while (companyResults.next()) {
+			int companyid = companyResults.getInt("companyid");
+			String companyName = companyResults.getString("companyname");
+			String companyAddress = companyResults.getString("address");
+			String companyCity = companyResults.getString("city");
+			int postal = companyResults.getInt("postal");
+			String companyPhone = companyResults.getString("phone");
+			String importanceChar = companyResults.getString("importance");
+			String comments = companyResults.getString("comments");
+			int tradeid = companyResults.getInt("tradeid");
+			
+			logger.debug("\tCompany fetched:");
+			logger.debug("\t\tID: " + companyid);
+			logger.debug("\t\tName: " + companyName);
+			logger.debug("\t\tAddress: " + companyAddress);
+			logger.debug("\t\tCity (should be blank or null in most cases):" + companyCity);
+			logger.debug("\t\tPostal: " + postal);
+			logger.debug("\t\tPhone: " + companyPhone);
+			logger.debug("\t\tImportance: " + importanceChar);
+			logger.debug("\t\tComments: " + comments);
+			logger.debug("\t\tTrade id: " + tradeid);
 
+			Company c = new Company();
+			c.set("companyid", companyid);
+
+			if (companyName == null)
+				throw new RuntimeException(
+						"Data error occured, a company without name should not be possible.");
+			c.setCompanyName(companyName);
+
+			if (companyAddress == null)
+				companyAddress = "";
+			c.setAddress(companyAddress);
+
+			c.setPostal(postal);
+
+			if (companyCity == null)
+				companyCity = "";
+			c.setCity(companyCity);
+
+			if (companyPhone == null)
+				companyPhone = "";
+			c.setPhone(companyPhone);
+
+			if (importanceChar == null)
+				importanceChar = "I";
+			c.setImportance(Importance.valueOf(importanceChar));
+
+			c.setComments(comments);
+
+			Trade noTrade = new Trade();
+			noTrade.setTrade("Ingen branche valgt");
+			if (!companyResults.wasNull())
+				c.setTrade(tradeMap.get(new Integer(tradeid)));
+			else
+				c.setTrade(noTrade);
+			
+			companies.add(c);
+			logger.debug("\t\tSuccessfully added\n");
+		}
 		return companies;
 	}
 	
 	public synchronized ArrayList<Company> getProspectCompanies() {
+		logger.info("Getting prospect companies");
 		getTrades();
 		getCities();
 		getSalesmen();
 
 		try {
-			companies = new ArrayList<Company>();
-
 			connect();
 			Statement companyStatement;
 			companyStatement = c.createStatement();
@@ -275,82 +292,25 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "	c.postal,\n"
 					+ " c.city,\n"
 					+ "	c.phone,\n"
-					+ "	c.mail,\n"
 					+ "	c.importance,\n"
 					+ "	c.comments,\n"
-					+ " c.tradeid,\n"
-					+ " c.acceptsmails\n"
+					+ " c.tradeid\n"
 					+ "		FROM companieswithcities c\n"
 					+ "		WHERE c.companyid NOT IN\n"
 					+ "			(SELECT k.companyid FROM contacts k\n"
 					+ "				WHERE k.salesmanid IS NOT null);";
+			logger.debug("\tSql used is: " + companyQuery);
 
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 
-			while (companyResults.next()) {
-				Company c = new Company();
-
-				c.set("companyid", companyResults.getInt("companyid"));
-
-				String companyName = companyResults.getString("companyname");
-				if (companyName == null)
-					throw new RuntimeException(
-							"Data error occured, a company without name should not be possible.");
-				c.setCompanyName(companyName);
-
-				String companyAddress = companyResults.getString("address");
-				if (companyAddress == null)
-					companyAddress = "";
-				c.setAddress(companyAddress);
-
-				c.setPostal(companyResults.getInt("postal"));
-
-				String companyCity = companyResults.getString("city");
-				if (companyCity == null)
-					companyCity = "";
-				c.setCity(companyCity);
-
-				String companyPhone = companyResults.getString("phone");
-				if (companyPhone == null)
-					companyPhone = "";
-				c.setPhone(companyPhone);
-
-				String companyMail = companyResults.getString("mail");
-				if (companyMail == null)
-					companyMail = "";
-				c.setMail(companyMail);
-
-				String importanceChar = companyResults.getString("importance");
-				if (importanceChar == null)
-					importanceChar = "I";
-				c.setImportance(Importance.valueOf(importanceChar));
-
-				c.setComments(companyResults.getString("comments"));
-
-				Trade noTrade = new Trade();
-				noTrade.setTrade("Ingen branche valgt");
-				int tradeid = companyResults.getInt("tradeid");
-				if (!companyResults.wasNull())
-					c.setTrade(tradeMap.get(new Integer(tradeid)));
-				else
-					c.setTrade(noTrade);
-
-				Boolean acceptsmails = companyResults.getBoolean("acceptsmails");
-				if (acceptsmails == null)
-					acceptsmails = false;
-				c.setAcceptsMails(acceptsmails);
-				
-				companies.add(c);
-			}
+			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
+			logger.info(companies.size() + " prospects fetched");
+			return companies;
 		} catch (SQLException e) {
 			logger.fatal("Get prospects", e);
 			throw new RuntimeException("Kunne ikke hente listen af potentielle kunder.");
 		}
-
-		close();
-
-		return companies;
 	}
 	
 	public synchronized Integer createCompany(Company company,
@@ -358,8 +318,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		connect();
 
 		try {
+			logger.info("Inserting company");
 			String storedCall = "{? = call insertCompany " +
-					"(?, ?, ?, ?, ?, ?, ?, ?, ?) }";
+					"(?, ?, ?, ?, ?, ?, ?) }";
 			CallableStatement insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
 			
@@ -370,23 +331,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			else
 				insertProc.setNull(4, Types.INTEGER);
 			insertProc.setString(5, company.getPhone());
-			insertProc.setString(6, company.getMail());
-			insertProc.setBoolean(7, company.getAcceptsMails());
 			
 			if (company.getTrade() == null || company.getTrade().get("tradeid") == null)
-				insertProc.setNull(8, Types.INTEGER);
+				insertProc.setNull(6, Types.INTEGER);
 			else
-				insertProc.setInt(8, company.getTrade().getId());
+				insertProc.setInt(6, company.getTrade().getId());
 						
-			insertProc.setString(9, company.getImportance().name());
-			insertProc.setString(10, company.getComments());
+			insertProc.setString(7, company.getImportance().name());
+			insertProc.setString(8, company.getComments());
 			
 			insertProc.execute();
+			logger.info("\tSuccessfully inserted the company");
 			
 			int companyid = insertProc.getInt(1);
 			int salesmanid = salesman.get("salesmanid");
 			
-			
+			logger.info("\tInserting contacts");
 			for (Contact c : contacts)
 				insertContact(c, salesmanid, companyid);
 			
@@ -401,8 +361,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		connect();
 
 		try {
+			logger.info("Updating company");
 			String storedCall = "{call updateCompany " +
-					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }";
+					"(?, ?, ?, ?, ?, ?, ?, ?) }";
 			
 			Trade trade = company.getTrade();
 			Integer tradeid = null;
@@ -418,16 +379,15 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			else
 				insertProc.setInt(4, company.getPostal());
 			insertProc.setString(5, company.getPhone());
-			insertProc.setString(6, company.getMail());
-			insertProc.setBoolean(7, company.getAcceptsMails());
 			if (tradeid == null)
-				insertProc.setNull(8, Types.INTEGER);
+				insertProc.setNull(6, Types.INTEGER);
 			else
-				insertProc.setInt(8, tradeid);
-			insertProc.setString(9, company.getImportance().name());
-			insertProc.setString(10, company.getComments());
+				insertProc.setInt(6, tradeid);
+			insertProc.setString(7, company.getImportance().name());
+			insertProc.setString(8, company.getComments());
 			
 			insertProc.execute();
+			logger.info("\tSuccessfully updated");
 		} catch (Exception e) {
 			logger.fatal("Update company: "+company.get("companyid"), e);
 			throw new RuntimeException("Kunne ikke opdatere: "+company.getCompanyName());
@@ -435,6 +395,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	}
 
 	public synchronized void deleteCompanies(List<Company> companies) {
+		logger.info("Delete companies");
 		for (Company c : companies)
 			deleteCompany(c);
 	}
@@ -443,12 +404,14 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		connect();
 
 		try {
+			logger.info("Deleting company");
 			String storedCall = "{call deleteCompany ( ? ) }";
 			
 			CallableStatement insertProc = c.prepareCall(storedCall);
 			insertProc.setInt(1, (Integer) company.get("companyid"));
 			
 			insertProc.execute();
+			logger.info("\tSuccessfully deleted company");
 		} catch (Exception e) {
 			logger.fatal("Delete company "+company.get("companyid"), e);
 			throw new RuntimeException("Kunne ikke slette: "+company.getCompanyName());

@@ -26,7 +26,6 @@ import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
-import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
@@ -58,7 +57,6 @@ public class CreateCompany extends LayoutContainer {
 		
 		newCompany = new Company();
 		newCompany.setImportance(Importance.I);
-		newCompany.setAcceptsMails(false);
 		
 		contactStore = new ListStore<Contact>();
 		
@@ -172,17 +170,6 @@ public class CreateCompany extends LayoutContainer {
 		phoneFld.setName("phone");
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		formPanel.add(phoneFld);
-
-		TextField<String> mailFld = new TextField<String>();
-		mailFld.setFieldLabel("Mail:");
-		mailFld.setName("mail");
-		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
-		formPanel.add(mailFld);
-		
-		CheckBox acceptsMailsBox = new CheckBox();
-		acceptsMailsBox.setFieldLabel("Ønsker mails");
-		acceptsMailsBox.setName("acceptsmails");
-		formPanel.add(acceptsMailsBox);
 
 		final ListStore<Trade> tradeStore = new ListStore<Trade>();
 

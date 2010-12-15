@@ -21,7 +21,6 @@ import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.button.Button;
-import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
@@ -31,7 +30,6 @@ import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CompanyEditPanel extends FormPanel {
@@ -44,8 +42,6 @@ public class CompanyEditPanel extends FormPanel {
 	private SimpleComboBox<Importance> importanceBox;
 	private ComboBox<Trade> tradeBox;
 	private ListStore<Trade> tradeStore;
-	private CheckBox acceptsMailsBox;
-	private TextField<String> mailFld;
 	private TextField<String> phoneFld;
 	private ComboBox<City> cityBox;
 	private ComboBox<City> postalBox;
@@ -54,8 +50,6 @@ public class CompanyEditPanel extends FormPanel {
 	private Button saveBtn;
 
 	private FormButtonBinding buttonBinding;
-
-	private Button mailBtn;
 
 	public CompanyEditPanel() {
 		this.setHeading("Firmadata");
@@ -139,19 +133,6 @@ public class CompanyEditPanel extends FormPanel {
 		FieldBinding fb = new FieldBinding(phoneFld, "phone");
 		binding.addFieldBinding(fb);
 
-		mailFld = new TextField<String>();
-		mailFld.setBorders(false);
-		mailFld.setFieldLabel("Mail");
-		mailFld.setName("mail");
-		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
-		mailFld.setAutoValidate(true);
-		this.add(mailFld);
-
-		acceptsMailsBox = new CheckBox();
-		acceptsMailsBox.setFieldLabel("Ønsker nyhedsmails:");
-		acceptsMailsBox.setName("acceptsmails");
-		this.add(acceptsMailsBox);
-
 		tradeStore = new ListStore<Trade>();
 		tradeBox = new ComboBox<Trade>();
 		dataService.getTrades(new AsyncCallback<ArrayList<Trade>>() {
@@ -225,7 +206,6 @@ public class CompanyEditPanel extends FormPanel {
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
 		buttonBinding.addButton(saveBtn);
-		mailBtn.enable();
 		
 		this.setReadOnly(false);
 	}
@@ -239,7 +219,6 @@ public class CompanyEditPanel extends FormPanel {
 
 		buttonBinding.removeButton(saveBtn);
 		saveBtn.disable();
-		mailBtn.disable();
 	}
 
 	private ToolBar getToolBar() {
@@ -255,17 +234,6 @@ public class CompanyEditPanel extends FormPanel {
 			}
 		});
 		toolBar.add(saveBtn);
-		
-		mailBtn = new Button("Send mail");
-		mailBtn.setIcon(IconHelper.createPath("images/email.gif"));
-		mailBtn.disable();
-		mailBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				Window.open("mailto:"+mailFld.getValue(), "", "");
-			}
-		});
-		toolBar.add(mailBtn);
 		
 		buttonBinding = new FormButtonBinding(this);
 		
