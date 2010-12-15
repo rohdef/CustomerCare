@@ -312,6 +312,7 @@ public class ContactEditPanel extends FormPanel {
 					contactStore.add(result);
 					contactsBox.setStore(contactStore);
 					contactsBox.setReadOnly(false);
+					contactsBox.setValue(result.get(0));
 					
 					loader.hide();
 				}
