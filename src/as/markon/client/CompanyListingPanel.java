@@ -2,6 +2,7 @@ package as.markon.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import as.markon.viewmodel.Company;
@@ -54,7 +55,7 @@ public class CompanyListingPanel extends ContentPanel {
 	private String uncheckedStyle = "x-grid3-group-uncheck";
 	
 	private boolean loadingCustomers = true,
-		loadingProspects = true;
+		loadingProspects = false;
 	
 	private GroupingStore<Company> companyStore;
 
@@ -281,28 +282,12 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		CheckBoxSelectionModel<Company> sm = new CustomCheckBoxSelectionModel(companyView);
 		
-		ColumnModel cm = createColumnConfigs(sm);
+		final ColumnModel cm = createColumnConfigs(sm);
 		companyView.setGroupRenderer(new CustomGridGroupRenderer(cm));
 		
 		prospectStore = new GroupingStore<Company>();
 		
-		loadingProspects = true;
-		checkLoader();
 		logger.info("Fetching prospect companies");
-		dataService.getProspectCompanies(new AsyncCallback<ArrayList<Company>>() {
-			public void onSuccess(ArrayList<Company> result) {
-				prospectStore.setMonitorChanges(true);
-				prospectStore.add(result);
-				prospectStore.setDefaultSort("companyname", SortDir.ASC);
-				prospectStore.groupBy("trade");
-				
-				loadingProspects = false;
-				checkLoader();
-			}
-			
-			public void onFailure(Throwable caught) {
-			}
-		});
 		
 		prospectGrid = new Grid<Company>(prospectStore, cm);
 		prospectGrid.setAutoExpandColumn("companyname");
@@ -325,6 +310,31 @@ public class CompanyListingPanel extends ContentPanel {
 		panel.add(prospectGrid);
 		panel.setTopComponent(createToolbar(prospectGrid, prospectStore, sm,
 				companyNameFilter, true));
+		
+		panel.addListener(Events.Expand, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				loadingProspects = true;
+				checkLoader();
+				
+				dataService.getProspectCompanies(new AsyncCallback<ArrayList<Company>>() {
+					public void onSuccess(ArrayList<Company> result) {
+						prospectStore = new GroupingStore<Company>();
+						prospectStore.setMonitorChanges(true);
+						prospectStore.add(result);
+						prospectStore.setDefaultSort("companyname", SortDir.ASC);
+						prospectStore.groupBy("trade");
+						prospectGrid.reconfigure(prospectStore, cm);
+						
+						loadingProspects = false;
+						checkLoader();
+					}
+					
+					public void onFailure(Throwable caught) {
+						logger.log(Level.SEVERE, "Couldn't load prospects", caught);
+					}
+				});
+			}
+		});
 		
 		return panel;
 	}

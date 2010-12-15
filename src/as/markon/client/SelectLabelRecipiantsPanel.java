@@ -87,15 +87,17 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 
 				for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
 					@SuppressWarnings("unchecked")
-					ComboBox<LabelRecipient> combo = (ComboBox<LabelRecipient>) mtGrid
+					XComboBox<LabelRecipient> combo = (XComboBox<LabelRecipient>) mtGrid
 							.getView().getWidget(i, 1);
-					LabelRecipient recipient = combo.getValue();
-					if (recipient == null) {
-						logger.log(Level.FINER, "Recipient is null, so none is" +
-								"selected, ignoring entry.");
-					} else {
-						logger.log(Level.FINE, "Adding " + recipient.getName());
-						recipients.add(recipient);
+					List<LabelRecipient> selectedRecipients = combo.getSelection();
+					for (LabelRecipient recipient : selectedRecipients) {
+						if (recipient == null) {
+							logger.log(Level.FINER, "Recipient is null, so none is" +
+									"selected, ignoring entry.");
+						} else {
+							logger.log(Level.FINE, "Adding " + recipient.getName());
+							recipients.add(recipient);
+						}
 					}
 				}
 				
@@ -138,12 +140,11 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		public Object render(Company model, String property,
 				ColumnData config, int rowIndex, int colIndex,
 				ListStore<Company> store, Grid<Company> grid) {
-			final ComboBox<LabelRecipient> contactsBox = new ComboBox<LabelRecipient>();
+			final XComboBox<LabelRecipient> contactsBox = new XComboBox<LabelRecipient>();
 			contactsBox.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 			contactsBox.setDisplayField("name");
 			contactsBox.setTriggerAction(TriggerAction.ALL);
 			contactsBox.setTypeAhead(true);
-			contactsBox.setForceSelection(true);
 
 			final ArrayList<LabelRecipient> contactMails = new ArrayList<LabelRecipient>();
 			ListStore<LabelRecipient> contactStore = new ListStore<LabelRecipient>();

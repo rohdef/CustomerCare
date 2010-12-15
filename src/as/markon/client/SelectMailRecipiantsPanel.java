@@ -92,15 +92,20 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 
 						for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
 							@SuppressWarnings("unchecked")
-							ComboBox<MailRecipient> combo = (ComboBox<MailRecipient>) mtGrid
+							XComboBox<MailRecipient> combo = (XComboBox<MailRecipient>) mtGrid
 									.getView().getWidget(i, 1);
-							MailRecipient recipient = combo.getValue();
-							if (recipient == null)
-								logger.log(Level.FINER, "\tIgnoring company, contact not set.");
-							else {
-								logger.log(Level.FINER, "\tAdding recipient: " + 
-										recipient.getName() + "<" + recipient.getMail() + ">");
-								recipients.add(recipient);
+							
+							List<MailRecipient> selectedRecipients = combo.getSelection();
+							for (MailRecipient recipient : selectedRecipients) {
+								if (recipient == null)
+									logger.log(Level.FINER, "\tIgnoring company, " +
+											"contact not set.");
+								else {
+									logger.log(Level.FINER, "\tAdding recipient: " + 
+											recipient.getName() + 
+											"<" + recipient.getMail() + ">");
+									recipients.add(recipient);
+								}
 							}
 						}
 						logger.log(Level.INFO, recipients.size() + " mail recipients recorded");
@@ -144,13 +149,12 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		public Object render(Company model, String property,
 				ColumnData config, int rowIndex, int colIndex,
 				ListStore<Company> store, Grid<Company> grid) {
-			final ComboBox<MailRecipient> contactsBox = new ComboBox<MailRecipient>();
+			final XComboBox<MailRecipient> contactsBox = new XComboBox<MailRecipient>();
 			contactsBox.setWidth(grid.getColumnModel().getColumnWidth(
 					colIndex) - 10);
 			contactsBox.setDisplayField("name");
 			contactsBox.setTriggerAction(TriggerAction.ALL);
 			contactsBox.setTypeAhead(true);
-			contactsBox.setForceSelection(true);
 
 			final ArrayList<MailRecipient> contactMails = new ArrayList<MailRecipient>();
 			ListStore<MailRecipient> contactStore = new ListStore<MailRecipient>();

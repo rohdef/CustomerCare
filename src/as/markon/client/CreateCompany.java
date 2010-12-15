@@ -106,6 +106,7 @@ public class CreateCompany extends LayoutContainer {
 		companynameFld.setFieldLabel("Firmanavn:");
 		companynameFld.setName("companyname");
 		companynameFld.setAllowBlank(false);
+		companynameFld.setAutoValidate(true);
 		formPanel.add(companynameFld);
 
 		TextField<String> addressFld = new TextField<String>();
@@ -169,6 +170,7 @@ public class CreateCompany extends LayoutContainer {
 		phoneFld.setFieldLabel("Telefon:");
 		phoneFld.setName("phone");
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
+		phoneFld.setAutoValidate(true);
 		formPanel.add(phoneFld);
 
 		final ListStore<Trade> tradeStore = new ListStore<Trade>();
