@@ -130,6 +130,7 @@ public class CustomerView extends LayoutContainer {
 					} else {
 						companyForm.show();
 						contactForm.show();
+						mailForm.hide();
 						labelForm.hide();
 					}
 				}
