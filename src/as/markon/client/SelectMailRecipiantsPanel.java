@@ -156,11 +156,6 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 			ListStore<MailRecipient> contactStore = new ListStore<MailRecipient>();
 			contactStore.setMonitorChanges(true);
 
-			if (model.getMail() != null && !model.getMail().isEmpty()
-					&& model.getAcceptsMails())
-				contactMails.add(new MailRecipient("Virksomheden", model
-						.getMail()));
-
 			dataService.getContactsFor(Global.getInstance()
 					.getCurrentSalesman(), model,
 					new AsyncCallback<ArrayList<Contact>>() {

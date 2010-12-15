@@ -148,8 +148,8 @@ public class ContactEditPanel extends FormPanel {
 				save();
 			}
 		});
-//		toolbar.add(saveBtn);
-//		buttonBinding.addButton(saveBtn);
+		toolbar.add(saveBtn);
+		buttonBinding.addButton(saveBtn);
 		
 		changeSalesman = new Button();
 		changeSalesman.setText("Flyt til sælger");
@@ -295,10 +295,6 @@ public class ContactEditPanel extends FormPanel {
 				sendMailBtn.disable();
 			}
 		});
-		
-		
-		
-		
 		
 		return toolbar;
 	}
