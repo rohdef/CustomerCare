@@ -51,6 +51,8 @@ public class CompanyEditPanel extends FormPanel {
 
 	private FormButtonBinding buttonBinding;
 
+	private Button calendarBtn;
+
 	public CompanyEditPanel() {
 		this.setHeading("Firmadata");
 		binding = new FormBinding(this);
@@ -206,7 +208,8 @@ public class CompanyEditPanel extends FormPanel {
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
 		buttonBinding.addButton(saveBtn);
-		
+
+		calendarBtn.enable();
 		this.setReadOnly(false);
 	}
 
@@ -219,6 +222,8 @@ public class CompanyEditPanel extends FormPanel {
 
 		buttonBinding.removeButton(saveBtn);
 		saveBtn.disable();
+		calendarBtn.disable();
+		
 	}
 
 	private ToolBar getToolBar() {
@@ -234,6 +239,18 @@ public class CompanyEditPanel extends FormPanel {
 			}
 		});
 		toolBar.add(saveBtn);
+		
+		calendarBtn = new Button("Opret aftale");
+		calendarBtn.setIcon(IconHelper.createPath("images/calendar_add.gif"));
+		calendarBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				CreateEventDialog dialog = new CreateEventDialog(original);
+				dialog.show();
+			}
+		});
+		calendarBtn.disable();
+		toolBar.add(calendarBtn);
 		
 		buttonBinding = new FormButtonBinding(this);
 		

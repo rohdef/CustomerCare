@@ -5,6 +5,7 @@ as.markon.viewmodel.Company, true, true, true, true, as.markon.viewmodel.Company
 as.markon.viewmodel.Contact, true, true, true, true, as.markon.viewmodel.Contact/1411744270, 1411744270
 [Las.markon.viewmodel.Contact;, false, false, true, true, [Las.markon.viewmodel.Contact;/199850987, 199850987
 as.markon.viewmodel.Importance, true, true, true, true, as.markon.viewmodel.Importance/78768694, 78768694
+as.markon.viewmodel.LabelRecipient, false, false, true, true, as.markon.viewmodel.LabelRecipient/2554002909, 2554002909
 as.markon.viewmodel.Salesman, true, true, true, true, as.markon.viewmodel.Salesman/1192439058, 1192439058
 as.markon.viewmodel.Trade, true, true, true, true, as.markon.viewmodel.Trade/459216010, 459216010
 com.extjs.gxt.ui.client.core.FastMap, true, true, true, true, com.extjs.gxt.ui.client.core.FastMap/3488076414, 3488076414
