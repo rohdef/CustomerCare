@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 
 import com.itextpdf.text.Document;
@@ -96,14 +98,27 @@ public class PdfServlet extends HttpServlet {
 	}
 	
 	private Connection c;
-	private String url = "jdbc:postgresql://localhost/",
-			db = "Markon",
-			driver = "org.postgresql.Driver",
-			user = "Markon",
-			password = "123";
+	private String url,
+			database,
+			driver,
+			user,
+			password;
 	
 	private List<LabelData> getCompaniesFor(int batchId) {
 		List<LabelData> labels = new ArrayList<LabelData>();
+		
+		try {
+			XMLConfiguration config = new XMLConfiguration("configuration.xml");
+			
+			driver = "org.postgresql.Driver";
+			url = "jdbc:postgresql://" + config.getString("database.host") + ":" +
+				config.getInt("database.port", 5432) + "/";
+			user = config.getString("database.user");
+			password = config.getString("database.password");
+			database = config.getString("database.database");
+		} catch (ConfigurationException ex) {
+			logger.fatal("Configuration failed", ex);
+		}
 		
 		try {
 			Class.forName(driver).newInstance();
@@ -116,7 +131,7 @@ public class PdfServlet extends HttpServlet {
 		}
 		
 		try {
-			c = DriverManager.getConnection(url + db, user, password);
+			c = DriverManager.getConnection(url + database, user, password);
 			logger.info("Connected to database");
 		} catch (SQLException e) {
 			logger.fatal("Database connection failed", e);

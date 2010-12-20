@@ -4,10 +4,19 @@
 	<classpathentry kind="src" output="test-classes" path="test"/>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/postgresql-9.0-801.jdbc3.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/commons-email-1.2.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/commons-email-1.2.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/kinnie/Downloads/commons-email-1.2/commons-email-1.2-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/activation.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/gxt.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/iText-5.0.5.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/commons-configuration-1.6.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/kinnie/Downloads/commons-configuration-1.6/commons-configuration-1.6-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/mail.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/log4j-1.2.16.jar"/>

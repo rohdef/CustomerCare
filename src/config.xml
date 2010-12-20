@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomerCare>
+	<database>
+		<host>localhost</host>
+		<port>5432</port>
+		<user>Markon</user>
+		<password></password>
+		<database>Markon</database>
+	</database>
+</CustomerCare>

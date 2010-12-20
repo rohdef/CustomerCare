@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.log4j.Logger;
 
@@ -38,14 +40,26 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	private ArrayList<Salesman> salespeople;
 
 	private Connection c;
-	private String url = "jdbc:postgresql://localhost/", db = "Markon",
-			driver = "org.postgresql.Driver", user = "Markon",
-			password = "123";
+	private String url, database, driver, user, password;
 
 	private HashMap<Integer, Trade> tradeMap;
 	private HashMap<Integer, City> cityMap;
 
 	public DatabaseServiceImpl() {
+		try {
+			XMLConfiguration config = new XMLConfiguration("configuration.xml");
+			
+			driver = "org.postgresql.Driver";
+			url = "jdbc:postgresql://" + config.getString("database.host") + ":" +
+				config.getInt("database.port", 5432) + "/";
+			user = config.getString("database.user");
+			password = config.getString("database.password");
+			database = config.getString("database.database");
+		} catch (ConfigurationException ex) {
+			logger.fatal("Configuration failed", ex);
+		}
+		
+		
 		try {
 			Class.forName(driver).newInstance();
 		} catch (InstantiationException e) {
@@ -65,7 +79,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				return;
 
 			logger.info("Connecting to database");
-			c = DriverManager.getConnection(url + db, user, password);
+			c = DriverManager.getConnection(url + database, user, password);
 			logger.info("Connected");
 		} catch (SQLException e) {
 			logger.fatal("Database connection failed", e);
