@@ -2,14 +2,13 @@ package as.markon.client.panels;
 
 import java.util.ArrayList;
 
-import as.markon.client.events.NewContactEvent;
-import as.markon.client.events.NewContactListener;
+import as.markon.client.events.ContactEvent;
+import as.markon.client.events.ContactListener;
 import as.markon.client.specialtypes.VType;
 import as.markon.client.specialtypes.VTypeValidator;
 import as.markon.viewmodel.Contact;
 
 import com.extjs.gxt.ui.client.event.ButtonEvent;
-import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
@@ -18,8 +17,8 @@ import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 
 public class CreateContactPanel extends FormPanel {
-	private ArrayList<NewContactListener> newContactListeners =
-		new ArrayList<NewContactListener>();
+	private ArrayList<ContactListener> newContactListeners =
+		new ArrayList<ContactListener>();
 
 	public CreateContactPanel() {
 		this.setHeading("Kontaktoplysninger");
@@ -74,7 +73,7 @@ public class CreateContactPanel extends FormPanel {
 				newContact.setAcceptsMails(acceptsMailsBox.getValue());
 				newContact.setComments(commentFld.getValue());
 
-				fireNewContactEvent(new NewContactEvent(Events.AfterEdit, newContact));
+				fireNewContactEvent(new ContactEvent(ContactEvent.NEW_CONTACT_TYPE, newContact));
 				clear();
 			}
 		});
@@ -82,16 +81,16 @@ public class CreateContactPanel extends FormPanel {
 		this.addButton(addContactBtn);
 	}
 
-	public void addNewContactListener(NewContactListener listener) {
+	public void addNewContactListener(ContactListener listener) {
 		newContactListeners.add(listener);
 	}
 	
-	public void removeNewContactListener(NewContactListener listener) {
+	public void removeNewContactListener(ContactListener listener) {
 		newContactListeners.remove(listener);
 	}
 	
-	private void fireNewContactEvent(NewContactEvent event) {
-		for (NewContactListener l : newContactListeners) {
+	private void fireNewContactEvent(ContactEvent event) {
+		for (ContactListener l : newContactListeners) {
 			l.handleEvent(event);
 		}
 	}

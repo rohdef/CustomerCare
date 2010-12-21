@@ -3,8 +3,8 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import as.markon.client.events.NewContactEvent;
-import as.markon.client.events.NewContactListener;
+import as.markon.client.events.ContactEvent;
+import as.markon.client.events.ContactListener;
 import as.markon.client.panels.CreateContactPanel;
 import as.markon.client.services.DataServiceAsync;
 import as.markon.client.services.Global;
@@ -77,9 +77,9 @@ public class CreateCompany extends LayoutContainer {
 		contacts.setLayout(new VBoxLayout());
 		
 		CreateContactPanel createNewContactPanel = new CreateContactPanel();
-		createNewContactPanel.addNewContactListener(new NewContactListener() {
+		createNewContactPanel.addNewContactListener(new ContactListener() {
 			
-			public void handleEvent(NewContactEvent be) {
+			public void handleEvent(ContactEvent be) {
 				contactStore.add(be.getContact());
 			}
 		});

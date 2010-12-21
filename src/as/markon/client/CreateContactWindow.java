@@ -1,7 +1,7 @@
 package as.markon.client;
 
-import as.markon.client.events.NewContactEvent;
-import as.markon.client.events.NewContactListener;
+import as.markon.client.events.ContactEvent;
+import as.markon.client.events.ContactListener;
 import as.markon.client.panels.CreateContactPanel;
 import as.markon.client.services.Global;
 
@@ -20,8 +20,8 @@ public class CreateContactWindow extends Window {
 		CreateContactPanel createContact = new CreateContactPanel();
 		createContact.setWidth("100%");
 		
-		createContact.addNewContactListener(new NewContactListener() {
-			public void handleEvent(NewContactEvent be) {
+		createContact.addNewContactListener(new ContactListener() {
+			public void handleEvent(ContactEvent be) {
 				Global.getInstance().getDataService()
 					.insertContact(be.getContact(), salesmanid, companyid,
 							new AsyncCallback<Void>() {
