@@ -57,10 +57,10 @@ public class CompanyListingPanel extends ContentPanel {
 	private boolean loadingCustomers = true,
 		loadingProspects = false;
 	
-	private GroupingStore<Company> companyStore;
 
 	private Grid<Company> companyGrid;
 	private Grid<Company> prospectGrid;
+	private GroupingStore<Company> companyStore;
 	private GroupingStore<Company> prospectStore;
 	private ContentPanel prospectListing;
 
@@ -82,10 +82,10 @@ public class CompanyListingPanel extends ContentPanel {
 	}
 
  	private ToolBar createToolbar(final Grid<Company> companyGrid,
-			final GroupingStore<Company> storeToAddTo,
+			final GroupingStore<Company> currentStore,
 			final CheckBoxSelectionModel<Company> sm,
 			final StringFilter filter,
-			boolean prospect) {
+			final boolean prospect) {
 		ToolBar companyToolBar = new ToolBar();
 		companyToolBar.setEnableOverflow(false);
 		
@@ -144,7 +144,7 @@ public class CompanyListingPanel extends ContentPanel {
 		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
-				Dialog deleteDialog = new DeleteDialog(sm, storeToAddTo);
+				Dialog deleteDialog = new DeleteDialog(sm, prospect);
 				deleteDialog.show();
 			}
 		});
@@ -388,7 +388,7 @@ public class CompanyListingPanel extends ContentPanel {
 
 	private class DeleteDialog extends Dialog {
 		public DeleteDialog(final CheckBoxSelectionModel<Company> sm,
-				final GroupingStore<Company> companyStore) {
+				final boolean prospects) {
 			this.setTitle("Er du sikker på, at du vil slette?");
 			this.addText("Advarsel! Du kan ikke fortryde denne handling!"); 
 			this.addText("Er du sikker på, at du vil slette den markerede virksomhed?");
@@ -404,8 +404,13 @@ public class CompanyListingPanel extends ContentPanel {
 						 dataService.deleteCompanies(sm.getSelectedItems(),
 								 new AsyncCallback<Void>() {
 									public void onSuccess(Void result) {
+										GroupingStore<Company> dataStore;
+										if (prospects)
+											dataStore = prospectStore;
+										else
+											dataStore = companyStore;
 										for (Company company : sm.getSelectedItems())
-											companyStore.remove(company);
+											dataStore.remove(company);
 									}
 									
 									public void onFailure(Throwable caught) {

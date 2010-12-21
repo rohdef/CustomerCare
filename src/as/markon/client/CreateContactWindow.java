@@ -1,5 +1,8 @@
 package as.markon.client;
 
+import as.markon.client.events.NewContactEvent;
+import as.markon.client.events.NewContactListener;
+
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;

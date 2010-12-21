@@ -1,5 +1,7 @@
 package as.markon.client;
 
+import as.markon.client.events.DeleteCompanyEvent;
+import as.markon.client.events.DeleteCompanyListener;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Salesman;
 

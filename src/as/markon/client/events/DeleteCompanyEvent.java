@@ -1,4 +1,4 @@
-package as.markon.client;
+package as.markon.client.events;
 
 import as.markon.viewmodel.Company;
 

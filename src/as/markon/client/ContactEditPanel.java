@@ -127,6 +127,7 @@ public class ContactEditPanel extends FormPanel {
 		
 		dataService.updateContact(contact, new AsyncCallback<Void>() {
 			public void onSuccess(Void result) {
+				contactsBox.setValue((Contact) contactBinding.getModel());
 			}
 			
 			public void onFailure(Throwable caught) {

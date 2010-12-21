@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import as.markon.client.events.DeleteCompanyEvent;
+import as.markon.client.events.DeleteCompanyListener;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.LabelRecipient;

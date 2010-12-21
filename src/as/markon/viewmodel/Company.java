@@ -84,6 +84,8 @@ public class Company extends BaseModel {
 	}
 	
 	public int getPostal() {
+		if (get("postal") == null)
+			return 0;
 		return get("postal");
 	}
 	
