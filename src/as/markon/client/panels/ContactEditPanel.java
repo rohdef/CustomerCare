@@ -1,9 +1,13 @@
 package as.markon.client.panels;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import as.markon.client.CreateContactWindow;
 import as.markon.client.LoadingDialog;
+import as.markon.client.events.ContactEvent;
+import as.markon.client.events.ContactListener;
 import as.markon.client.services.DataServiceAsync;
 import as.markon.client.services.Global;
 import as.markon.client.specialtypes.VType;
@@ -48,6 +52,9 @@ public class ContactEditPanel extends FormPanel {
 	private FormBinding contactBinding;
 	
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private static Logger logger = Logger.getLogger(ContactEditPanel.class.getName());
+	
+	private ArrayList<ContactListener> contactListeners; 
 	private LoadingDialog loader = new LoadingDialog();
 	private Button changeSalesman;
 	private Company company;
@@ -57,6 +64,7 @@ public class ContactEditPanel extends FormPanel {
 	public ContactEditPanel() {
 		this.setHeading("Kontakter");
 
+		contactListeners = new ArrayList<ContactListener>();
 		emptyStore = new ListStore<Contact>();
 
 		contactsBox = new ComboBox<Contact>();
@@ -185,6 +193,7 @@ public class ContactEditPanel extends FormPanel {
 						salesmanStore.add(result);
 						salesmanBox.setForceSelection(true);
 						salesmanBox.select(Global.getInstance().getCurrentSalesman());
+						salesmanBox.setTriggerAction(TriggerAction.ALL);
 					}
 					
 					public void onFailure(Throwable caught) {
@@ -201,8 +210,15 @@ public class ContactEditPanel extends FormPanel {
 						new SelectionListener<ButtonEvent>() {
 							@Override
 							public void componentSelected(ButtonEvent ce) {
+								Contact contact = (Contact)contactBinding.getModel();
+								Contact oldContact = new Contact();
+								oldContact.setProperties(contact.getProperties());
 								Salesman salesman = salesmanBox.getValue();
-								((Contact)contactBinding.getModel()).setSalesman(salesman);
+								contact.setSalesman(salesman);
+								fireContactEvent(new ContactEvent(
+										ContactEvent.CHANGED_CONTACT_TYPE,
+										contact, oldContact)
+								);
 							}
 						});
 				
@@ -260,9 +276,21 @@ public class ContactEditPanel extends FormPanel {
 								dataService.deleteContact((Contact)contactBinding.getModel(),
 										new AsyncCallback<Void>() {
 											public void onSuccess(Void result) {
-												contactStore.remove(
-														(Contact)contactBinding.getModel());
+												Contact contact = (Contact)contactBinding
+													.getModel();
+												contactStore.remove(contact);
 												contactBinding.unbind();
+												
+												fireContactEvent(
+														new ContactEvent(ContactEvent.
+																DELETED_CONTACT_TYPE,
+																contact));
+												
+												if (contactStore.getCount() > 0)
+													contactsBox.setValue(
+															contactStore.getAt(0));
+												else
+													contactsBox.clear();
 											}
 											
 											public void onFailure(Throwable caught) {
@@ -312,6 +340,8 @@ public class ContactEditPanel extends FormPanel {
 		loader.show();
 		addContactBtn.enable();
 		
+		logger.log(Level.INFO, "Fetching contacts for " + company.getCompanyName());
+		logger.log(Level.INFO, "Salesman is set to null? " + (contactSalesman == null));
 		dataService.getContactsFor(contactSalesman, company,
 			new AsyncCallback<ArrayList<Contact>>() {
 				public void onSuccess(ArrayList<Contact> result) {
@@ -337,5 +367,19 @@ public class ContactEditPanel extends FormPanel {
 		this.setReadOnly(true);
 		contactsBox.clear();
 		changeSalesman.disable();
+	}
+	
+	public void addContactListener(ContactListener l) {
+		contactListeners.add(l);
+	}
+	
+	public void removeContactListene(ContactListener l) {
+		contactListeners.remove(l);
+	}
+	
+	private void fireContactEvent(ContactEvent event) {
+		for (ContactListener l : contactListeners) {
+			l.handleEvent(event);
+		}
 	}
 }

@@ -1,5 +1,10 @@
 package as.markon.client;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import as.markon.client.events.ContactEvent;
+import as.markon.client.events.ContactListener;
 import as.markon.client.events.DeleteCompanyEvent;
 import as.markon.client.events.DeleteCompanyListener;
 import as.markon.client.panels.CompanyEditPanel;
@@ -30,18 +35,25 @@ import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
+import com.google.gwt.user.client.ui.Image;
 
 public class CustomerView extends LayoutContainer {
+	private static Logger logger = Logger.getLogger(CustomerView.class.getName());
+	
 	private CompanyListingPanel companyListing;
+	private CompanyEditPanel companyForm;
+	private ContactEditPanel contactForm;
+	private SelectMailRecipiantsPanel mailForm;
+	private SelectLabelRecipiantsPanel labelForm;
 
 	public CustomerView(Salesman salesman) {
 		this.setLayout(new BorderLayout());
 
+		setSalesman(salesman);
+		
 		ContentPanel northPanel = createNorthPanel();
 		companyListing = new CompanyListingPanel();
 		ContentPanel eastPanel = createEastPanel();
-
-		setSalesman(salesman);
 
 		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 100));
 		this.add(companyListing,
@@ -62,6 +74,10 @@ public class CustomerView extends LayoutContainer {
 		topLayout.setHBoxLayoutAlign(HBoxLayoutAlign.MIDDLE);
 		northPanel.setLayout(topLayout);
 
+		Image profileImage = new Image("http://gravatar.com/avatar/"+
+				Global.getInstance().getCurrentSalesman().getMailMd5());
+		northPanel.add(profileImage);
+		
 		Text customersTxt = new Text();
 		customersTxt.setText("Kunder");
 		customersTxt.setStyleAttribute("font-size", "3em;");
@@ -110,10 +126,10 @@ public class CustomerView extends LayoutContainer {
 		ContentPanel eastPanel = new ContentPanel();
 		eastPanel.setHeaderVisible(false);
 
-		final CompanyEditPanel companyForm = new CompanyEditPanel();
-		final ContactEditPanel contactForm = new ContactEditPanel();
-		final SelectMailRecipiantsPanel mailForm = new SelectMailRecipiantsPanel();
-		final SelectLabelRecipiantsPanel labelForm = new SelectLabelRecipiantsPanel();
+		companyForm = new CompanyEditPanel();
+		contactForm = new ContactEditPanel();
+		mailForm = new SelectMailRecipiantsPanel();
+		labelForm = new SelectLabelRecipiantsPanel();
 
 		companyForm.setVisible(true);
 		contactForm.setVisible(true);
@@ -164,7 +180,7 @@ public class CustomerView extends LayoutContainer {
 				}
 			}
 		});
-	
+
 		DeleteCompanyListener deleteListener = new DeleteCompanyListener() {
 			public void handleEvent(DeleteCompanyEvent be) {
 				companyListing.deselectCompany(be.getCompany());
@@ -172,21 +188,43 @@ public class CustomerView extends LayoutContainer {
 		};
 		mailForm.addDeleteListener(deleteListener);
 		labelForm.addDeleteListener(deleteListener);
+		
+		contactForm.addContactListener(new ContactEventListener());
 
 		return eastPanel;
 	}
-
-//	private void krHandleError(Throwable t) {
-//		Dialog errorMessage = new Dialog();
-//		errorMessage.setTitle("Fejl i systemet");
-//		errorMessage.setButtons(Dialog.OK);
-//		errorMessage.setBodyStyle("pad-text");
-//		errorMessage.setScrollMode(Scroll.AUTO);
-//		errorMessage.setHideOnButtonClick(true);
-//		errorMessage.addText("Der er desværre sket en fejl :(\n\""
-//				+ "\"\nsystemet skulle gerne have lavet en log\n"
-//				+ "til ham den flinke på hjul.");
-//
-//		errorMessage.show();
-//	}
+	
+	private class ContactEventListener implements ContactListener {
+		public void handleEvent(ContactEvent be) {
+			logger.log(Level.FINE, "ContactEvent happened: ");
+			logger.log(Level.FINER, "\tContact: "+be.getContact());
+			logger.log(Level.FINER, "\tOldContact: "+be.getOldContact());
+			
+			if (be.getType() == ContactEvent.DELETED_CONTACT_TYPE) {
+				companyListing.removeContactFromLists(be.getContact());
+				return;
+			} else if (be.getType() == ContactEvent.NEW_CONTACT_TYPE) {
+				companyListing.moveContactToCustomers(be.getContact());
+				return;
+			} else if (be.getType() == ContactEvent.CHANGED_CONTACT_TYPE) {
+				if (be.getContact().getSalesman() == null) {
+					if (be.getOldContact().getSalesman() != null) {
+						companyListing.moveContactToProspects(be.getContact());
+					}
+				} else {
+					if (be.getContact().getSalesman().
+							equals(be.getOldContact().getSalesman())) {
+						// Nothing changed really
+					} else if (be.getContact().getSalesman().
+							equals(Global.getInstance().getCurrentSalesman())) {
+						companyListing.moveContactToCustomers(be.getContact());
+					}
+				}
+				
+				return;
+			} else {
+				logger.log(Level.WARNING, "This shouldn't be possible");
+			}
+		}
+	}
 }

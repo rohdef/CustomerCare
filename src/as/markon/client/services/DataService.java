@@ -23,11 +23,23 @@ public interface DataService extends RemoteService {
 	// Companies
 	public ArrayList<Company> getCompanies(Salesman salesman);
 	public ArrayList<Company> getProspectCompanies();
-	public Integer createCompany(Company company, ArrayList<Contact> contacts, Salesman salesman);
+	public Integer createCompany(Company company, ArrayList<Contact> contacts,
+			Salesman salesman);
 	public void updateCompany(Company company);
 	public void deleteCompanies(List<Company> companies);
 	public void deleteCompany(Company company);
+	/**
+	 * Get the application company, this is the company that hosts the application. This
+	 * is used for when creating events and setting the signature in mails.
+	 * @return
+	 */
 	public Company getAppCompany();
+	/**
+	 * 
+	 * @param contact
+	 * @return the company associated with the contact
+	 */
+	public Company getCompanyFor(Contact contact);
 
 	// Contacts
 	public ArrayList<Contact> getContactsFor(Salesman salesman, Company company);
@@ -38,9 +50,29 @@ public interface DataService extends RemoteService {
 	public void updateContact(Contact contact);
 	
 	// Salespeople
+	/**
+	 * Returns the list of existing salesmen
+	 */
 	public ArrayList<Salesman> getSalesmen();
+	/**
+	 * Adds a new salesman to the dataservice
+	 * @param salesman to add to the dataservice
+	 * @return the unique id of the new salesman (remember to set it on the salesman
+	 * if you need to use it for other operations).
+	 */
 	public int insertSalesman(Salesman salesman);
+	/**
+	 * Updates the salesman in the dataservice with the current values. Be aware
+	 * that this will fail if you have modified the id.
+	 * @param salesman
+	 */
 	public void updateSalesman(Salesman salesman);
+	/**
+	 * Deletes the salesman from the dataservice, this cannot be undone.
+	 * 
+	 * The contacts from the salesman will become prospects.
+	 * @param salesman
+	 */
 	public void deleteSalesman(Salesman salesman);
 	
 	// Trades

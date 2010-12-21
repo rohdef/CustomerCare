@@ -98,7 +98,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
-	
 	public Importance getImportance(String name) {
 		return Importance.valueOf(name);
 	}
@@ -121,11 +120,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				ResultSet cityResults = cityStatement.executeQuery(citySql);
 
 				while (cityResults.next()) {
-					logger.debug("\tCity fetched:");
+//					logger.debug("\tCity fetched:");
 					int postal = cityResults.getInt("postal");
-					logger.debug("\t\tPostal: "+postal);
+//					logger.debug("\t\tPostal: "+postal);
 					String cityname = cityResults.getString("city");
-					logger.debug("\t\tCity name: "+cityname);
+//					logger.debug("\t\tCity name: "+cityname);
 					City c = new City();
 					c.setPostal(postal);
 					c.setCity(cityname);
@@ -445,6 +444,50 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Delete company "+company.get("companyid"), e);
 			throw new RuntimeException("Kunne ikke slette: "+company.getCompanyName());
 		}
+	}
+	
+	public Company getCompanyFor(Contact contact) {
+		Company company = null;
+		
+		try {
+			connect();
+			Statement companyStatement;
+			companyStatement = c.createStatement();
+
+			String companyQuery = "SELECT DISTINCT\n"
+					+ "	c.companyid,\n"
+					+ "	c.companyname,\n"
+					+ "	c.address,\n"
+					+ "	c.postal,\n"
+					+ " c.city,\n"
+					+ "	c.phone,\n"
+					+ "	c.importance,\n"
+					+ "	c.comments,\n"
+					+ " c.tradeid\n"
+					+ "		FROM companieswithcities c, contacts k\n"
+					+ "		WHERE c.companyid = k.companyid\n"
+					+ "			AND k.contactid = " + contact.get("contactid") + ";";
+			logger.debug("\tThe sql being used is: "+companyQuery);			
+
+			ResultSet companyResults;
+			companyResults = companyStatement.executeQuery(companyQuery);
+
+			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
+			if (companies.size() == 1) {
+				company = companies.get(0);
+			} else if (companies.size() > 1) {
+				logger.fatal("Error, wrong amount of companies returned. "
+						+ companies.size() + " found, but 1 was expected.");
+				throw new RuntimeException("Forkert antal firmaer fundet for kontakten "
+						+ contact.getName());
+			}
+		} catch (SQLException e) {
+			logger.fatal("Fetch company for "+contact.get("contactid"), e);
+			throw new RuntimeException("Kunne ikke hente firmaet for " +
+					contact.getName());
+		}
+		
+		return company;
 	}
 	
 	//

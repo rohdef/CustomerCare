@@ -12,6 +12,7 @@ import as.markon.client.TradeAdminDialog;
 import as.markon.client.services.DataServiceAsync;
 import as.markon.client.services.Global;
 import as.markon.viewmodel.Company;
+import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Salesman;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
@@ -81,6 +82,8 @@ public class CompanyListingPanel extends ContentPanel {
 		this.add(createCustomerListing());
 		prospectListing = createProspectListing();
 		this.add(prospectListing);
+		
+		salesmanChanged();
 	}
 	
 	public boolean isShowingProspects() {
@@ -293,8 +296,6 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		prospectStore = new GroupingStore<Company>();
 		
-		logger.info("Fetching prospect companies");
-		
 		prospectGrid = new Grid<Company>(prospectStore, cm);
 		prospectGrid.setAutoExpandColumn("companyname");
 		prospectGrid.setView(companyView);
@@ -383,6 +384,68 @@ public class CompanyListingPanel extends ContentPanel {
 	
 	public void deselectCompany(Company company) {
 		companyGrid.getSelectionModel().deselect(company);
+	}
+
+	public void moveContactToCustomers(Contact contact) {
+		dataService.getCompanyFor(contact, new AsyncCallback<Company>() {
+			public void onSuccess(Company result) {
+				if (result == null)
+					return;
+				
+				companyStore.add(result);
+				if (isShowingProspects())
+					prospectStore.remove(result);
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
+		
+	}
+	
+	public void moveContactToProspects(Contact contact) {
+		dataService.getCompanyFor(contact, new AsyncCallback<Company>() {
+			public void onSuccess(final Company company) {
+				if (company == null)
+					return;
+				dataService.getAllContacts(company, new AsyncCallback<ArrayList<Contact>>() {
+					public void onSuccess(ArrayList<Contact> result) {
+						for (Contact c : result) {
+							if (c.getSalesman() != null)
+								return;
+						}
+						
+						companyStore.remove(company);	
+						if (isShowingProspects()) {
+							prospectStore.add(company);
+						}
+					}
+					
+					public void onFailure(Throwable caught) {
+					}
+				});
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
+	}
+	
+	public void removeContactFromLists(Contact contact) {
+		dataService.getCompanyFor(contact, new AsyncCallback<Company>() {
+			public void onSuccess(Company result) {
+				if (result == null)
+					return;
+				
+				companyStore.remove(result);
+				if (isShowingProspects()) {
+					prospectStore.remove(result);
+				}
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
 	}
 	
 	private void checkLoader() {
