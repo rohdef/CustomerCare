@@ -2,6 +2,12 @@ package as.markon.client;
 
 import as.markon.client.events.DeleteCompanyEvent;
 import as.markon.client.events.DeleteCompanyListener;
+import as.markon.client.panels.CompanyEditPanel;
+import as.markon.client.panels.CompanyListingPanel;
+import as.markon.client.panels.ContactEditPanel;
+import as.markon.client.panels.SelectLabelRecipiantsPanel;
+import as.markon.client.panels.SelectMailRecipiantsPanel;
+import as.markon.client.services.Global;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Salesman;
 

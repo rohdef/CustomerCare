@@ -1,4 +1,4 @@
-package as.markon.client;
+package as.markon.client.services;
 
 import java.util.ArrayList;
 import java.util.List;

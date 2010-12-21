@@ -1,7 +1,13 @@
-package as.markon.client;
+package as.markon.client.panels;
 
 import java.util.ArrayList;
 
+import as.markon.client.CreateContactWindow;
+import as.markon.client.LoadingDialog;
+import as.markon.client.services.DataServiceAsync;
+import as.markon.client.services.Global;
+import as.markon.client.specialtypes.VType;
+import as.markon.client.specialtypes.VTypeValidator;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.Salesman;

@@ -1,9 +1,11 @@
-package as.markon.client;
+package as.markon.client.panels;
 
 import java.util.ArrayList;
 
 import as.markon.client.events.NewContactEvent;
 import as.markon.client.events.NewContactListener;
+import as.markon.client.specialtypes.VType;
+import as.markon.client.specialtypes.VTypeValidator;
 import as.markon.viewmodel.Contact;
 
 import com.extjs.gxt.ui.client.event.ButtonEvent;

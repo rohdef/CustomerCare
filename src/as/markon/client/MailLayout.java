@@ -3,6 +3,8 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import as.markon.client.services.DataServiceAsync;
+import as.markon.client.services.Global;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.MailRecipient;
 import as.markon.viewmodel.Salesman;

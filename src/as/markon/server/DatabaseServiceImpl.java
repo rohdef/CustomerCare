@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
-import as.markon.client.DataService;
+import as.markon.client.services.DataService;
 import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;

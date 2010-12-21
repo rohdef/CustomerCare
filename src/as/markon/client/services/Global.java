@@ -1,4 +1,4 @@
-package as.markon.client;
+package as.markon.client.services;
 
 import com.google.gwt.core.client.GWT;
 

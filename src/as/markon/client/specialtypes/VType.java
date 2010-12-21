@@ -1,4 +1,4 @@
-package as.markon.client;
+package as.markon.client.specialtypes;
 
 public enum VType {
 	ALPHABET("^[a-zæøåA-ZÆØÅ -\\.,]+$", "Alphabet"), 

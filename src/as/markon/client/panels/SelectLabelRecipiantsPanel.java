@@ -1,4 +1,4 @@
-package as.markon.client;
+package as.markon.client.panels;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,18 +7,17 @@ import java.util.logging.Logger;
 
 import as.markon.client.events.DeleteCompanyEvent;
 import as.markon.client.events.DeleteCompanyListener;
+import as.markon.client.services.DataServiceAsync;
+import as.markon.client.services.Global;
+import as.markon.client.specialtypes.XComboBox;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
-import as.markon.viewmodel.MailRecipient;
+import as.markon.viewmodel.LabelRecipient;
 
-import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.EventType;
-import com.extjs.gxt.ui.client.event.Events;
-import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
-import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
@@ -28,24 +27,23 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
-import com.extjs.gxt.ui.client.widget.layout.FitData;
-import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class SelectMailRecipiantsPanel extends FormPanel {
-	private static Logger logger = Logger.getLogger(SelectMailRecipiantsPanel.class.getName());
+public class SelectLabelRecipiantsPanel extends FormPanel {
+	private static Logger logger = Logger.getLogger(SelectLabelRecipiantsPanel.class.getName());
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
-	private ArrayList<ComboBox<MailRecipient>> boxes;
+	private ArrayList<ComboBox<LabelRecipient>> boxes;
 	private Grid<Company> mtGrid;
 	private ListStore<Company> selectedCompanies, emptyStore;
 	private ColumnModel cm;
 	private ArrayList<DeleteCompanyListener> deleteListeners;
 
-	public SelectMailRecipiantsPanel() {
-		boxes = new ArrayList<ComboBox<MailRecipient>>();
+	public SelectLabelRecipiantsPanel() {
+		boxes = new ArrayList<ComboBox<LabelRecipient>>();
 		deleteListeners = new ArrayList<DeleteCompanyListener>();
 
-		this.setHeading("Mailindstillinger");
+		this.setHeading("Labelindstillinger");
 		
 		GridCellRenderer<Company> recipientRenderer = new RecipientCellRenderer();
 
@@ -84,53 +82,49 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		mtGrid.setBorders(false);
 		mtGrid.setStripeRows(true);
 		this.add(mtGrid);
-		
-		this.addButton(new Button("Skriv mail",
-				new SelectionListener<ButtonEvent>() {
-					@Override
-					public void componentSelected(ButtonEvent ce) {
-						logger.log(Level.INFO, "Preparing mail call");
-						List<MailRecipient> recipients = new ArrayList<MailRecipient>();
 
-						for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
-							@SuppressWarnings("unchecked")
-							XComboBox<MailRecipient> combo = (XComboBox<MailRecipient>) mtGrid
-									.getView().getWidget(i, 1);
-							
-							List<MailRecipient> selectedRecipients = combo.getSelection();
-							for (MailRecipient recipient : selectedRecipients) {
-								if (recipient == null)
-									logger.log(Level.FINER, "\tIgnoring company, " +
-											"contact not set.");
-								else {
-									logger.log(Level.FINER, "\tAdding recipient: " + 
-											recipient.getName() + 
-											"<" + recipient.getMail() + ">");
-									recipients.add(recipient);
-								}
-							}
+		this.addButton(new Button("Print labels", new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				logger.log(Level.INFO, "Starting pdf call");
+				
+				ArrayList<LabelRecipient> recipients = new ArrayList<LabelRecipient>();
+
+				for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
+					@SuppressWarnings("unchecked")
+					XComboBox<LabelRecipient> combo = (XComboBox<LabelRecipient>) mtGrid
+							.getView().getWidget(i, 1);
+					List<LabelRecipient> selectedRecipients = combo.getSelection();
+					for (LabelRecipient recipient : selectedRecipients) {
+						if (recipient == null) {
+							logger.log(Level.FINER, "Recipient is null, so none is" +
+									"selected, ignoring entry.");
+						} else {
+							logger.log(Level.FINE, "Adding " + recipient.getName());
+							recipients.add(recipient);
 						}
-						logger.log(Level.INFO, recipients.size() + " mail recipients recorded");
-
-						final Window mailWin = new Window();
-						mailWin.setSize(700, 550);
-						mailWin.setModal(true);
-						mailWin.setHeading("Mail besked");
-						mailWin.setLayout(new FitLayout());
-
-						MailLayout mailLayout = new MailLayout(recipients);
-						mailLayout.addListener(Events.Close,
-								new Listener<BaseEvent>() {
-									public void handleEvent(BaseEvent be) {
-										mailWin.hide();
-									}
-								});
-
-						mailWin.add(mailLayout, new FitData(4));
-
-						mailWin.show();
 					}
-				}));
+				}
+				
+				logger.log(Level.INFO, recipients.size() + " label recipients recorded");
+				
+				dataService.createPdf(recipients,
+						new AsyncCallback<Integer>() {
+							public void onSuccess(Integer result) {
+								String url = "./customercare/pdfdownload?labelsessid="
+									+result;
+								logger.log(Level.FINE, "Accessubg url "+url);
+								Window.open(url, "_blank", "");
+							}
+							
+							public void onFailure(Throwable caught) {
+								logger.log(Level.SEVERE,
+										"Creating the pdf model failed",
+										caught);
+							}
+						});
+			}
+		}));
 
 		this.setWidth("100%");
 		this.setBorders(false);
@@ -151,30 +145,27 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		public Object render(Company model, String property,
 				ColumnData config, int rowIndex, int colIndex,
 				ListStore<Company> store, Grid<Company> grid) {
-			final XComboBox<MailRecipient> contactsBox = new XComboBox<MailRecipient>();
-			contactsBox.setWidth(grid.getColumnModel().getColumnWidth(
-					colIndex) - 10);
+			final XComboBox<LabelRecipient> contactsBox = new XComboBox<LabelRecipient>();
+			contactsBox.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 			contactsBox.setDisplayField("name");
 			contactsBox.setTriggerAction(TriggerAction.ALL);
 			contactsBox.setTypeAhead(true);
 
-			final ArrayList<MailRecipient> contactMails = new ArrayList<MailRecipient>();
-			ListStore<MailRecipient> contactStore = new ListStore<MailRecipient>();
+			final ArrayList<LabelRecipient> contactMails = new ArrayList<LabelRecipient>();
+			ListStore<LabelRecipient> contactStore = new ListStore<LabelRecipient>();
 			contactStore.setMonitorChanges(true);
+
+			contactMails.add(new LabelRecipient("Virksomheden", model));
 
 			dataService.getContactsFor(Global.getInstance()
 					.getCurrentSalesman(), model,
 					new AsyncCallback<ArrayList<Contact>>() {
 
 						public void onSuccess(ArrayList<Contact> result) {
-							ListStore<MailRecipient> contactStore = new ListStore<MailRecipient>();
+							ListStore<LabelRecipient> contactStore = new ListStore<LabelRecipient>();
 							contactStore.setMonitorChanges(true);
 							for (Contact c : result) {
-								if (c.getMail() != null
-										&& !c.getMail().isEmpty()
-										&& c.getAcceptsMails())
-									contactMails.add(new MailRecipient(c
-											.getName(), c.getMail()));
+								contactMails.add(new LabelRecipient(c.getName(), c));
 							}
 							contactStore.add(contactMails);
 							contactsBox.setStore(contactStore);
@@ -217,8 +208,4 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 	public void removeDeleteListener(DeleteCompanyListener listener) {
 		deleteListeners.remove(listener);
 	}
-	
-	private static native void openUrl(String url, String name) /*-{
-		$wnd.open(url, name);
-	}-*/;
 }

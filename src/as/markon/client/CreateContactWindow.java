@@ -2,6 +2,8 @@ package as.markon.client;
 
 import as.markon.client.events.NewContactEvent;
 import as.markon.client.events.NewContactListener;
+import as.markon.client.panels.CreateContactPanel;
+import as.markon.client.services.Global;
 
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.widget.Window;

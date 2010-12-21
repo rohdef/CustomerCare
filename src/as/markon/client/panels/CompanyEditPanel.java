@@ -1,8 +1,13 @@
-package as.markon.client;
+package as.markon.client.panels;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import as.markon.client.CreateEventDialog;
+import as.markon.client.services.DataServiceAsync;
+import as.markon.client.services.Global;
+import as.markon.client.specialtypes.VType;
+import as.markon.client.specialtypes.VTypeValidator;
 import as.markon.viewmodel.City;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Importance;

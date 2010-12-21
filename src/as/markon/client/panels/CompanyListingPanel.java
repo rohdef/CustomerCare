@@ -1,10 +1,16 @@
-package as.markon.client;
+package as.markon.client.panels;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import as.markon.client.CreateCompany;
+import as.markon.client.LoadingDialog;
+import as.markon.client.SalesmanAdminWindow;
+import as.markon.client.TradeAdminDialog;
+import as.markon.client.services.DataServiceAsync;
+import as.markon.client.services.Global;
 import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Salesman;
 

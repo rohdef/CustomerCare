@@ -1,4 +1,4 @@
-package as.markon.client;
+package as.markon.client.specialtypes;
 
 import com.extjs.gxt.ui.client.widget.form.Field;
 import com.extjs.gxt.ui.client.widget.form.Validator;
