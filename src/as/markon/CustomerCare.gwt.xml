@@ -3,6 +3,10 @@
   <!-- Inherit the core Web Toolkit stuff.                        -->
   <inherits name='com.google.gwt.user.User'/>
   <inherits name='com.extjs.gxt.ui.GXT'/>
+  
+  <script src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2.148" />
+  <inherits name="com.google.gwt.maps.GoogleMaps" />
+  <inherits name="com.claudiushauptmann.gwt.maps.gxt.GwtMapsGxt" />
 
   <!-- Inherit the default GWT style sheet.  You can change       -->
   <!-- the theme of your GWT application by uncommenting          -->

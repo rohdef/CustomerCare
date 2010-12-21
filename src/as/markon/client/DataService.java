@@ -27,9 +27,11 @@ public interface DataService extends RemoteService {
 	public void updateCompany(Company company);
 	public void deleteCompanies(List<Company> companies);
 	public void deleteCompany(Company company);
+	public Company getAppCompany();
 
 	// Contacts
 	public ArrayList<Contact> getContactsFor(Salesman salesman, Company company);
+	public ArrayList<Contact> getAllContacts(Company company);
 	public void deleteContacts(List<Contact> contacts);
 	public void deleteContact(Contact contact);
 	public void insertContact(Contact contact, int salesmanid, int companyid);

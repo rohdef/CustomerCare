@@ -42,4 +42,7 @@ public interface DataServiceAsync {
 	void insertSalesman(Salesman salesman, AsyncCallback<Integer> callback);
 	void createPdf(ArrayList<LabelRecipient> recipients,
 			AsyncCallback<Integer> callback);
+	void getAppCompany(AsyncCallback<Company> callback);
+	void getAllContacts(Company company,
+			AsyncCallback<ArrayList<Contact>> callback);
 }

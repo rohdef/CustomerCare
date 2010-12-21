@@ -3,6 +3,7 @@ package as.markon.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import as.markon.viewmodel.Company;
 import as.markon.viewmodel.MailRecipient;
 import as.markon.viewmodel.Salesman;
 
@@ -28,6 +29,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class MailLayout extends LayoutContainer {
 	private DataServiceAsync dataService;
+	private Company appCompany;
+	
 	public MailLayout(final List<MailRecipient> recipients) {
 		dataService = Global.getInstance().getDataService();
 		this.setLayout(new FitLayout());
@@ -66,9 +69,18 @@ public class MailLayout extends LayoutContainer {
 		contentEditor.setFieldLabel("Indhold");
 		contentEditor.setHeight(380);
 		
-		String initialValue = createInitialValue(Global.getInstance().getCurrentSalesman());
+		dataService.getAppCompany(new AsyncCallback<Company>() {
+			public void onSuccess(Company result) {
+				appCompany = result;
+				String initialValue = createInitialValue(
+						Global.getInstance().getCurrentSalesman());
+				contentEditor.setValue(initialValue);
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
 		
-		contentEditor.setValue(initialValue);
 		senderBox.addSelectionChangedListener(new SelectionChangedListener<Salesman>() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent<Salesman> se) {
@@ -185,25 +197,25 @@ public class MailLayout extends LayoutContainer {
 			+ "{titel}</address>"
 			
 			+ "<address>"
-			+ "<strong>MarkOn A/S</strong><br />"
-			+ "Lystrupvej 62<br />"
-			+ "DK-8240 Risskov<br />"
-			+ "Denmark<address>"
+			+ "<strong>" + appCompany.getCompanyName() + "</strong><br />"
+			+ appCompany.getAddress() + "<br />"
+			+ appCompany.getCity() + "<br />"
+			+ appCompany.get("country") + "<address>"
 			
-			+ "<address>Direct: +45 8619 8686<br />"
+			+ "<address>Direct: " + appCompany.getPhone() + "<br />"
 			+ "Mobile: {mobil}"
 			+ "</address>"
 			
 			+ "<address>"
-			+ "Company tel.: +45 8619 8686<br />"
-			+ "Fax: +45 8619 1729"
+			+ "Company tel.: " + appCompany.getPhone() + "<br />"
+			+ "Fax: " + appCompany.get("fax")
 			+ "</address>"
 			
 			+ "<address>"
-			+ "Web: <a href=\"http://markon.as\">http://markon.as</a><br />"
+			+ "Web: <a href=\"" + appCompany.get("webpage") + "\">" +
+				appCompany.get("webpage") + "</a><br />"
 			+ "E-mail: <a href=\"mailto:{mail}\">{mail}</a><br />"
-			+ "Vat No.: DK 7330 2315<br />"
-			+ "PSI-member number: 9867<br />"
+			+ "Vat No.:" + appCompany.get("vat-no")
 			+ "</address>"
 			
 			+ "" // TODO Ignore vidste du for now

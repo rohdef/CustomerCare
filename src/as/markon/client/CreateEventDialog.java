@@ -12,10 +12,12 @@ import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.FieldEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.widget.CheckBoxListView;
+import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
@@ -35,6 +37,12 @@ import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.NumberFormat;
+import com.google.gwt.maps.client.MapWidget;
+import com.google.gwt.maps.client.geocode.Geocoder;
+import com.google.gwt.maps.client.geocode.LatLngCallback;
+import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.overlay.Marker;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -53,16 +61,19 @@ public class CreateEventDialog extends Dialog {
 	private TimeField endTimeFld;
 	private TimeField startTimeFld;
 	private FormButtonBinding buttonBinding;
+	private MapWidget map;
 	
 	public CreateEventDialog(Company company) {
 		this.company = company;
 		
 		setModal(true);
 		setHeading("Opret aftale");
-		setLayout(new RowLayout(Orientation.VERTICAL));
-		setSize(800, 500);
+		setLayout(new RowLayout(Orientation.HORIZONTAL));
+		setSize(625, 450);
 		
 		add(createEventArea());
+		add(createMapsArea());
+		setMapLocation("Danmark");
 		
 		setButtons(Dialog.OKCANCEL);
 		getButtonById(Dialog.CANCEL).setText("Anuller");
@@ -129,7 +140,6 @@ public class CreateEventDialog extends Dialog {
 		buttonBinding.addButton(getButtonById(Dialog.OK));
 		
 		setHideOnButtonClick(true);
-		setAutoWidth(true);
 	}
 
 	private FormPanel createEventArea() {
@@ -205,18 +215,32 @@ public class CreateEventDialog extends Dialog {
 				
 		locationFld = new TextField<String>();
 		locationFld.setFieldLabel("Placering");
+		locationFld.addListener(Events.Change, new Listener<FieldEvent>() {
+			public void handleEvent(FieldEvent be) {
+				setMapLocation(locationFld.getValue());
+			}
+		});
 		panel.add(locationFld);
 		
 		ButtonBar locationBtnBar = new ButtonBar();		
-		Button locationMarkOnBtn = new Button("Hos MarkOn");
-		locationMarkOnBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				String placeName = "MarkOn A/S";
-				String address = "Lystrupvej 62";
-				String city = "8240 Risskov";
-				
-				locationFld.setValue(placeName + ", " + address + ", " + city);
+		final Button locationMarkOnBtn = new Button("Hos MarkOn");
+		
+		Global.getInstance().getDataService().getAppCompany(new AsyncCallback<Company>() {
+			public void onSuccess(final Company result) {
+				locationMarkOnBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+					@Override
+					public void componentSelected(ButtonEvent ce) {
+						String placeName = result.getCompanyName();
+						String address = result.getAddress();
+						String city = result.getCity();
+						
+						locationFld.setValue(placeName + ", " + address + ", " + city);
+						setMapLocation(placeName + ", " + address + ", " + city);
+					}
+				});
+			}
+			
+			public void onFailure(Throwable caught) {
 			}
 		});
 		locationBtnBar.add(locationMarkOnBtn);
@@ -227,9 +251,11 @@ public class CreateEventDialog extends Dialog {
 			public void componentSelected(ButtonEvent ce) {
 				String placeName = company.getCompanyName();
 				String address = company.getAddress();
+				int postal = company.getPostal();
 				String city = company.getCity();
 				
-				locationFld.setValue(placeName + ", " + address + ", " + city);
+				locationFld.setValue(placeName + ", " + address + ", " + postal + " " + city);
+				setMapLocation(placeName + ", " + address + ", " + postal + " "  + city);
 			}
 		});
 		locationBtnBar.add(locationAtClientBtn);
@@ -245,8 +271,8 @@ public class CreateEventDialog extends Dialog {
 		customerContactsView.setWidth("50%");
 		customerContactsView.setStore(custormerContactsStore);
 		customerContactsView.setDisplayProperty("contactname");
-		Global.getInstance().getDataService().getContactsFor(
-				Global.getInstance().getCurrentSalesman(),
+		Global.getInstance().getDataService().getAllContacts(
+//				Global.getInstance().getCurrentSalesman(),
 				company,
 				new AsyncCallback<ArrayList<Contact>>() {
 					public void onSuccess(ArrayList<Contact> result) {
@@ -280,5 +306,42 @@ public class CreateEventDialog extends Dialog {
 		panel.add(guestListContainer);
 		
 		return panel;
+	}
+
+	private ContentPanel createMapsArea() {
+		ContentPanel panel = new ContentPanel();
+		panel.setHeading("Lokation for mødet");
+		panel.setSize(300, 300);
+		
+		map = new MapWidget();
+		map.setSize("100%", "100%");
+		map.setUIToDefault();
+		map.setContinuousZoom(true);
+		panel.add(map);
+		
+		return panel;
+	}
+	
+	private void setMapLocation(final String address) {
+		Geocoder geocoder = new Geocoder();
+		geocoder.getLatLng(address, new LatLngCallback() {
+			
+			public void onSuccess(final LatLng point) {
+				map.clearOverlays();
+				if (address.equals("Danmark")) {
+					map.setZoomLevel(5);
+					map.panTo(point);
+				} else {
+					Marker marker = new Marker(point);
+					map.addOverlay(marker);
+					map.setZoomLevel(12);
+					map.panTo(point);
+				}
+			}
+			
+			public void onFailure() {
+				logger.finer("Address [" + address + "] not found.");
+			}
+		});
 	}
 }

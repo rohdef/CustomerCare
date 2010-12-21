@@ -44,10 +44,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	private HashMap<Integer, Trade> tradeMap;
 	private HashMap<Integer, City> cityMap;
+	private XMLConfiguration config;
 
 	public DatabaseServiceImpl() {
 		try {
-			XMLConfiguration config = new XMLConfiguration("configuration.xml");
+			config = new XMLConfiguration("config.xml");
 			
 			driver = "org.postgresql.Driver";
 			url = "jdbc:postgresql://" + config.getString("database.host") + ":" +
@@ -222,6 +223,20 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		
 	}
 
+	public Company getAppCompany() {
+		Company appCompany = new Company();
+		appCompany.setCompanyName(config.getString("company.name"));
+		appCompany.setAddress(config.getString("company.address"));
+		appCompany.setCity(config.getString("company.city"));
+		appCompany.set("country", config.getString("company.country"));
+		appCompany.setPhone(config.getString("company.phone"));
+		appCompany.set("fax", config.getString("company.fax"));
+		appCompany.set("webpage", config.getString("company.webpage"));
+		appCompany.set("vat-no", config.getString("company.vat-no"));
+		
+		return appCompany;
+	}
+	
 	private ArrayList<Company> fillCompanyArrayList(ResultSet companyResults)
 			throws SQLException {
 		ArrayList<Company> companies = new ArrayList<Company>();
@@ -574,6 +589,46 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
+	public ArrayList<Contact> getAllContacts(Company company) {
+		try {
+			String contactQuery = "SELECT\n" +
+				"\tk.contactid,\n" +
+				"\tk.contactname,\n" +
+				"\tk.title,\n" +
+				"\tk.phone,\n" +
+				"\tk.mail,\n" +
+				"\tk.acceptsmails,\n" +
+				"\tk.comments\n" +
+				"\t\tFROM contacts k\n" +
+				"\t\tWHERE k.companyid = " + company.get("companyid") + ";";
+
+			connect();
+			Statement contactStatement = c.createStatement();
+			ResultSet contactResult = contactStatement
+					.executeQuery(contactQuery);
+
+			ArrayList<Contact> contacts = new ArrayList<Contact>();
+			while (contactResult.next()) {
+				Contact k = new Contact();
+				k.set("contactid", contactResult.getInt("contactid"));
+				k.setName(contactResult.getString("contactname"));
+				k.setTitle(contactResult.getString("title"));
+				k.setPhone(contactResult.getString("phone"));
+				k.setMail(contactResult.getString("mail"));
+				k.setComments(contactResult.getString("comments"));
+				k.setAcceptsMails(contactResult.getBoolean("acceptsmails"));
+
+				contacts.add(k);
+			}
+
+			return contacts;
+		} catch (Exception e) {
+			logger.fatal("Get contacts for company "+company.get("companyid"), e);
+			throw new RuntimeException("Kunne ikke hente kontaktpersonerne til: " +
+					company.getCompanyName());
+		}
+	}
+	
 	//
 	// Salespeople
 	//

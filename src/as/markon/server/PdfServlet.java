@@ -108,7 +108,7 @@ public class PdfServlet extends HttpServlet {
 		List<LabelData> labels = new ArrayList<LabelData>();
 		
 		try {
-			XMLConfiguration config = new XMLConfiguration("configuration.xml");
+			XMLConfiguration config = new XMLConfiguration("config.xml");
 			
 			driver = "org.postgresql.Driver";
 			url = "jdbc:postgresql://" + config.getString("database.host") + ":" +
