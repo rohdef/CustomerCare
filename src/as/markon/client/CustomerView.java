@@ -24,6 +24,7 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.util.Padding;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
@@ -37,6 +38,10 @@ import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
 import com.google.gwt.user.client.ui.Image;
 
+/**
+ * This is the primary view handling what panels to show and where to show them.
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CustomerView extends LayoutContainer {
 	private static Logger logger = Logger.getLogger(CustomerView.class.getName());
 	
@@ -46,36 +51,60 @@ public class CustomerView extends LayoutContainer {
 	private SelectMailRecipiantsPanel mailForm;
 	private SelectLabelRecipiantsPanel labelForm;
 
+	private Image profileImage;
+
+	/**
+	 * Creates a new instance of the view. This needs a salesman to fetch the correct 
+	 * companies.
+	 * @param salesman
+	 */
 	public CustomerView(Salesman salesman) {
 		this.setLayout(new BorderLayout());
 
-		setSalesman(salesman);
-		
 		ContentPanel northPanel = createNorthPanel();
 		companyListing = new CompanyListingPanel();
 		ContentPanel eastPanel = createEastPanel();
 
-		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 100));
+		setSalesman(salesman);
+
+		this.add(northPanel, new BorderLayoutData(LayoutRegion.NORTH, 120));
 		this.add(companyListing,
 				new BorderLayoutData(LayoutRegion.CENTER, 0.7f));
 		this.add(eastPanel, new BorderLayoutData(LayoutRegion.EAST, 0.3f));
 	}
 
+	/**
+	 * Set the salesman to update the list of companies and set the profile picture. 
+	 * this also registers the global salesman, so other parts of the application can 
+	 * see who is currently show.
+	 * @param salesman
+	 */
 	public synchronized void setSalesman(Salesman salesman) {
 		Global.getInstance().setCurrentSalesman(salesman);
-
+		profileImage.setUrl("http://gravatar.com/avatar/" + salesman.getMailMd5());
+		profileImage.setAltText(salesman.getSalesman());
+		
 		if (companyListing != null)
 			companyListing.salesmanChanged();
 	}
 	
+	/**
+	 * Create the north panel showing the profile picture and the link to change salesman.
+	 * @return
+	 */
 	private ContentPanel createNorthPanel() {
 		ContentPanel northPanel = new ContentPanel();
 		HBoxLayout topLayout = new HBoxLayout();
 		topLayout.setHBoxLayoutAlign(HBoxLayoutAlign.MIDDLE);
+		topLayout.setPadding(new Padding(5));
 		northPanel.setLayout(topLayout);
 
-		Image profileImage = new Image("http://gravatar.com/avatar/"+
-				Global.getInstance().getCurrentSalesman().getMailMd5());
+		profileImage = new Image();
+			
+//			new Image("http://gravatar.com/avatar/"+
+//				Global.getInstance().getCurrentSalesman().getMailMd5());
+		profileImage.setWidth("80px");
+		profileImage.setHeight("80px");
 		northPanel.add(profileImage);
 		
 		Text customersTxt = new Text();
@@ -122,6 +151,12 @@ public class CustomerView extends LayoutContainer {
 		return northPanel;
 	}
 
+	/**
+	 * Creates the east panel, its contents depends on the amount of companies selected. 
+	 * For 0-1 companies it will show the company and contact details. For two or more 
+	 * it will show the e-mail and labels form.
+	 * @return
+	 */
 	private ContentPanel createEastPanel() {
 		ContentPanel eastPanel = new ContentPanel();
 		eastPanel.setHeaderVisible(false);
@@ -194,30 +229,48 @@ public class CustomerView extends LayoutContainer {
 		return eastPanel;
 	}
 	
+	/**
+	 * Private implementation of the ContactListener to appropriately handle when a 
+	 * contact is changed.
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class ContactEventListener implements ContactListener {
 		public void handleEvent(ContactEvent be) {
 			logger.log(Level.FINE, "ContactEvent happened: ");
 			logger.log(Level.FINER, "\tContact: "+be.getContact());
-			logger.log(Level.FINER, "\tOldContact: "+be.getOldContact());
+			logger.log(Level.FINER, "\tOldContact: "+be.getOldContact() +"\n");
 			
 			if (be.getType() == ContactEvent.DELETED_CONTACT_TYPE) {
-				companyListing.removeContactFromLists(be.getContact());
+				logger.fine("\tContact deleted");
+				companyListing.removeCompanyFromLists(be.getCompany());
 				return;
 			} else if (be.getType() == ContactEvent.NEW_CONTACT_TYPE) {
-				companyListing.moveContactToCustomers(be.getContact());
+				logger.fine("\tNew contact recieved");
+				if (be.getCompany() != null)
+					companyListing.moveCompanyToCustomers(be.getCompany());
+				else
+					companyListing.moveContactToCustomers(be.getContact());
+				
 				return;
 			} else if (be.getType() == ContactEvent.CHANGED_CONTACT_TYPE) {
+				logger.fine("\tThe contact was changed");
 				if (be.getContact().getSalesman() == null) {
+					logger.fine("\t\tThe new salesman is null (therefore removed)");
 					if (be.getOldContact().getSalesman() != null) {
 						companyListing.moveContactToProspects(be.getContact());
 					}
 				} else {
 					if (be.getContact().getSalesman().
 							equals(be.getOldContact().getSalesman())) {
-						// Nothing changed really
+						logger.fine("\t\tThe salesman is the same");
 					} else if (be.getContact().getSalesman().
 							equals(Global.getInstance().getCurrentSalesman())) {
-						companyListing.moveContactToCustomers(be.getContact());
+						logger.fine("\t\tThe salesman was changed");
+						
+						if (be.getOldContact().getSalesman() == null)
+							companyListing.moveContactToCustomers(be.getContact());
+					} else {
+						companyListing.removeContactFromLists(be.getContact());
 					}
 				}
 				

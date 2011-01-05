@@ -32,7 +32,7 @@ public interface DataServiceAsync {
 	void deleteContacts(List<Contact> contacts, AsyncCallback<Void> callback);
 	void deleteContact(Contact contact, AsyncCallback<Void> callback);
 	void insertContact(Contact contact, int salesmanid, int companyid,
-			AsyncCallback<Void> callback);
+			AsyncCallback<Integer> callback);
 	void updateContact(Contact contact, AsyncCallback<Void> callback);
 	void getProspectCompanies(AsyncCallback<ArrayList<Company>> callback);
 	void addTrade(Trade trade, AsyncCallback<Void> callback);

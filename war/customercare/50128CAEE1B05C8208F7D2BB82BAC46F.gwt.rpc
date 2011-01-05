@@ -1,7 +1,10 @@
+com.google.gwt.ajaxloader.client.Properties$TypeException, false, false, true, true, com.google.gwt.ajaxloader.client.Properties$TypeException/806639172, 806639172
 com.google.gwt.core.client.impl.SerializableThrowable, false, false, true, true, com.google.gwt.core.client.impl.SerializableThrowable/3336179259, 3336179259
 com.google.gwt.http.client.RequestException, false, false, true, true, com.google.gwt.http.client.RequestException/190587325, 190587325
 com.google.gwt.json.client.JSONException, false, false, true, true, com.google.gwt.json.client.JSONException/2941795468, 2941795468
 com.google.gwt.logging.shared.RemoteLoggingService, false, false, false, false, _, 2602557223
+com.google.gwt.maps.jsio.client.JSONWrapperException, false, false, true, true, com.google.gwt.maps.jsio.client.JSONWrapperException/3422975972, 3422975972
+com.google.gwt.maps.jsio.client.MultipleWrapperException, false, false, true, true, com.google.gwt.maps.jsio.client.MultipleWrapperException/1503780744, 1503780744
 com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException, true, true, true, true, com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException/3936916533, 3936916533
 com.google.gwt.user.client.rpc.InvocationException, false, false, true, false, com.google.gwt.user.client.rpc.InvocationException/1510557512, 1510557512
 com.google.gwt.user.client.rpc.SerializableException, false, false, true, true, com.google.gwt.user.client.rpc.SerializableException/3047383460, 3047383460

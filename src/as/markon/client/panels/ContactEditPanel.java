@@ -136,6 +136,9 @@ public class ContactEditPanel extends FormPanel {
 		this.setTopComponent(getToolbar());
 	}
 	
+	/**
+	 * Saves the contact and updates the selection in the combobox for this panel.
+	 */
 	private void save() {
 		Contact contact = (Contact) contactBinding.getModel();
 		
@@ -150,6 +153,10 @@ public class ContactEditPanel extends FormPanel {
 		});
 	}
 	
+	/**
+	 * Get the toolbar for this panel.
+	 * @return
+	 */
 	private ToolBar getToolbar() {
 		ToolBar toolbar = new ToolBar();
 		FormButtonBinding buttonBinding = new FormButtonBinding(this);
@@ -210,15 +217,23 @@ public class ContactEditPanel extends FormPanel {
 						new SelectionListener<ButtonEvent>() {
 							@Override
 							public void componentSelected(ButtonEvent ce) {
-								Contact contact = (Contact)contactBinding.getModel();
-								Contact oldContact = new Contact();
+								final Contact contact = (Contact)contactBinding.getModel();
+								final Contact oldContact = new Contact();
 								oldContact.setProperties(contact.getProperties());
 								Salesman salesman = salesmanBox.getValue();
 								contact.setSalesman(salesman);
-								fireContactEvent(new ContactEvent(
-										ContactEvent.CHANGED_CONTACT_TYPE,
-										contact, oldContact)
-								);
+								dataService.updateContact(contact, new AsyncCallback<Void>() {
+									public void onSuccess(Void result) {
+										fireContactEvent(new ContactEvent(
+												ContactEvent.CHANGED_CONTACT_TYPE,
+												contact, oldContact)
+										);
+									}
+									
+									public void onFailure(Throwable caught) {
+									}
+								});
+								
 							}
 						});
 				
@@ -243,6 +258,18 @@ public class ContactEditPanel extends FormPanel {
 				createContact.addListener(Events.Hide, new Listener<BaseEvent>() {
 					public void handleEvent(BaseEvent be) {
 						bindCompany(company, Global.getInstance().getCurrentSalesman());
+					}
+				});
+				
+				createContact.addContactListener(new ContactListener() {
+					public void handleEvent(ContactEvent be) {
+						ContactEvent event = be;
+						if (company != null) {
+							event = new ContactEvent(be.getType(), be.getContact(),
+									null, company);
+						}
+						
+						fireContactEvent(event);
 					}
 				});
 				
@@ -284,7 +311,9 @@ public class ContactEditPanel extends FormPanel {
 												fireContactEvent(
 														new ContactEvent(ContactEvent.
 																DELETED_CONTACT_TYPE,
-																contact));
+																contact,
+																null,
+																company));
 												
 												if (contactStore.getCount() > 0)
 													contactsBox.setValue(
@@ -334,6 +363,17 @@ public class ContactEditPanel extends FormPanel {
 		return toolbar;
 	}
 	
+	/**
+	 * Bind company and salesman to the panel to show the contacts for the selected 
+	 * company and salesman.
+	 * 
+	 * This should be called when a company is selected or when the selection is changes. 
+	 * There is no need to run unbindCompany first when changing selection. This is 
+	 * sufficient.
+	 * @param company the newly selected company.
+	 * @param contactSalesman the salesman to show contacts for. This will most likely 
+	 * be the current salesman.
+	 */
 	public void bindCompany(Company company, Salesman contactSalesman) {
 		this.company = company;
 		contactsBox.setStore(emptyStore);
@@ -349,7 +389,8 @@ public class ContactEditPanel extends FormPanel {
 					contactStore.add(result);
 					contactsBox.setStore(contactStore);
 					contactsBox.setReadOnly(false);
-					contactsBox.setValue(result.get(0));
+					if (result.size() > 0)
+						contactsBox.setValue(result.get(0));
 					
 					loader.hide();
 				}
@@ -360,6 +401,10 @@ public class ContactEditPanel extends FormPanel {
 			});
 	}
 	
+	/**
+	 * Removes the company binding for this panel. Use this to clear the boxes and make 
+	 * the panel read only. This should be used when no company is selected any more.
+	 */
 	public void unbindCompany() {
 		addContactBtn.disable();
 		contactsBox.setStore(emptyStore);
@@ -369,14 +414,26 @@ public class ContactEditPanel extends FormPanel {
 		changeSalesman.disable();
 	}
 	
+	/**
+	 * Register a ContactListener to handle changes in the contact.
+	 * @param l the listener handling the changes in the contact.
+	 */
 	public void addContactListener(ContactListener l) {
 		contactListeners.add(l);
 	}
 	
+	/**
+	 * Remove a ContatListener from the registered listeners.
+	 * @param l the listener to remove.
+	 */
 	public void removeContactListene(ContactListener l) {
 		contactListeners.remove(l);
 	}
 	
+	/**
+	 * Fire the registered ContactListeners when the containing event.
+	 * @param event contains the details of the change.
+	 */
 	private void fireContactEvent(ContactEvent event) {
 		for (ContactListener l : contactListeners) {
 			l.handleEvent(event);

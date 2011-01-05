@@ -4,7 +4,7 @@
   <inherits name='com.google.gwt.user.User'/>
   <inherits name='com.extjs.gxt.ui.GXT'/>
   
-  <script src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2.148" />
+  <script src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2.148&amp;key=ABQIAAAAIk06fYP98jIODN9aMfy-4BQQEuFKMrsd4ppGG6bsbtgs1_-aPxRaNNSnHRmt4U9sTp-X6SHl3iWZYg" />
   <inherits name="com.google.gwt.maps.GoogleMaps" />
   <inherits name="com.claudiushauptmann.gwt.maps.gxt.GwtMapsGxt" />
 

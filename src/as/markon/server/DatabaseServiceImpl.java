@@ -447,6 +447,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	}
 	
 	public Company getCompanyFor(Contact contact) {
+		logger.info("Starting to find company");
 		Company company = null;
 		
 		try {
@@ -471,9 +472,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
+			logger.info("\tCompanies fetched");
 
 			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
 			if (companies.size() == 1) {
+				logger.debug("\t1 company in the list, setting the company for return");
 				company = companies.get(0);
 			} else if (companies.size() > 1) {
 				logger.fatal("Error, wrong amount of companies returned. "
@@ -493,7 +496,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	//
 	// Contacts
 	//
-	public void insertContact(Contact contact, int salesmanid, int companyid) {
+	public int insertContact(Contact contact, int salesmanid, int companyid) {
 		connect();
 		
 		try {
@@ -533,6 +536,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setString(9, comments);
 			
 			insertProc.execute();
+			
+			return insertProc.getInt(1);
 		} catch (Exception e) {
 			logger.fatal("Insert contact", e);
 			throw new RuntimeException("Kunne ikke oprette kontaktpersonen: "+contact.getName());

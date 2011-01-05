@@ -46,7 +46,14 @@ public interface DataService extends RemoteService {
 	public ArrayList<Contact> getAllContacts(Company company);
 	public void deleteContacts(List<Contact> contacts);
 	public void deleteContact(Contact contact);
-	public void insertContact(Contact contact, int salesmanid, int companyid);
+	/**
+	 * Create a new contact and get the new id back
+	 * @param contact
+	 * @param salesmanid
+	 * @param companyid
+	 * @return the id of the new contact
+	 */
+	public int insertContact(Contact contact, int salesmanid, int companyid);
 	public void updateContact(Contact contact);
 	
 	// Salespeople
