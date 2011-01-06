@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='customercare'>
+  <!-- Inherit the core Web Toolkit stuff.                        -->
+  <inherits name='com.google.gwt.user.User'/>
+  <inherits name='com.extjs.gxt.ui.GXT'/>
+  
+  <script src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2.148&amp;key=ABQIAAAAIk06fYP98jIODN9aMfy-4BQQEuFKMrsd4ppGG6bsbtgs1_-aPxRaNNSnHRmt4U9sTp-X6SHl3iWZYg" />
+  <inherits name="com.google.gwt.maps.GoogleMaps" />
+  <inherits name="com.claudiushauptmann.gwt.maps.gxt.GwtMapsGxt" />
+
+  <!-- Inherit the default GWT style sheet.  You can change       -->
+  <!-- the theme of your GWT application by uncommenting          -->
+  <!-- any one of the following lines.                            -->
+  <inherits name='com.google.gwt.user.theme.standard.Standard'/>
+  <!--<inherits name='com.google.gwt.user.theme.chrome.Chrome'/>--> 
+  <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
+
+
+  <!-- Other module inherits                                      -->
+  <inherits name='com.google.gwt.logging.Logging' />
+    
+  <!-- Configure logging -->
+  <set-property name="gwt.logging.logLevel" value="FINER"/> 
+  <set-property name="gwt.logging.enabled" value="TRUE"/>
+  <set-property name="gwt.logging.popupHandler" value="DISABLED"/>
+  <set-property name="gwt.logging.firebugHandler" value="ENABLED" />
+<!--  <set-property name="gwt.logging.simpleRemoteHandler" value="ENABLED" />-->
+
+
+  <!-- Specify the app entry point class.                         -->
+  <entry-point class='dk.rohdef.client.CustomerCare'/>
+
+  <!-- Specify the paths for translatable code                    -->
+  <source path='client'/>
+  <source path='client.events'/>
+  <source path='client.panels'/>
+  <source path='client.services'/>
+  <source path='client.specialtypes'/>
+  <source path='viewmodel' />
+  
+</module>
