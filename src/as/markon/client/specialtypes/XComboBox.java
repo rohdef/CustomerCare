@@ -34,7 +34,7 @@ public class XComboBox<D extends ModelData> extends ComboBox<D> {
         initComponent();
         setTriggerAction(TriggerAction.ALL);
     }
-
+    
     private void bindStore(ListStore<D> store, boolean initial) {
         if (this.store != null && !initial) {
             this.store.removeStoreListener(getStoreListener());
@@ -220,7 +220,6 @@ public class XComboBox<D extends ModelData> extends ComboBox<D> {
 
     @Override
     public void setSelection(List<D> selection) {
-
         for (D d : selection) {
             ((CheckBoxListView<D>) getView()).setChecked(d, true);
         }
