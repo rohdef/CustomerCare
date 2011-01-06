@@ -10,6 +10,7 @@ import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
@@ -96,63 +97,59 @@ public class MailLayout extends LayoutContainer {
 		formPanel.add(subjectField, formData);
 		formPanel.add(contentEditor, formData);
 
-		formPanel.addButton(new Button("Send mail",
+		Button sendMailBtn = new Button("Send mail",
 				new SelectionListener<ButtonEvent>() {
-					@Override
-					public void componentSelected(ButtonEvent ce) {
-						String subject = subjectField.getValue();
-						String message = contentEditor.getValue();
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				String subject = subjectField.getValue();
+				String message = contentEditor.getValue();
 
-						ArrayList<String> recipientMails = new ArrayList<String>();
-						for (MailRecipient mc : recipients)
-							recipientMails.add(mc.getMail());
+				ArrayList<String> recipientMails = new ArrayList<String>();
+				for (MailRecipient mc : recipients)
+					recipientMails.add(mc.getMail());
 
-						// FIXME should be reenabled later
-						sendMail(senderBox.getSelection().get(0), subject, message, recipientMails);
-					}
-				}));
+				// FIXME should be reenabled later
+				sendMail(senderBox.getSelection().get(0), subject, message, recipientMails);
+			}
+		});
+		sendMailBtn.setIcon(IconHelper.createPath("images/email_go.gif"));
+		formPanel.addButton(sendMailBtn);
 
-		formPanel.addButton(new Button("Anuller",
+		Button cancelBtn = new Button("Anuller",
 				new SelectionListener<ButtonEvent>() {
-					@Override
-					public void componentSelected(ButtonEvent ce) {
-						final Dialog confirmDialog = new Dialog();
-						confirmDialog
-								.setHeading("Vil du slette det du har skrevet?");
-						confirmDialog.setModal(true);
-						confirmDialog.setButtons(Dialog.YESNO);
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				final Dialog confirmDialog = new Dialog();
+				confirmDialog
+						.setHeading("Vil du slette det du har skrevet?");
+				confirmDialog.setModal(true);
+				confirmDialog.setButtons(Dialog.YESNO);
 
-						confirmDialog
-								.addText("Er du sikker på, at du vil slette mailen?");
-						confirmDialog.getButtonById(Dialog.YES).setText(
-								"Slet mail");
-						confirmDialog.getButtonById(Dialog.NO).setText(
-								"Tilbage til mailen");
+				confirmDialog
+						.addText("Er du sikker på, at du vil slette mailen?");
+				confirmDialog.getButtonById(Dialog.YES).setText(
+						"Slet mail");
+				confirmDialog.getButtonById(Dialog.NO).setText(
+						"Tilbage til mailen");
 
-						confirmDialog.getButtonById(Dialog.YES)
-								.addSelectionListener(
-										new SelectionListener<ButtonEvent>() {
-											@Override
-											public void componentSelected(
-													ButtonEvent ce) {
-												fireEvent(Events.Close);
-												confirmDialog.hide();
-											}
-										});
+				confirmDialog.getButtonById(Dialog.YES)
+						.addSelectionListener(
+								new SelectionListener<ButtonEvent>() {
+									@Override
+									public void componentSelected(
+											ButtonEvent ce) {
+										fireEvent(Events.Close);
+										confirmDialog.hide();
+									}
+								});
 
-						confirmDialog.getButtonById(Dialog.NO)
-								.addSelectionListener(
-										new SelectionListener<ButtonEvent>() {
-											@Override
-											public void componentSelected(
-													ButtonEvent ce) {
-												confirmDialog.hide();
-											}
-										});
+				confirmDialog.setHideOnButtonClick(true);
 
-						confirmDialog.show();
-					}
-				}));
+				confirmDialog.show();
+			}
+		});
+		cancelBtn.setIcon(IconHelper.createPath("images/cancel.gif"));
+		formPanel.addButton(cancelBtn);
 
 		this.add(formPanel);
 	}

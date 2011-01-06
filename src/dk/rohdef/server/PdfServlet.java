@@ -28,11 +28,21 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
-
+/**
+ * An http servlet, used for rendering a PDF-file with labels for printing. This recieves 
+ * the id number of the label set, renders the PDF-file and sends it back to the client.
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class PdfServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private Logger logger = Logger.getLogger(PdfServlet.class);
 	
+	/**
+	 * Render the table with the labels from the label data list. This will result in 
+	 * 2 columns and 4 rows for each page.
+	 * @param companies
+	 * @return
+	 */
 	private PdfPTable createTable(List<LabelData> companies) {
 		logger.debug("Creating PDF table for " + companies.size() + " companies");
 		
@@ -122,6 +132,11 @@ public class PdfServlet extends HttpServlet {
 			user,
 			password;
 	
+	/**
+	 * Get the label data from the database.
+	 * @param batchId the id number for the label set.
+	 * @return
+	 */
 	private List<LabelData> getCompaniesFor(int batchId) {
 		List<LabelData> labels = new ArrayList<LabelData>();
 		
@@ -191,6 +206,9 @@ public class PdfServlet extends HttpServlet {
 		return labels;
 	}
 
+	/**
+	 * Create a database connection from the information in the configuration file.
+	 */
 	private void connect() {
 		try {
 			XMLConfiguration config = new XMLConfiguration("config.xml");
@@ -224,6 +242,11 @@ public class PdfServlet extends HttpServlet {
 		}
 	}
 	
+	/**
+	 * Class for storing label data. This is done in a poor design and is intended for 
+	 * internal use only. 
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class LabelData {
 		public String company, address, city, attention;
 	}

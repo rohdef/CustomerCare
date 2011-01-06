@@ -14,6 +14,7 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.CheckBoxListView;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
@@ -178,15 +179,18 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		ToolBar toolBar = new ToolBar();
 		toolBar.setEnableOverflow(false);
 		
-		toolBar.add(new Button("Print labels", new SelectionListener<ButtonEvent>() {
+		Button printBtn = new Button("Print labels", new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				createPdfForPrint();
 			}
-		}));
+		});
+		toolBar.add(printBtn);
+		printBtn.setIcon(IconHelper.createPath("images/printer.gif"));
 		
 		Button selectionMenuBtn = new Button();
 		selectionMenuBtn.setText("Vælg modtagere");
+		selectionMenuBtn.setIcon(IconHelper.createPath("images/select_recipients.gif"));
 		
 		Menu selectionMenu = new Menu();
 		
@@ -369,6 +373,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		public Object render(final Company model, String property, ColumnData config,
 				int rowIndex, int colIndex, ListStore<Company> store, Grid<Company> grid) {
 			Button removeBtn = new Button("Fjern");
+			removeBtn.setIcon(IconHelper.createPath("images/delete.gif"));
 			removeBtn.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 
 			removeBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {

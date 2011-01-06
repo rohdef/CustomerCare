@@ -13,6 +13,7 @@ import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
@@ -72,7 +73,7 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		removeBtnConfig.setId("remove");
 		removeBtnConfig.setHeader("Fjern modtager");
 		removeBtnConfig.setRenderer(removeBtnRenderer);
-		removeBtnConfig.setWidth(40);
+		removeBtnConfig.setWidth(80);
 
 		configs.add(companyName);
 		configs.add(mailTo);
@@ -89,53 +90,55 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		mtGrid.setBorders(false);
 		mtGrid.setStripeRows(true);
 		this.add(mtGrid);
-		
-		this.addButton(new Button("Skriv mail",
+		Button mailBtn = new Button("Skriv mail",
 				new SelectionListener<ButtonEvent>() {
-					@Override
-					public void componentSelected(ButtonEvent ce) {
-						logger.log(Level.INFO, "Preparing mail call");
-						List<MailRecipient> recipients = new ArrayList<MailRecipient>();
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				logger.log(Level.INFO, "Preparing mail call");
+				List<MailRecipient> recipients = new ArrayList<MailRecipient>();
 
-						for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
-							@SuppressWarnings("unchecked")
-							XComboBox<MailRecipient> combo = (XComboBox<MailRecipient>) mtGrid
-									.getView().getWidget(i, 1);
-							
-							List<MailRecipient> selectedRecipients = combo.getSelection();
-							for (MailRecipient recipient : selectedRecipients) {
-								if (recipient == null)
-									logger.log(Level.FINER, "\tIgnoring company, " +
-											"contact not set.");
-								else {
-									logger.log(Level.FINER, "\tAdding recipient: " + 
-											recipient.getName() + 
-											"<" + recipient.getMail() + ">");
-									recipients.add(recipient);
-								}
-							}
+				for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
+					@SuppressWarnings("unchecked")
+					XComboBox<MailRecipient> combo = (XComboBox<MailRecipient>) mtGrid
+							.getView().getWidget(i, 1);
+					
+					List<MailRecipient> selectedRecipients = combo.getSelection();
+					for (MailRecipient recipient : selectedRecipients) {
+						if (recipient == null)
+							logger.log(Level.FINER, "\tIgnoring company, " +
+									"contact not set.");
+						else {
+							logger.log(Level.FINER, "\tAdding recipient: " + 
+									recipient.getName() + 
+									"<" + recipient.getMail() + ">");
+							recipients.add(recipient);
 						}
-						logger.log(Level.INFO, recipients.size() + " mail recipients recorded");
-
-						final Window mailWin = new Window();
-						mailWin.setSize(700, 550);
-						mailWin.setModal(true);
-						mailWin.setHeading("Mail besked");
-						mailWin.setLayout(new FitLayout());
-
-						MailLayout mailLayout = new MailLayout(recipients);
-						mailLayout.addListener(Events.Close,
-								new Listener<BaseEvent>() {
-									public void handleEvent(BaseEvent be) {
-										mailWin.hide();
-									}
-								});
-
-						mailWin.add(mailLayout, new FitData(4));
-
-						mailWin.show();
 					}
-				}));
+				}
+				logger.log(Level.INFO, recipients.size() + " mail recipients recorded");
+
+				final Window mailWin = new Window();
+				mailWin.setSize(700, 550);
+				mailWin.setModal(true);
+				mailWin.setHeading("Mail besked");
+				mailWin.setLayout(new FitLayout());
+
+				MailLayout mailLayout = new MailLayout(recipients);
+				mailLayout.addListener(Events.Close,
+						new Listener<BaseEvent>() {
+							public void handleEvent(BaseEvent be) {
+								mailWin.hide();
+							}
+						});
+
+				mailWin.add(mailLayout, new FitData(4));
+
+				mailWin.show();
+			}
+		});
+		mailBtn.setIcon(IconHelper.createPath("images/email.gif"));
+		
+		this.addButton(mailBtn);
 
 		this.setWidth("100%");
 		this.setBorders(false);
@@ -151,6 +154,18 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 	public void unbindCompanies() {
 		mtGrid.reconfigure(emptyStore, cm);
 	}
+	
+	public void addDeleteListener(DeleteCompanyListener listener) {
+		deleteListeners.add(listener);
+	}
+	
+	public void removeDeleteListener(DeleteCompanyListener listener) {
+		deleteListeners.remove(listener);
+	}
+	
+	private static native void openUrl(String url, String name) /*-{
+		$wnd.open(url, name);
+	}-*/;
 	
 	private class RecipientCellRenderer implements GridCellRenderer<Company> {
 		public Object render(Company model, String property,
@@ -201,6 +216,7 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		public Object render(final Company model, String property, ColumnData config,
 				int rowIndex, int colIndex, ListStore<Company> store, Grid<Company> grid) {
 			Button removeBtn = new Button("Fjern");
+			removeBtn.setIcon(IconHelper.createPath("images/delete.gif"));
 			removeBtn.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 
 			removeBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -214,16 +230,4 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 			return removeBtn;
 		}
 	}
-	
-	public void addDeleteListener(DeleteCompanyListener listener) {
-		deleteListeners.add(listener);
-	}
-	
-	public void removeDeleteListener(DeleteCompanyListener listener) {
-		deleteListeners.remove(listener);
-	}
-	
-	private static native void openUrl(String url, String name) /*-{
-		$wnd.open(url, name);
-	}-*/;
 }
