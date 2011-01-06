@@ -14,10 +14,16 @@ import as.markon.viewmodel.Company;
 import as.markon.viewmodel.Contact;
 import as.markon.viewmodel.LabelRecipient;
 
+import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.EventType;
+import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.Listener;
+import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
+import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.store.StoreListener;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
@@ -31,6 +37,10 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class SelectLabelRecipiantsPanel extends FormPanel {
+	private String headingTextStart = "Labelindstillinger ("
+		, headingTextEnd = " labels valgt)";
+	private int selectionCount;
+	
 	private static Logger logger = Logger.getLogger(SelectLabelRecipiantsPanel.class.getName());
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
 	private ArrayList<ComboBox<LabelRecipient>> boxes;
@@ -43,7 +53,8 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		boxes = new ArrayList<ComboBox<LabelRecipient>>();
 		deleteListeners = new ArrayList<DeleteCompanyListener>();
 
-		this.setHeading("Labelindstillinger");
+		selectionCount = 0;
+		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
 		
 		GridCellRenderer<Company> recipientRenderer = new RecipientCellRenderer();
 
@@ -73,7 +84,6 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 
 		selectedCompanies = new ListStore<Company>();
 		emptyStore = new ListStore<Company>();
-					
 
 		cm = new ColumnModel(configs);
 
@@ -81,6 +91,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		mtGrid.setHeight(200);
 		mtGrid.setBorders(false);
 		mtGrid.setStripeRows(true);
+		
 		this.add(mtGrid);
 
 		this.addButton(new Button("Print labels", new SelectionListener<ButtonEvent>() {
@@ -132,6 +143,9 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 	}
 	
 	public void bindCompanies(List<Company> companies) {
+		selectionCount = 0;
+		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
+		
 		selectedCompanies = new ListStore<Company>();
 		selectedCompanies.add(companies);
 		mtGrid.reconfigure(selectedCompanies, cm);
@@ -139,6 +153,22 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 	
 	public void unbindCompanies() {
 		mtGrid.reconfigure(emptyStore, cm);
+		
+		selectionCount = 0;
+		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
+	}
+	
+	private void recountSelection() {
+		selectionCount = 0;
+		
+		for (int i = 0; i < mtGrid.getStore().getCount(); i++) {
+			@SuppressWarnings("unchecked")
+			XComboBox<LabelRecipient> combo = (XComboBox<LabelRecipient>) mtGrid
+					.getView().getWidget(i, 1);
+			selectionCount += combo.getSelection().size();
+		}
+		
+		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
 	}
 	
 	private class RecipientCellRenderer implements GridCellRenderer<Company> {
@@ -177,6 +207,12 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 					});
 
 			contactsBox.setStore(contactStore);
+			contactsBox.addListener(Events.Collapse, new Listener<BaseEvent>() {
+				public void handleEvent(BaseEvent be) {
+					recountSelection();
+				}
+			});
+			
 			boxes.add(contactsBox);
 
 			return contactsBox;

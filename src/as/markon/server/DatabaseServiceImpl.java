@@ -337,7 +337,43 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			return companies;
 		} catch (SQLException e) {
 			logger.fatal("Get prospects", e);
-			throw new RuntimeException("Kunne ikke hente listen af potentielle kunder.");
+			throw new RuntimeException("Kunne ikke hente listen af emner.");
+		}
+	}
+	
+	public ArrayList<Company> getAllCompanies() {
+		logger.info("Getting all companies");
+		getTrades();
+		getCities();
+		getSalesmen();
+
+		try {
+			connect();
+			Statement companyStatement;
+			companyStatement = c.createStatement();
+
+			String companyQuery = "SELECT DISTINCT\n"
+					+ "	c.companyid,\n"
+					+ "	c.companyname,\n"
+					+ "	c.address,\n"
+					+ "	c.postal,\n"
+					+ " c.city,\n"
+					+ "	c.phone,\n"
+					+ "	c.importance,\n"
+					+ "	c.comments,\n"
+					+ " c.tradeid\n"
+					+ "		FROM companieswithcities c\n";
+			logger.debug("\tSql used is: " + companyQuery);
+
+			ResultSet companyResults;
+			companyResults = companyStatement.executeQuery(companyQuery);
+
+			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
+			logger.info(companies.size() + " prospects fetched");
+			return companies;
+		} catch (SQLException e) {
+			logger.fatal("Get all companies", e);
+			throw new RuntimeException("Kunne ikke hente den komlette liste af virksomheder.");
 		}
 	}
 	

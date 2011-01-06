@@ -4,7 +4,18 @@
 		<host>localhost</host>
 		<port>5432</port>
 		<user>Markon</user>
-		<password></password>
+		<password>123</password>
 		<database>Markon</database>
 	</database>
+	
+	<company>
+		<name>MarkOn A/S</name>
+		<address>Lystrupvej 62</address>
+		<city>8240 Risskov</city>
+		<country>Denmark</country>
+		<phone>+45 8619 8686</phone>
+		<fax>+45 8619 1729</fax>
+		<webpage>http://www.markon.as</webpage>
+		<vat-no>DK 7330 2315</vat-no>
+	</company>
 </CustomerCare>

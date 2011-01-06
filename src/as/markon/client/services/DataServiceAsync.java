@@ -46,4 +46,5 @@ public interface DataServiceAsync {
 	void getAllContacts(Company company,
 			AsyncCallback<ArrayList<Contact>> callback);
 	void getCompanyFor(Contact contact, AsyncCallback<Company> callback);
+	void getAllCompanies(AsyncCallback<ArrayList<Company>> callback);
 }

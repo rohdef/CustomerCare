@@ -23,6 +23,7 @@ public interface DataService extends RemoteService {
 	// Companies
 	public ArrayList<Company> getCompanies(Salesman salesman);
 	public ArrayList<Company> getProspectCompanies();
+	public ArrayList<Company> getAllCompanies();
 	public Integer createCompany(Company company, ArrayList<Contact> contacts,
 			Salesman salesman);
 	public void updateCompany(Company company);

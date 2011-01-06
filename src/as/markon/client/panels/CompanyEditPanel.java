@@ -37,6 +37,10 @@ import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+/**
+ * Panel to edit the informations about a company. 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CompanyEditPanel extends FormPanel {
 	private DataServiceAsync dataService = Global.getInstance()
 			.getDataService();
@@ -58,6 +62,9 @@ public class CompanyEditPanel extends FormPanel {
 
 	private Button calendarBtn;
 
+	/**
+	 * 
+	 */
 	public CompanyEditPanel() {
 		this.setHeading("Firmadata");
 		binding = new FormBinding(this);
@@ -199,6 +206,10 @@ public class CompanyEditPanel extends FormPanel {
 		binding.autoBind();
 	}
 
+	/**
+	 * Attach a company to the panel to show the data and enable it for editing.
+	 * @param company the company to edit.
+	 */
 	public void bindCompany(Company company) {
 		this.original = company;
 		
@@ -218,6 +229,9 @@ public class CompanyEditPanel extends FormPanel {
 		this.setReadOnly(false);
 	}
 
+	/**
+	 * Remove the company details from the panel without saving it.
+	 */
 	public void unbindCompany() {
 		binding.unbind();
 		importanceBox.clear();
@@ -231,6 +245,10 @@ public class CompanyEditPanel extends FormPanel {
 		
 	}
 
+	/**
+	 * Create a toolbar for the options.
+	 * @return
+	 */
 	private ToolBar getToolBar() {
 		ToolBar toolBar = new ToolBar();
 		
@@ -262,6 +280,10 @@ public class CompanyEditPanel extends FormPanel {
 		return toolBar;
 	}
 
+	/**
+	 * Save the company details in the database and update the model.
+	 */
+	// TODO clean up and send an event for the changes in stead.
 	private void save() {
 		final Company updated = (Company) binding.getModel();
 		final Company theOriginal = original;

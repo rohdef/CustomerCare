@@ -36,6 +36,7 @@ public class CompanyListingPanel extends ContentPanel {
 
 	private CompanyGridPanel companyPanel;
 	private CompanyGridPanel prospectPanel;
+	private CompanyGridPanel allCompaniesPanel;
 
 	/**
 	 * 
@@ -50,6 +51,7 @@ public class CompanyListingPanel extends ContentPanel {
 		
 		this.add(createCustomerListing());
 		this.add(createProspectListing());
+		this.add(createAllCompaniesListing());
 	}
 	
 	/**
@@ -68,15 +70,17 @@ public class CompanyListingPanel extends ContentPanel {
 	private ContentPanel createCustomerListing() {
 		companyPanel = new CompanyGridPanel(false);
 		companyPanel.setHeading("Kundeliste");
-		companyPanel.setHeight(600);
 				
 		return companyPanel;
 	}
 
+	/**
+	 * Get the panel containing the list of prospects
+	 * @return
+	 */
 	private ContentPanel createProspectListing() {
 		prospectPanel = new CompanyGridPanel(true);
-		prospectPanel.setHeading("Kundekandidater");
-		prospectPanel.setHeight(600);
+		prospectPanel.setHeading("Kundeemner");
 		
 		prospectPanel.addListener(Events.Expand, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
@@ -104,6 +108,42 @@ public class CompanyListingPanel extends ContentPanel {
 		});
 		
 		return prospectPanel;
+	}
+	
+	/**
+	 * Get the panel containing the list of prospects
+	 * @return
+	 */
+	private ContentPanel createAllCompaniesListing() {
+		allCompaniesPanel = new CompanyGridPanel(true);
+		allCompaniesPanel.setHeading("Alle virksomheder");
+		
+		allCompaniesPanel.addListener(Events.Expand, new Listener<BaseEvent>() {
+			public void handleEvent(BaseEvent be) {
+				loadingProspects = true;
+				checkLoader();
+				
+				dataService.getAllCompanies(new AsyncCallback<ArrayList<Company>>() {
+					public void onSuccess(ArrayList<Company> result) {
+						GroupingStore<Company> store = new GroupingStore<Company>();
+						store.setMonitorChanges(true);
+						store.add(result);
+						store.setDefaultSort("companyname", SortDir.ASC);
+						store.groupBy("trade");
+						allCompaniesPanel.setCompanyStore(store);
+						
+						loadingProspects = false;
+						checkLoader();
+					}
+					
+					public void onFailure(Throwable caught) {
+						logger.log(Level.SEVERE, "Couldn't load prospects", caught);
+					}
+				});
+			}
+		});
+		
+		return allCompaniesPanel;
 	}
 	
 	/**
