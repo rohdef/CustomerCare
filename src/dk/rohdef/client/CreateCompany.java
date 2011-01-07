@@ -335,13 +335,13 @@ public class CreateCompany extends LayoutContainer {
 					confirmDialog.setButtons(Dialog.YESNO);
 					confirmDialog.setHideOnButtonClick(true);
 					
-					confirmDialog.setHeading("Ønsker du at oprette som kundekandidat?");
+					confirmDialog.setHeading("Ønsker du at oprette som kundeemne?");
 					confirmDialog.addText("Vil du oprette en virksomhed uden kontakter.");
 					confirmDialog.addText("En virksomhed uden kontakter vil dukke op som" +
-							"en kunde kanidat.");
+							"et kundeemne.");
 					
 					confirmDialog.getButtonById(Dialog.NO).setText("Fortryd");
-					confirmDialog.getButtonById(Dialog.YES).setText("Opret kundekandidat");
+					confirmDialog.getButtonById(Dialog.YES).setText("Opret kundeemne");
 					confirmDialog.getButtonById(Dialog.YES).addSelectionListener(
 							new SelectionListener<ButtonEvent>() {
 								@Override
