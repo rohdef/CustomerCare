@@ -57,7 +57,7 @@ public class CompanyGridToolBar extends ToolBar {
 		
 		newCompany = new Button();
 		newCompany.setText("Opret ny virksomhed");
-		newCompany.setIcon(IconHelper.createPath("images/add.gif"));
+		newCompany.setIcon(IconHelper.createPath("images/company_add.gif"));
 		newCompany.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -76,6 +76,7 @@ public class CompanyGridToolBar extends ToolBar {
 				});
 				
 				createCompanyWindow.add(createCompany);
+				createCompanyWindow.setIcon(IconHelper.createPath("images/company_add.gif"));
 				createCompanyWindow.setSize(650, 475);
 				createCompanyWindow.setModal(true);
 				createCompanyWindow.setHeading("Opret ny virksomhed");
@@ -88,11 +89,12 @@ public class CompanyGridToolBar extends ToolBar {
 		deleteCompaniesBtn = new Button();
 		deleteCompaniesBtn.setText("Slet markerede firmaer");
 		deleteCompaniesBtn.disable();
-		deleteCompaniesBtn.setIcon(IconHelper.createPath("images/delete.gif"));
+		deleteCompaniesBtn.setIcon(IconHelper.createPath("images/company_delete.gif"));
 		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				Dialog deleteDialog = new DeleteDialog(prospect);
+				deleteDialog.setIcon(IconHelper.createPath("images/company_delete.gif"));
 				deleteDialog.show();
 			}
 		});
@@ -173,7 +175,9 @@ public class CompanyGridToolBar extends ToolBar {
 			this.addText("Er du sikker på, at du vil slette den markerede virksomhed?");
 			this.setButtons(Dialog.YESNO);
 			this.getButtonById(Dialog.YES).setText("Slet virksomhed");
+			this.getButtonById(Dialog.YES).setIcon(IconHelper.createPath("images/company_delete.gif"));
 			this.getButtonById(Dialog.NO).setText("Fortryd");
+			this.getButtonById(Dialog.NO).setIcon(IconHelper.createPath("images/cancel_green.gif"));
 			this.setHideOnButtonClick(true);
 			
 			this.getButtonById(Dialog.YES).addSelectionListener(

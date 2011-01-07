@@ -17,6 +17,7 @@ import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
@@ -70,7 +71,11 @@ public class CreateCompany extends LayoutContainer {
 		
 		this.setLayout(new HBoxLayout());
 		
-		this.add(createNewCompanyPanel());
+		FormPanel newCompanyPanel = createNewCompanyPanel();
+		this.add(newCompanyPanel);
+		
+		newCompanyPanel.addButton(getCreateCompanyButton());
+		newCompanyPanel.addButton(getCancelButton());
 		
 		LayoutContainer contacts = new LayoutContainer();
 		contacts.setAutoWidth(true);
@@ -230,10 +235,6 @@ public class CreateCompany extends LayoutContainer {
 		binding.autoBind();
 		binding.bind(newCompany);
 
-		formPanel.addButton(getCreateCompanyButton());
-		
-		formPanel.addButton(getCancelButton());
-		
 		return formPanel;
 	}
 	
@@ -275,7 +276,7 @@ public class CreateCompany extends LayoutContainer {
 	}
 
 	public Button getCreateCompanyButton() {
-		return new Button("Opret firma",
+		Button createBtn = new Button("Opret firma",
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -304,15 +305,20 @@ public class CreateCompany extends LayoutContainer {
 				}
 			}
 		});
+		createBtn.setIcon(IconHelper.createPath("images/add.gif"));
+		return createBtn;
 	}
 	
 	public Button getCancelButton() {
-		return new Button("Anuller", new SelectionListener<ButtonEvent>() {
+		Button cancelBtn = new Button("Anuller", new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				fireEvent(Events.Close);
 			}
 		});
+		cancelBtn.setIcon(IconHelper.createPath("images/cancel.gif"));
+		
+		return cancelBtn; 
 	}
 	
 	private void createCompany() {

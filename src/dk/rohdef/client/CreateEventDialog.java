@@ -13,6 +13,7 @@ import com.extjs.gxt.ui.client.event.FieldEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.CheckBoxListView;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
@@ -47,6 +48,12 @@ import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Contact;
 import dk.rohdef.viewmodel.Salesman;
 
+/**
+ * Dialog for creating Google Calendar events. Shows the map location when a destination is 
+ * selected. When pressing create event it opens a new tab/window with the Google Calendar 
+ * event details, just needing to be finally confirmed. 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CreateEventDialog extends Dialog {
 	private static Logger logger = Logger.getLogger(CreateEventDialog.class.getName());
 	private Company company;
@@ -64,13 +71,17 @@ public class CreateEventDialog extends Dialog {
 	private FormButtonBinding buttonBinding;
 	private MapWidget map;
 	
+	/**
+	 * 
+	 * @param company the company the meeting is going to be held with.
+	 */
 	public CreateEventDialog(Company company) {
 		this.company = company;
 		
 		setModal(true);
 		setHeading("Opret aftale");
 		setLayout(new RowLayout(Orientation.HORIZONTAL));
-		setSize(625, 450);
+		setSize(725, 450);
 		
 		add(createEventArea());
 		add(createMapsArea());
@@ -78,7 +89,9 @@ public class CreateEventDialog extends Dialog {
 		
 		setButtons(Dialog.OKCANCEL);
 		getButtonById(Dialog.CANCEL).setText("Anuller");
+		getButtonById(Dialog.CANCEL).setIcon(IconHelper.createPath("images/cancel.gif"));
 		getButtonById(Dialog.OK).setText("Opret aftale");
+		getButtonById(Dialog.OK).setIcon(IconHelper.createPath("images/calendar_add.gif"));
 		
 		getButtonById(Dialog.OK).addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -143,6 +156,10 @@ public class CreateEventDialog extends Dialog {
 		setHideOnButtonClick(true);
 	}
 
+	/**
+	 * Creates the form where all the event details can be entered.
+	 * @return
+	 */
 	private FormPanel createEventArea() {
 		FormPanel panel = new FormPanel();
 		buttonBinding = new FormButtonBinding(panel);
@@ -165,14 +182,14 @@ public class CreateEventDialog extends Dialog {
 		startDateFld = new DateField();
 		startDateFld.setAllowBlank(false);
 		startDateFld.setAutoValidate(true);
-		startDateFld.setAutoWidth(true);
+//		startDateFld.setAutoWidth(true);
 		startDateFld.setFieldLabel("Start dato");
 		left.add(startDateFld);
 		
 		endDateFld = new DateField();
 		endDateFld.setAllowBlank(false);
 		endDateFld.setAutoValidate(true);
-		endDateFld.setAutoWidth(true);
+//		endDateFld.setAutoWidth(true);
 		endDateFld.setFieldLabel("Slut dato");
 		left.add(endDateFld);
 		
@@ -191,20 +208,24 @@ public class CreateEventDialog extends Dialog {
 		
 		startTimeFld = new TimeField();
 		startTimeFld.setFieldLabel("Starttid");
-		startTimeFld.setWidth(150);
+		startTimeFld.setAutoWidth(true);
+		startTimeFld.setValue(startTimeFld.findModel(9, 0));
 		startTimeFld.setTriggerAction(TriggerAction.ALL);
 		right.add(startTimeFld);
 		
 		endTimeFld = new TimeField();
 		endTimeFld.setFieldLabel("Sluttid");
-		endTimeFld.setWidth(150);
+		endTimeFld.setAutoWidth(true);
+		endTimeFld.setValue(endTimeFld.findModel(10, 0));
 		endTimeFld.setTriggerAction(TriggerAction.ALL);
 		right.add(endTimeFld);
 		
 		startTimeFld.addListener(Events.Change, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
-				Time time = startTimeFld.getValue();
-				endTimeFld.setValue(time);
+				int hour =  startTimeFld.getValue().getHour() + 1;
+				int min = startTimeFld.getValue().getMinutes();
+				
+				endTimeFld.setValue(endTimeFld.findModel(hour, min));
 			}
 		});
 		
@@ -225,6 +246,7 @@ public class CreateEventDialog extends Dialog {
 		
 		ButtonBar locationBtnBar = new ButtonBar();		
 		final Button locationMarkOnBtn = new Button("Hos MarkOn");
+		locationMarkOnBtn.setIcon(IconHelper.createPath("images/home.gif"));
 		
 		Global.getInstance().getDataService().getAppCompany(new AsyncCallback<Company>() {
 			public void onSuccess(final Company result) {
@@ -247,6 +269,7 @@ public class CreateEventDialog extends Dialog {
 		locationBtnBar.add(locationMarkOnBtn);
 		
 		Button locationAtClientBtn = new Button("Hos " + company.getCompanyName());
+		locationAtClientBtn.setIcon(IconHelper.createPath("images/map.gif"));
 		locationAtClientBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -272,9 +295,7 @@ public class CreateEventDialog extends Dialog {
 		customerContactsView.setWidth("50%");
 		customerContactsView.setStore(custormerContactsStore);
 		customerContactsView.setDisplayProperty("contactname");
-		Global.getInstance().getDataService().getAllContacts(
-//				Global.getInstance().getCurrentSalesman(),
-				company,
+		Global.getInstance().getDataService().getAllContacts(company,
 				new AsyncCallback<ArrayList<Contact>>() {
 					public void onSuccess(ArrayList<Contact> result) {
 						custormerContactsStore.add(result);
@@ -309,6 +330,10 @@ public class CreateEventDialog extends Dialog {
 		return panel;
 	}
 
+	/**
+	 * Creates the map object, so the map can be shown.
+	 * @return
+	 */
 	private ContentPanel createMapsArea() {
 		ContentPanel panel = new ContentPanel();
 		panel.setHeading("Lokation for mødet");
@@ -323,6 +348,12 @@ public class CreateEventDialog extends Dialog {
 		return panel;
 	}
 	
+	/**
+	 * Sets the map location from an address, place name or similar (just as on the main 
+	 * page for Google Maps.
+	 * @see <a href="http://maps.google.com">Gooogle Maps</a>
+	 * @param address
+	 */
 	private void setMapLocation(final String address) {
 		Geocoder geocoder = new Geocoder();
 		geocoder.getLatLng(address, new LatLngCallback() {

@@ -2,9 +2,9 @@ package dk.rohdef.client.panels;
 
 import java.util.ArrayList;
 
-
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
@@ -25,6 +25,7 @@ public class CreateContactPanel extends FormPanel {
 		this.setHeading("Kontaktoplysninger");
 		this.setWidth("50%");
 		this.setBorders(false);
+		this.setFrame(false);
 		
 		final TextField<String> nameFld = new TextField<String>();
 		nameFld.setBorders(false);
@@ -78,6 +79,7 @@ public class CreateContactPanel extends FormPanel {
 				clear();
 			}
 		});
+		addContactBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
 		addContactBtn.setType("submit");
 		this.addButton(addContactBtn);
 	}

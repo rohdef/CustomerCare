@@ -48,6 +48,7 @@ public class SalesmanAdminWindow extends Window {
 
 	public SalesmanAdminWindow() {
 		this.setHeading("Administrer sælgere");
+		this.setIcon(IconHelper.createPath("images/salesmen.gif"));
 		this.setLayout(new RowLayout(Orientation.HORIZONTAL));
 		this.setWidth(625);
 		this.setHeight(270);
@@ -157,8 +158,9 @@ public class SalesmanAdminWindow extends Window {
 		editArea.add(phoneFld);
 
 		Button createBtn = new Button();
+		createBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
 		createBtn.setText("Opret sælger");
-		createBtn.setText("Submit");
+		createBtn.setType("Submit");
 		createBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {

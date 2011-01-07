@@ -40,6 +40,10 @@ import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Contact;
 import dk.rohdef.viewmodel.Salesman;
 
+/**
+ * Creates a panel with the fields for contacts, so they can be edited. 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class ContactEditPanel extends FormPanel {
 	private ListStore<Contact> emptyStore;
 	private ListStore<Contact> contactStore;
@@ -62,6 +66,9 @@ public class ContactEditPanel extends FormPanel {
 	private Button addContactBtn;
 	private Button saveBtn;
 
+	/**
+	 * 
+	 */
 	public ContactEditPanel() {
 		this.setHeading("Kontakter");
 
@@ -184,9 +191,12 @@ public class ContactEditPanel extends FormPanel {
 				final Dialog setSalesmanDialog = new Dialog();
 				setSalesmanDialog.setTitle("Hvem ønsker du skal overtage kunden?");
 				setSalesmanDialog.setButtons(Dialog.OKCANCEL);
+				setSalesmanDialog.setIcon(IconHelper.createPath("images/user_go.gif"));
 				setSalesmanDialog.setHideOnButtonClick(true);
 				
 				FormPanel selectSalesmanPanel = new FormPanel();
+				selectSalesmanPanel.setFrame(false);
+				selectSalesmanPanel.setBorders(false);
 				selectSalesmanPanel.setAutoWidth(true);
 				selectSalesmanPanel.setHeaderVisible(false);
 				
@@ -212,7 +222,11 @@ public class ContactEditPanel extends FormPanel {
 				setSalesmanDialog.add(selectSalesmanPanel);
 				
 				setSalesmanDialog.getButtonById(Dialog.OK).setText("Skift saelger");
+				setSalesmanDialog.getButtonById(Dialog.OK).setIcon(
+						IconHelper.createPath("images/user_go.gif"));
 				setSalesmanDialog.getButtonById(Dialog.CANCEL).setText("Anuller");
+				setSalesmanDialog.getButtonById(Dialog.CANCEL).setIcon(
+						IconHelper.createPath("images/cancel.gif"));
 				
 				setSalesmanDialog.getButtonById(Dialog.OK).addSelectionListener(
 						new SelectionListener<ButtonEvent>() {
@@ -289,6 +303,7 @@ public class ContactEditPanel extends FormPanel {
 				Dialog deleteDialog = new Dialog();
 				deleteDialog.setHideOnButtonClick(true);
 				deleteDialog.setButtons(Dialog.YESNO);
+				deleteDialog.setIcon(IconHelper.createPath("images/user_delete.gif"));
 				deleteDialog.setHeading("Er du sikker på, at du vil slette "+
 						contactBinding.getModel().get("contactname"));
 				deleteDialog.addText("Vil du slette "+
@@ -296,7 +311,11 @@ public class ContactEditPanel extends FormPanel {
 						"? Denne handling kan ikke fortrydes!");
 				
 				deleteDialog.getButtonById(Dialog.NO).setText("Fortyd");
+				deleteDialog.getButtonById(Dialog.NO).setIcon(
+						IconHelper.createPath("images/cancel_green.gif"));
 				deleteDialog.getButtonById(Dialog.YES).setText("Slet kontakten");
+				deleteDialog.getButtonById(Dialog.YES).setIcon(
+						IconHelper.createPath("images/user_delete.gif"));
 				deleteDialog.getButtonById(Dialog.YES).addSelectionListener(
 						new SelectionListener<ButtonEvent>() {
 							@Override
@@ -382,7 +401,6 @@ public class ContactEditPanel extends FormPanel {
 		addContactBtn.enable();
 		
 		logger.log(Level.INFO, "Fetching contacts for " + company.getCompanyName());
-		logger.log(Level.INFO, "Salesman is set to null? " + (contactSalesman == null));
 		dataService.getContactsFor(contactSalesman, company,
 			new AsyncCallback<ArrayList<Contact>>() {
 				public void onSuccess(ArrayList<Contact> result) {
@@ -397,6 +415,7 @@ public class ContactEditPanel extends FormPanel {
 				}
 
 				public void onFailure(Throwable caught) {
+					loader.hide(); // Ensure that we can continue
 					throw new RuntimeException(caught);
 				}
 			});

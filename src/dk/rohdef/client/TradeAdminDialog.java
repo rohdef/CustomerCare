@@ -7,6 +7,7 @@ import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
@@ -37,6 +38,8 @@ public class TradeAdminDialog extends Dialog {
 		setLayout(new RowLayout(Orientation.VERTICAL));
 		this.setWidth(550);
 		this.setHideOnButtonClick(true);
+		this.setIcon(IconHelper.createPath("images/trades.gif"));
+		this.getButtonById(Dialog.OK).setIcon(IconHelper.createPath("images/accept.gif"));
 		GridCellRenderer<Trade> deleteBtnRenderer = new DeleteCellRenderer();
 		
 		// Grid
@@ -54,7 +57,7 @@ public class TradeAdminDialog extends Dialog {
 		deleteColumn.setId("remove");
 		deleteColumn.setHeader("Slet branche");
 		deleteColumn.setRenderer(deleteBtnRenderer);
-		deleteColumn.setWidth(40);
+		deleteColumn.setWidth(80);
 		configs.add(deleteColumn);
 		
 		ColumnModel cm = new ColumnModel(configs);
@@ -93,6 +96,7 @@ public class TradeAdminDialog extends Dialog {
 		
 		Button addBtn = new Button();
 		addBtn.setText("Tilføj");
+		addBtn.setIcon(IconHelper.createPath("images/trade_add.gif"));
 		addBtn.setType("Submit");
 		addBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -153,6 +157,7 @@ public class TradeAdminDialog extends Dialog {
 				int rowIndex, int colIndex, ListStore<Trade> store,
 				Grid<Trade> grid) {
 			Button deleteBtn = new Button("Slet");
+			deleteBtn.setIcon(IconHelper.createPath("images/trade_delete.gif"));
 			deleteBtn.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 			
 			deleteBtn.addSelectionListener(new DeleteListener(model, store));
