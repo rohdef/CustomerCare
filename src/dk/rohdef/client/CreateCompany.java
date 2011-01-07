@@ -22,8 +22,10 @@ import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.button.ButtonBar;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
+import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
@@ -33,8 +35,8 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
+import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.VBoxLayout;
-import com.extjs.gxt.ui.client.widget.layout.VBoxLayoutData;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.events.ContactEvent;
@@ -69,31 +71,73 @@ public class CreateCompany extends LayoutContainer {
 		
 		contactStore = new ListStore<Contact>();
 		
-		this.setLayout(new HBoxLayout());
+		this.setLayout(new VBoxLayout());
 		
-		FormPanel newCompanyPanel = createNewCompanyPanel();
-		this.add(newCompanyPanel);
+		final FormPanel newCompanyPanel = createNewCompanyPanel();
 		
-		newCompanyPanel.addButton(getCreateCompanyButton());
-		newCompanyPanel.addButton(getCancelButton());
-		
-		LayoutContainer contacts = new LayoutContainer();
+		final LayoutContainer contacts = new LayoutContainer();
 		contacts.setAutoWidth(true);
 		contacts.setHeight(470);
-		contacts.setLayout(new VBoxLayout());
+		contacts.setLayout(new HBoxLayout());
+		contacts.setVisible(false);
+		this.add(contacts);
 		
 		CreateContactPanel createNewContactPanel = new CreateContactPanel();
 		createNewContactPanel.addNewContactListener(new ContactListener() {
-			
 			public void handleEvent(ContactEvent be) {
 				contactStore.add(be.getContact());
 			}
 		});
 		
-		contacts.add(createNewContactPanel, new VBoxLayoutData());
-		contacts.add(getContactList(), new VBoxLayoutData());
+		contacts.add(createNewContactPanel, new HBoxLayoutData());
+		contacts.add(getContactList(), new HBoxLayoutData());
 		
-		this.add(contacts);
+		this.add(newCompanyPanel);
+		
+		final FormButtonBinding companyButtonBinding = new FormButtonBinding(newCompanyPanel);
+		final FormButtonBinding contactButtonBinding = new FormButtonBinding(createNewContactPanel);
+		final Button previousBtn = new Button("Forrige");
+		final Button nextBtn = new Button("Næste");
+		final Button createCompanyBtn = getCreateCompanyButton();
+		ButtonBar buttonBar = new ButtonBar();
+		
+		previousBtn.disable();
+		previousBtn.setIcon(IconHelper.createPath("images/arrow_left.gif"));
+		previousBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				companyButtonBinding.addButton(nextBtn);
+				contactButtonBinding.removeButton(previousBtn);
+				contacts.setVisible(false);
+				newCompanyPanel.setVisible(true);
+				nextBtn.enable();
+				previousBtn.disable();
+				createCompanyBtn.disable();
+			}
+		});
+		buttonBar.add(previousBtn);
+		
+		nextBtn.setIcon(IconHelper.createPath("images/arrow_right.gif"));
+		nextBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				companyButtonBinding.removeButton(nextBtn);
+				contactButtonBinding.addButton(previousBtn);
+				newCompanyPanel.setVisible(false);
+				contacts.setVisible(true);
+				previousBtn.enable();
+				nextBtn.disable();
+				createCompanyBtn.enable();
+			}
+		});
+		buttonBar.add(nextBtn);
+		companyButtonBinding.addButton(nextBtn);
+		
+		createCompanyBtn.disable();
+		buttonBar.add(createCompanyBtn);
+		buttonBar.add(getCancelButton());
+		
+		this.add(buttonBar);
 	}
 	
 	@Override
@@ -267,6 +311,10 @@ public class CreateCompany extends LayoutContainer {
 	}
 	
 	private ChangeEventSupport changeEventSupport = new ChangeEventSupport();
+
+	private Button cancelBtn;
+
+	private Button createBtn;
 	public void addChangeListener(ChangeListener... listener) {
 		changeEventSupport.addChangeListener(listener);
 	}
@@ -275,8 +323,8 @@ public class CreateCompany extends LayoutContainer {
 		changeEventSupport.removeChangeListener(listener);
 	}
 
-	public Button getCreateCompanyButton() {
-		Button createBtn = new Button("Opret firma",
+	private Button getCreateCompanyButton() {
+		createBtn = new Button("Opret firma",
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -309,8 +357,8 @@ public class CreateCompany extends LayoutContainer {
 		return createBtn;
 	}
 	
-	public Button getCancelButton() {
-		Button cancelBtn = new Button("Anuller", new SelectionListener<ButtonEvent>() {
+	private Button getCancelButton() {
+		cancelBtn = new Button("Anuller", new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				fireEvent(Events.Close);
