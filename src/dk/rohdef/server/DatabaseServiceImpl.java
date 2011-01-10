@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.mail.HtmlEmail;
@@ -42,6 +46,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 	private Connection c;
 	private String url, database, driver, user, password;
+	private boolean loading;
 
 	private HashMap<Integer, Trade> tradeMap;
 	private HashMap<Integer, City> cityMap;
@@ -61,7 +66,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Configuration failed", ex);
 		}
 		
-		
 		try {
 			Class.forName(driver).newInstance();
 		} catch (InstantiationException e) {
@@ -72,24 +76,48 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Could not find the database driver", e);
 		}
 
+		loading = true;
 		connect();
 	}
 
 	private synchronized void connect() {
-		try {
-			if (c != null && !c.isClosed())
-				return;
-
-			logger.info("Connecting to database");
-			c = DriverManager.getConnection(url + database, user, password);
-			logger.info("Connected");
-		} catch (SQLException e) {
-			logger.fatal("Database connection failed", e);
-			throw new RuntimeException("Kunne ikke oprette forbindelse til databasen.");
+		if (config.getBoolean("application.connection-pool")) {
+			try {
+				InitialContext cxt = new InitialContext();
+		
+				DataSource ds = (DataSource) cxt.lookup( "java:/comp/env/jdbc/postgres" );
+		
+				if ( ds == null ) {
+				   throw new RuntimeException("Data source not found!");
+				}
+				c = ds.getConnection();
+			} catch (NamingException e) {
+				logger.fatal("Could not load data context", e);
+			} catch (SQLException e) {
+				logger.fatal("Database connection failed", e);
+				throw new RuntimeException("Kunne ikke oprette forbindelse til databasen.");
+			}
+		} else {
+			try {
+				if (c != null && !c.isClosed())
+					return;
+	
+				logger.info("Connecting to database");
+				c = DriverManager.getConnection(url + database, user, password);
+				logger.info("Connected");
+			} catch (SQLException e) {
+				logger.fatal("Database connection failed", e);
+				throw new RuntimeException("Kunne ikke oprette forbindelse til databasen.");
+			}
 		}
 	}
 
-	public void close() {
+	private void close() {
+		if (loading) {
+			logger.info("Still loading. omitting close request.");
+			return;
+		}
+		
 		try {
 			logger.info("Closing database");
 			c.close();
@@ -97,6 +125,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (SQLException e) {
 			logger.error("Could not close database connection", e);
 		}
+	}
+	
+	public void loaded() {
+		loading = false;
+		close();
 	}
 
 	public Importance getImportance(String name) {
@@ -110,15 +143,17 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			cities = new ArrayList<City>();
 			cityMap = new HashMap<Integer, City>();
 
+			Statement cityStatement = null;
+			ResultSet cityResults = null;
 			try {
 				connect();
 
-				Statement cityStatement = c.createStatement();
+				cityStatement = c.createStatement();
 
 				String citySql = "SELECT p.postal, p.city FROM postalcodes p;";
 				logger.info("Fetching cities");
 				logger.debug("\tThe sql being used is: " + citySql);
-				ResultSet cityResults = cityStatement.executeQuery(citySql);
+				cityResults = cityStatement.executeQuery(citySql);
 
 				while (cityResults.next()) {
 //					logger.debug("\tCity fetched:");
@@ -133,6 +168,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					cities.add(c);
 					cityMap.put(postal, c);
 				}
+				
 				logger.info("\t"+cities.size() + " cities fetched");
 			} catch (Exception e) {
 				cities = null;
@@ -140,6 +176,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 				logger.fatal("Get cities", e);
 				throw new RuntimeException("Kunne ikke hente listen af byer");
+			} finally {
+				if (cityResults != null) {
+					try {
+						cityResults.close();
+					} catch (SQLException e) {
+						logger.fatal("Could not close the result set", e);
+					}
+				}
+				if (cityStatement != null) {
+					try {
+						cityStatement.close();
+					} catch (SQLException e) {
+						logger.fatal("Could not close the statement", e);
+					}
+				}
+				close();
 			}
 		}
 
@@ -162,11 +214,18 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 						+ "Your mail program does not support html-messages. We " +
 								"recommend that you upgrade your program.");
 
-				mail.setHostName("pasmtp.tele.dk");
+				mail.setHostName(config.getString("smtp.host"));
+				mail.setSmtpPort(config.getInt("smtp.port"));
+				mail.setSSL(config.getBoolean("smtp.ssl"));
+				mail.setTLS(config.getBoolean("smtp.tls"));
+				
 				logger.debug("\tSending the mail\n\t\tSubject: "+subject+"\n\t\tMessage: "+mail
 						+"\n\n\t\tTo: "+recipiant+"\n\t\tFrom: "+user+"\n");
 				
-				mail.send();
+				if (config.getBoolean("application.test-mode"))
+					logger.info("Test mode enabled, mail is not sent.");
+				else
+					mail.send();
 			}
 		} catch (Exception e) {
 			logger.fatal("Send mails", e);
@@ -188,9 +247,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		int salesmanId = salesman.get("salesmanid");
 		logger.debug("\tThe salesman id is: "+salesmanId);
 
+		Statement companyStatement = null;
+		ResultSet companyResults = null;
 		try {
 			connect();
-			Statement companyStatement;
 			companyStatement = c.createStatement();
 
 			String companyQuery = "SELECT DISTINCT\n"
@@ -209,7 +269,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "			AND s.salesmanid = " + salesmanId + ";";
 			logger.debug("\tThe sql being used is: "+companyQuery);			
 
-			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 
 			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
@@ -219,8 +278,23 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Fetch customers for "+salesman.get("salesmanid"), e);
 			throw new RuntimeException("Kunne ikke hente kundelisten for "
 					+ salesman.getSalesman());
+		} finally {
+			if (companyResults != null) {
+				try {
+					companyResults.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (companyStatement != null) {
+				try {
+					companyStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
-		
 	}
 
 	public Company getAppCompany() {
@@ -309,9 +383,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		getCities();
 		getSalesmen();
 
+		Statement companyStatement = null;
+		ResultSet companyResults = null;
 		try {
 			connect();
-			Statement companyStatement;
 			companyStatement = c.createStatement();
 
 			String companyQuery = "SELECT DISTINCT\n"
@@ -330,15 +405,31 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "				WHERE k.salesmanid IS NOT null);";
 			logger.debug("\tSql used is: " + companyQuery);
 
-			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 
 			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
 			logger.info(companies.size() + " prospects fetched");
+			
 			return companies;
 		} catch (SQLException e) {
 			logger.fatal("Get prospects", e);
 			throw new RuntimeException("Kunne ikke hente listen af emner.");
+		} finally {
+			if (companyResults != null) {
+				try {
+					companyResults.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (companyStatement != null) {
+				try {
+					companyStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -348,9 +439,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		getCities();
 		getSalesmen();
 
+		Statement companyStatement = null;
+		ResultSet companyResults = null;
 		try {
 			connect();
-			Statement companyStatement;
 			companyStatement = c.createStatement();
 
 			String companyQuery = "SELECT DISTINCT\n"
@@ -366,7 +458,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "		FROM companieswithcities c\n";
 			logger.debug("\tSql used is: " + companyQuery);
 
-			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 
 			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
@@ -375,6 +466,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (SQLException e) {
 			logger.fatal("Get all companies", e);
 			throw new RuntimeException("Kunne ikke hente den komlette liste af virksomheder.");
+		} finally {
+			if (companyResults != null) {
+				try {
+					companyResults.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (companyStatement != null) {
+				try {
+					companyStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -382,11 +489,12 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			ArrayList<Contact> contacts, Salesman salesman) {
 		connect();
 
+		CallableStatement insertProc = null;
 		try {
 			logger.info("Inserting company");
 			String storedCall = "{? = call insertCompany " +
 					"(?, ?, ?, ?, ?, ?, ?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
 			
 			insertProc.setString(2, company.getCompanyName());
@@ -419,12 +527,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (Exception e) {
 			logger.fatal("Trying to insert company", e);
 			throw new RuntimeException("Kunne ikke oprette kunde.");
+		} finally {
+			if (insertProc != null) {
+				try {
+					insertProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 
 	public void updateCompany(Company company) {
 		connect();
 
+		CallableStatement updateProc = null;
 		try {
 			logger.info("Updating company");
 			String storedCall = "{call updateCompany " +
@@ -435,27 +553,37 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			if (trade != null)
 				tradeid = trade.get("tradeid");
 			
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, (Integer) company.get("companyid"));
-			insertProc.setString(2, company.getCompanyName());
-			insertProc.setString(3, company.getAddress());
+			updateProc = c.prepareCall(storedCall);
+			updateProc.setInt(1, (Integer) company.get("companyid"));
+			updateProc.setString(2, company.getCompanyName());
+			updateProc.setString(3, company.getAddress());
 			if (company.getPostal() == 0)
-				insertProc.setNull(4, Types.INTEGER);
+				updateProc.setNull(4, Types.INTEGER);
 			else
-				insertProc.setInt(4, company.getPostal());
-			insertProc.setString(5, company.getPhone());
+				updateProc.setInt(4, company.getPostal());
+			updateProc.setString(5, company.getPhone());
 			if (tradeid == null)
-				insertProc.setNull(6, Types.INTEGER);
+				updateProc.setNull(6, Types.INTEGER);
 			else
-				insertProc.setInt(6, tradeid);
-			insertProc.setString(7, company.getImportance().name());
-			insertProc.setString(8, company.getComments());
+				updateProc.setInt(6, tradeid);
+			updateProc.setString(7, company.getImportance().name());
+			updateProc.setString(8, company.getComments());
 			
-			insertProc.execute();
+			updateProc.execute();
 			logger.info("\tSuccessfully updated");
+			updateProc.close();
 		} catch (Exception e) {
 			logger.fatal("Update company: "+company.get("companyid"), e);
 			throw new RuntimeException("Kunne ikke opdatere: "+company.getCompanyName());
+		} finally {
+			if (updateProc != null) {
+				try {
+					updateProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 
@@ -468,18 +596,29 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void deleteCompany(Company company) {
 		connect();
 
+		CallableStatement deleteProc = null;
 		try {
 			logger.info("Deleting company");
 			String storedCall = "{call deleteCompany ( ? ) }";
 			
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, (Integer) company.get("companyid"));
+			deleteProc = c.prepareCall(storedCall);
+			deleteProc.setInt(1, (Integer) company.get("companyid"));
 			
-			insertProc.execute();
+			deleteProc.execute();
 			logger.info("\tSuccessfully deleted company");
+			deleteProc.close();
 		} catch (Exception e) {
 			logger.fatal("Delete company "+company.get("companyid"), e);
 			throw new RuntimeException("Kunne ikke slette: "+company.getCompanyName());
+		} finally {
+			if (deleteProc != null) {
+				try {
+					deleteProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -487,9 +626,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		logger.info("Starting to find company");
 		Company company = null;
 		
+		Statement companyStatement = null;
+		ResultSet companyResults = null;
 		try {
 			connect();
-			Statement companyStatement;
 			companyStatement = c.createStatement();
 
 			String companyQuery = "SELECT DISTINCT\n"
@@ -507,9 +647,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ "			AND k.contactid = " + contact.get("contactid") + ";";
 			logger.debug("\tThe sql being used is: "+companyQuery);			
 
-			ResultSet companyResults;
 			companyResults = companyStatement.executeQuery(companyQuery);
 			logger.info("\tCompanies fetched");
+			
+			companyResults.close();
+			companyStatement.close();
 
 			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
 			if (companies.size() == 1) {
@@ -525,6 +667,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Fetch company for "+contact.get("contactid"), e);
 			throw new RuntimeException("Kunne ikke hente firmaet for " +
 					contact.getName());
+		} finally {
+			if (companyResults != null) {
+				try {
+					companyResults.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (companyStatement != null) {
+				try {
+					companyStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
 		
 		return company;
@@ -536,10 +694,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public int insertContact(Contact contact, int salesmanid, int companyid) {
 		connect();
 		
+		CallableStatement insertProc = null;
 		try {
 			String storedCall = "{? = call insertContact " +
 			"(?, ?, ?, ?, ?, ?, ?, ?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
 			
 			insertProc.setInt(2, companyid);
@@ -573,35 +732,55 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			insertProc.setString(9, comments);
 			
 			insertProc.execute();
+			int contactId = insertProc.getInt(1);
 			
-			return insertProc.getInt(1);
+			return contactId;
 		} catch (Exception e) {
 			logger.fatal("Insert contact", e);
 			throw new RuntimeException("Kunne ikke oprette kontaktpersonen: "+contact.getName());
+		} finally {
+			if (insertProc != null) {
+				try {
+					insertProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not closed store procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
 	public void updateContact(Contact contact) {
 		connect();
 
+		CallableStatement updateProc = null;
 		try {
 			String storedCall = "{call updateContact " +
 					"(?, ?, ?, ?, ?, ?, ?, ?) }";
 			
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, (Integer) contact.get("contactid"));
-			insertProc.setInt(2, (Integer) contact.getSalesman().get("salesmanid"));
-			insertProc.setString(3, contact.getName());
-			insertProc.setString(4, contact.getTitle());
-			insertProc.setString(5, contact.getPhone());
-			insertProc.setString(6, contact.getMail());
-			insertProc.setBoolean(7, contact.getAcceptsMails());
-			insertProc.setString(8, contact.getComments());
+			updateProc = c.prepareCall(storedCall);
+			updateProc.setInt(1, (Integer) contact.get("contactid"));
+			updateProc.setInt(2, (Integer) contact.getSalesman().get("salesmanid"));
+			updateProc.setString(3, contact.getName());
+			updateProc.setString(4, contact.getTitle());
+			updateProc.setString(5, contact.getPhone());
+			updateProc.setString(6, contact.getMail());
+			updateProc.setBoolean(7, contact.getAcceptsMails());
+			updateProc.setString(8, contact.getComments());
 			
-			insertProc.execute();
+			updateProc.execute();
 		} catch (Exception e) {
 			logger.fatal("Update contact "+contact.get("contactid"), e);
 			throw new RuntimeException("Kunne ikke opdatere kontaktpersonen: "+contact.getName());
+		} finally {
+			if (updateProc != null) {
+				try {
+					updateProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -613,21 +792,34 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void deleteContact(Contact contact) {
 		connect();
 
+		CallableStatement deleteProc = null;
 		try {
 			String storedCall = "{call deleteContact ( ? ) }";
 			
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, (Integer) contact.get("contactid"));
+			deleteProc = c.prepareCall(storedCall);
+			deleteProc.setInt(1, (Integer) contact.get("contactid"));
 			
-			insertProc.execute();
+			deleteProc.execute();
 		} catch (Exception e) {
 			logger.fatal("Delete contact "+contact.get("contactid"), e);
 			throw new RuntimeException("Kunne ikke slette kontakten: "+contact.getName());
+		} finally {
+			if (deleteProc != null) {
+				try {
+					deleteProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the stored procedure", e);
+				}
+			}
+			
+			close();
 		}
 	}
 
 	public synchronized ArrayList<Contact> getContactsFor(Salesman salesman,
 			Company company) {
+		Statement contactStatement = null;
+		ResultSet contactResult = null;
 		try {
 			String contactQuery = "SELECT\n" +
 				"\tk.contactid,\n" +
@@ -646,8 +838,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				contactQuery += "\t\tAND k.salesmanid IS NULL;";
 
 			connect();
-			Statement contactStatement = c.createStatement();
-			ResultSet contactResult = contactStatement
+			contactStatement = c.createStatement();
+			contactResult = contactStatement
 					.executeQuery(contactQuery);
 
 			ArrayList<Contact> contacts = new ArrayList<Contact>();
@@ -671,10 +863,28 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					" and salesman "+salesman.get("salesmanid"), e);
 			throw new RuntimeException("Kunne ikke hente kontaktpersonerne til: " +
 					company.getCompanyName());
+		} finally {
+			if (contactResult != null) {
+				try {
+					contactResult.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (contactStatement != null) {
+				try {
+					contactStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
 	}
 
 	public ArrayList<Contact> getAllContacts(Company company) {
+		Statement contactStatement = null;
+		ResultSet contactResult = null;
 		try {
 			String contactQuery = "SELECT\n" +
 				"\tk.contactid,\n" +
@@ -688,8 +898,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				"\t\tWHERE k.companyid = " + company.get("companyid") + ";";
 
 			connect();
-			Statement contactStatement = c.createStatement();
-			ResultSet contactResult = contactStatement
+			contactStatement = c.createStatement();
+			contactResult = contactStatement
 					.executeQuery(contactQuery);
 
 			ArrayList<Contact> contacts = new ArrayList<Contact>();
@@ -711,6 +921,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			logger.fatal("Get contacts for company "+company.get("companyid"), e);
 			throw new RuntimeException("Kunne ikke hente kontaktpersonerne til: " +
 					company.getCompanyName());
+		} finally {
+			if (contactResult != null) {
+				try {
+					contactResult.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (contactStatement != null) {
+				try {
+					contactStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -724,11 +950,14 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			String tradeSql = "SELECT s.salesmanid, s.salesman, s.title, s.phone, s.mail\n" +
 					"FROM salespeople s ORDER BY s.salesmanid;";
 
+			Statement salespeopleStatement = null;
+			ResultSet salespeopleResult = null;
+			
 			try {
 				connect();
 
-				Statement salespeopleStatement = c.createStatement();
-				ResultSet salespeopleResult = salespeopleStatement
+				salespeopleStatement = c.createStatement();
+				salespeopleResult = salespeopleStatement
 						.executeQuery(tradeSql);
 
 				while (salespeopleResult.next()) {
@@ -747,6 +976,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 				logger.fatal("Get salespeople", e);
 				throw new RuntimeException("Kunne ikke hente listen af sælgere.");
+			} finally {
+				if (salespeopleResult != null) {
+					try {
+						salespeopleResult.close();
+					} catch (SQLException e) {
+						logger.fatal("Could not close the result set", e);
+					}
+				}
+				if (salespeopleStatement != null) {
+					try {
+						salespeopleStatement.close();
+					} catch (SQLException e) {
+						logger.fatal("Could not close the statement", e);
+					}
+				}
+				close();
 			}
 		}
 
@@ -756,10 +1001,11 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public int insertSalesman(Salesman salesman) {
 		connect();
 		
+		CallableStatement insertProc = null;
 		try {
 			String storedCall = "{? = call insertSalesman " +
 			"(?, ?, ?, ?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
 			
 			String phone = "";
@@ -786,24 +1032,35 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (Exception e) {
 			logger.fatal("Insert s", e);
 			throw new RuntimeException("Kunne ikke oprette sælgeren: "+salesman.getSalesman());
+		}  finally {
+			if (insertProc != null) {
+				try {
+					insertProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the stored procedure", e);
+				}
+			}
+			close();
+
 		}
 	}
 	
 	public void updateSalesman(Salesman salesman) {
 		connect();
 
+		CallableStatement updateProc = null;
 		try {
 			String storedCall = "{call updateSalesman " +
 					"(?, ?, ?, ?, ?) }";
 			
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, (Integer) salesman.get("salesmanid"));
-			insertProc.setString(2, salesman.getSalesman());
-			insertProc.setString(3, salesman.getTitle());
-			insertProc.setString(4, salesman.getPhone());
-			insertProc.setString(5, salesman.getMail());
+			updateProc = c.prepareCall(storedCall);
+			updateProc.setInt(1, (Integer) salesman.get("salesmanid"));
+			updateProc.setString(2, salesman.getSalesman());
+			updateProc.setString(3, salesman.getTitle());
+			updateProc.setString(4, salesman.getPhone());
+			updateProc.setString(5, salesman.getMail());
 			
-			insertProc.execute();
+			updateProc.execute();
 			
 			for (Salesman s : salespeople) {
 				if (s.get("salesmanid").equals(salesman.get("salesmanid"))) {
@@ -815,23 +1072,42 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (Exception e) {
 			logger.fatal("Update salesman "+salesman.get("salesmanid"), e);
 			throw new RuntimeException("Kunne ikke opdatere sælgeren: "+salesman.getSalesman());
+		} finally {
+			if (updateProc != null) {
+				try {
+					updateProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
 	public void deleteSalesman(Salesman salesman) {
 		connect();
 
+		CallableStatement deleteProc = null;
 		try {
 			String storedCall = "{call deleteSalesman ( ? ) }";
 			
-			CallableStatement insertProc = c.prepareCall(storedCall);
-			insertProc.setInt(1, (Integer) salesman.get("salesmanid"));
+			deleteProc = c.prepareCall(storedCall);
+			deleteProc.setInt(1, (Integer) salesman.get("salesmanid"));
 			
-			insertProc.execute();
+			deleteProc.execute();
 			salespeople.remove(salesman);
 		} catch (Exception e) {
 			logger.fatal("Delete salesman "+salesman.get("contactid"), e);
 			throw new RuntimeException("Kunne ikke slette sælgeren: "+salesman.getSalesman());
+		} finally {
+			if (deleteProc != null) {
+				try {
+					deleteProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -844,11 +1120,13 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 		String tradeSql = "SELECT t.tradeid, t.tradename FROM trade t";
 
+		Statement tradeStatement = null;
+		ResultSet tradeResult = null;
 		try {
 			connect();
 
-			Statement tradeStatement = c.createStatement();
-			ResultSet tradeResult = tradeStatement.executeQuery(tradeSql);
+			tradeStatement = c.createStatement();
+			tradeResult = tradeStatement.executeQuery(tradeSql);
 
 			logger.info("Getting trades");
 			while (tradeResult.next()) {
@@ -866,6 +1144,22 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 
 			logger.fatal("Could not get trades", e);
 			throw new RuntimeException("Kunne ikke hente listen af brancer");
+		} finally {
+			if (tradeResult != null) {
+				try {
+					tradeResult.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (tradeStatement != null) {
+				try {
+					tradeStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
 		}
 		return trades;
 	}
@@ -873,9 +1167,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	public void addTrade(Trade trade) {
 		connect();
 		
+		CallableStatement insertProc = null;
 		try {
 			String storedCall = "{call insertTrade (?, ?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
+			insertProc = c.prepareCall(storedCall);
 			
 			insertProc.setInt(1, trade.getId());
 			insertProc.setString(2, trade.getTrade());
@@ -884,22 +1179,41 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (Exception e) {
 			logger.fatal("Insert trade", e);
 			throw new RuntimeException("Kunne ikke oprette branchen: "+trade.getTrade());
+		} finally {
+			if (insertProc != null) {
+				try {
+					insertProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
 	public void deleteTrade(Trade trade) {
 		connect();
 		
+		CallableStatement deleteProc = null; 
 		try {
 			String storedCall = "{call deleteTrade (?) }";
-			CallableStatement insertProc = c.prepareCall(storedCall);
+			deleteProc = c.prepareCall(storedCall);
 			
-			insertProc.setInt(1, trade.getId());
+			deleteProc.setInt(1, trade.getId());
 			
-			insertProc.execute();
+			deleteProc.execute();
 		} catch (Exception e) {
 			logger.fatal("Delete trade", e);
 			throw new RuntimeException("Kunne ikke slette branchen: "+trade.getTrade());
+		} finally {
+			if (deleteProc != null) {
+				try {
+					deleteProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 	}
 	
@@ -930,21 +1244,24 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		connect();
 		Integer batchid = 0;
 		
+		CallableStatement batchIdProc = null;
+		CallableStatement companyProc = null; 
+		CallableStatement contactProc = null;
 		try {
 			
 			String batchIdCall = "{ ? = call nextval('labelqueue_batchid_seq') }";
-			CallableStatement batchIdProc = c.prepareCall(batchIdCall);
+			batchIdProc = c.prepareCall(batchIdCall);
 			
 			batchIdProc.registerOutParameter(1, Types.BIGINT);
 			batchIdProc.execute();
 			batchid = (int) batchIdProc.getLong(1);
 			
 			String storedCall = "{ call labelQueueAddCompany (?, ?) }";
-			CallableStatement companyProc = c.prepareCall(storedCall);			
+			companyProc = c.prepareCall(storedCall);			
 			companyProc.setInt(1, batchid);
 			
 			storedCall = "{ call labelQueueAddContact (?, ?) }";
-			CallableStatement contactProc = c.prepareCall(storedCall);
+			contactProc = c.prepareCall(storedCall);
 			contactProc.setInt(1, batchid);
 			
 			for (LabelRecipient recipient : recipients) {
@@ -969,11 +1286,32 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					throw new NullPointerException(error);
 				}
 			}
-			
-			c.close();
 		} catch (Exception e) {
 			logger.fatal("Trying to queue company for mail", e);
 			throw new RuntimeException("Kunne ikke oprette post-data.");
+		} finally {
+			if (batchIdProc != null) {
+				try {
+					batchIdProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			if (companyProc != null) {
+				try {
+					companyProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			if (contactProc != null) {
+				try {
+					contactProc.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close stored procedure", e);
+				}
+			}
+			close();
 		}
 		
 		return batchid;

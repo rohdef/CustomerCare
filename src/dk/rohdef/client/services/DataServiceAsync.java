@@ -16,7 +16,6 @@ import dk.rohdef.viewmodel.Trade;
 
 public interface DataServiceAsync {
 	void getCompanies(Salesman salesman, AsyncCallback<ArrayList<Company>> callback);
-	void close(AsyncCallback<Void> callback);
 	void getContactsFor(Salesman salesman, Company company,	AsyncCallback<ArrayList<Contact>> callback);
 	void getTrades(AsyncCallback<ArrayList<Trade>> callback);
 	void getImportance(String name, AsyncCallback<Importance> callback);
@@ -48,4 +47,5 @@ public interface DataServiceAsync {
 			AsyncCallback<ArrayList<Contact>> callback);
 	void getCompanyFor(Contact contact, AsyncCallback<Company> callback);
 	void getAllCompanies(AsyncCallback<ArrayList<Company>> callback);
+	void loaded(AsyncCallback<Void> callback);
 }

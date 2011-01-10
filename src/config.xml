@@ -4,9 +4,16 @@
 		<host>localhost</host>
 		<port>5432</port>
 		<user>Markon</user>
-		<password>85028502</password>
+		<password>123</password>
 		<database>Markon</database>
 	</database>
+	
+	<smtp>
+		<host>pasmtp.tele.dk</host>
+		<port>25</port>
+		<ssl>false</ssl>
+		<tls>false</tls>
+	</smtp>
 	
 	<company>
 		<name>MarkOn A/S</name>
@@ -18,4 +25,9 @@
 		<webpage>http://www.markon.as</webpage>
 		<vat-no>DK 7330 2315</vat-no>
 	</company>
+	
+	<application>
+		<test-mode>false</test-mode>
+		<connection-pool>true</connection-pool>
+	</application>
 </CustomerCare>

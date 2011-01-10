@@ -95,7 +95,6 @@ public class CreateCompany extends LayoutContainer {
 		this.add(newCompanyPanel);
 		
 		final FormButtonBinding companyButtonBinding = new FormButtonBinding(newCompanyPanel);
-		final FormButtonBinding contactButtonBinding = new FormButtonBinding(createNewContactPanel);
 		final Button previousBtn = new Button("Forrige");
 		final Button nextBtn = new Button("Næste");
 		final Button createCompanyBtn = getCreateCompanyButton();
@@ -107,7 +106,6 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.addButton(nextBtn);
-				contactButtonBinding.removeButton(previousBtn);
 				contacts.setVisible(false);
 				newCompanyPanel.setVisible(true);
 				nextBtn.enable();
@@ -122,7 +120,6 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.removeButton(nextBtn);
-				contactButtonBinding.addButton(previousBtn);
 				newCompanyPanel.setVisible(false);
 				contacts.setVisible(true);
 				previousBtn.enable();

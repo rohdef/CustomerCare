@@ -73,15 +73,10 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 
 		mtGrid = new Grid<Company>(emptyStore, cm);
 		mtGrid.setHeight(200);
-		mtGrid.setBorders(false);
 		mtGrid.setStripeRows(true);
 		
 		this.add(mtGrid);
 		this.setTopComponent(createToolBar());
-		
-		this.setWidth("100%");
-		this.setBorders(false);
-		this.setFrame(true);
 	}
 	
 	/**
@@ -157,7 +152,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		removeBtnConfig.setId("remove");
 		removeBtnConfig.setHeader("Fjern modtager");
 		removeBtnConfig.setRenderer(removeBtnRenderer);
-		removeBtnConfig.setWidth(80);
+		removeBtnConfig.setWidth(85);
 
 		configs.add(companyName);
 		configs.add(mailTo);

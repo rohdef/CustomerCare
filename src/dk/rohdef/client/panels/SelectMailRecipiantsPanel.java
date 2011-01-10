@@ -26,6 +26,7 @@ import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.layout.FitData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.MailLayout;
@@ -73,7 +74,7 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		removeBtnConfig.setId("remove");
 		removeBtnConfig.setHeader("Fjern modtager");
 		removeBtnConfig.setRenderer(removeBtnRenderer);
-		removeBtnConfig.setWidth(80);
+		removeBtnConfig.setWidth(85);
 
 		configs.add(companyName);
 		configs.add(mailTo);
@@ -87,9 +88,9 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 
 		mtGrid = new Grid<Company>(emptyStore, cm);
 		mtGrid.setHeight(200);
-		mtGrid.setBorders(false);
 		mtGrid.setStripeRows(true);
 		this.add(mtGrid);
+		
 		Button mailBtn = new Button("Skriv mail",
 				new SelectionListener<ButtonEvent>() {
 			@Override
@@ -137,12 +138,9 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 			}
 		});
 		mailBtn.setIcon(IconHelper.createPath("images/email.gif"));
-		
-		this.addButton(mailBtn);
-
-		this.setWidth("100%");
-		this.setBorders(false);
-		this.setFrame(true);
+		ToolBar toolBar = new ToolBar();
+		toolBar.add(mailBtn);
+		this.setTopComponent(toolBar);
 	}
 	
 	public void bindCompanies(List<Company> companies) {

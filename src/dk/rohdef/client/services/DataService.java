@@ -17,7 +17,11 @@ import dk.rohdef.viewmodel.Trade;
 
 @RemoteServiceRelativePath("data")
 public interface DataService extends RemoteService {
-	public void close();
+	/**
+	 * Inform the dataservice that the application is loaded and thus make it close 
+	 * connections when requested to. This also closes the connection.
+	 */
+	public void loaded();
 
 	public ArrayList<City> getCities();
 	
