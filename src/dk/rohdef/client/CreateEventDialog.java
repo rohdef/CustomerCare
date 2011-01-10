@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -169,7 +168,7 @@ public class CreateEventDialog extends Dialog {
 		titleFld.setAllowBlank(false);
 		titleFld.setAutoValidate(true);
 		titleFld.setFieldLabel("Titel");
-		titleFld.setValue("Møde: " + company.getCompanyName() + " og MarkOn A/S");
+		titleFld.setValue("Møde: " + company.getCompanyName() + " og ");
 		panel.add(titleFld);
 
 		FormLayout topLabelLayout = new FormLayout();
@@ -245,11 +244,14 @@ public class CreateEventDialog extends Dialog {
 		panel.add(locationFld);
 		
 		ButtonBar locationBtnBar = new ButtonBar();		
-		final Button locationMarkOnBtn = new Button("Hos MarkOn");
+		final Button locationMarkOnBtn = new Button("Hos ");
 		locationMarkOnBtn.setIcon(IconHelper.createPath("images/home.gif"));
 		
 		Global.getInstance().getDataService().getAppCompany(new AsyncCallback<Company>() {
 			public void onSuccess(final Company result) {
+				titleFld.setTitle(titleFld.getId()+result.getCompanyName());
+				
+				locationMarkOnBtn.setText("Hos " + result.getCompanyName());
 				locationMarkOnBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
