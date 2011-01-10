@@ -16,6 +16,7 @@ import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.LoadingDialog;
+import dk.rohdef.client.panels.CompanyGridPanel.CompanyGridType;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
@@ -69,7 +70,7 @@ public class CompanyListingPanel extends ContentPanel {
  	 * @return
  	 */
 	private ContentPanel createCustomerListing() {
-		companyPanel = new CompanyGridPanel(false);
+		companyPanel = new CompanyGridPanel(CompanyGridType.CUSTOMERS);
 		companyPanel.setHeading("Kundeliste");
 				
 		return companyPanel;
@@ -80,7 +81,7 @@ public class CompanyListingPanel extends ContentPanel {
 	 * @return
 	 */
 	private ContentPanel createProspectListing() {
-		prospectPanel = new CompanyGridPanel(true);
+		prospectPanel = new CompanyGridPanel(CompanyGridType.PROSPECTS);
 		prospectPanel.setHeading("Kundeemner");
 		
 		prospectPanel.addListener(Events.Expand, new Listener<BaseEvent>() {
@@ -116,7 +117,7 @@ public class CompanyListingPanel extends ContentPanel {
 	 * @return
 	 */
 	private ContentPanel createAllCompaniesListing() {
-		allCompaniesPanel = new CompanyGridPanel(true);
+		allCompaniesPanel = new CompanyGridPanel(CompanyGridType.ALL);
 		allCompaniesPanel.setHeading("Alle virksomheder");
 		
 		allCompaniesPanel.addListener(Events.Expand, new Listener<BaseEvent>() {

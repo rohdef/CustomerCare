@@ -38,6 +38,8 @@ import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
 
 public class CompanyGridPanel extends ContentPanel {
+	public enum CompanyGridType { ALL, PROSPECTS, CUSTOMERS, };
+	
 	private DataServiceAsync dataService;
 	private Grid<Company> companyGrid;
 	private GroupingStore<Company> companyStore;
@@ -45,11 +47,11 @@ public class CompanyGridPanel extends ContentPanel {
 	private String checkedStyle = "x-grid3-group-check";
 	private String uncheckedStyle = "x-grid3-group-uncheck";
 	
-	private boolean prospects;
+	private CompanyGridType companyGridType;
 
-	public CompanyGridPanel(boolean prospects) {
+	public CompanyGridPanel(CompanyGridType companyGridType) {
 		dataService = Global.getInstance().getDataService();
-		this.prospects = prospects;
+		this.companyGridType = companyGridType;
 		
 		this.setLayout(new FitLayout());
 		this.setFrame(false);
@@ -121,12 +123,14 @@ public class CompanyGridPanel extends ContentPanel {
 	private ToolBar initializeToolBar(StringFilter filter) {
 		final GridSelectionModel<Company> sm = companyGrid.getSelectionModel();
 		
-		final CompanyGridToolBar toolBar = new CompanyGridToolBar(filter, prospects);
+		final CompanyGridToolBar toolBar = new CompanyGridToolBar(filter, 
+				(companyGridType != CompanyGridType.CUSTOMERS));
 		
 		toolBar.addCreateCompanyListener(new ChangeListener() {
 			public void modelChanged(ChangeEvent event) {
 				Company company = (Company) event.getSource();
-				if ((Boolean)company.get("prospect") == prospects)
+				if ((Boolean)company.get("prospect") == (companyGridType == CompanyGridType.PROSPECTS)
+						|| companyGridType == CompanyGridType.ALL)
 					companyStore.add(company);
 			}
 		});
