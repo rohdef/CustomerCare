@@ -7,7 +7,6 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import dk.rohdef.client.i18n.CustomerCareI18n;
@@ -15,6 +14,13 @@ import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Salesman;
 
+/**
+ * The entry point for the system. This loads the initial login module, sets the title 
+ * and makes sure to load the company/customer view when a salesman is selected. This 
+ * also tells the DataService when we are finished loading to speed up initial loading 
+ * but still try to make sure database connections are closes as they should. 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CustomerCare implements EntryPoint {
 	/**
 	 * This is the entry point method.
