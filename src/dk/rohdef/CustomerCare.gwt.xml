@@ -39,4 +39,5 @@
   <source path='client.specialtypes'/>
   <source path='viewmodel' />
   
+  <extend-property name="locale" values="da"/>
 </module>

@@ -1,11 +1,7 @@
 package dk.rohdef.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-
-import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.data.ChangeEvent;
 import com.extjs.gxt.ui.client.data.ChangeEventSource;
 import com.extjs.gxt.ui.client.data.ChangeEventSupport;
@@ -13,8 +9,6 @@ import com.extjs.gxt.ui.client.data.ChangeListener;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.EventType;
 import com.extjs.gxt.ui.client.event.Events;
-import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
-import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
 import com.extjs.gxt.ui.client.util.IconHelper;
@@ -23,14 +17,8 @@ import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.button.ButtonBar;
-import com.extjs.gxt.ui.client.widget.form.ComboBox;
-import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
 import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
-import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
-import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
-import com.extjs.gxt.ui.client.widget.form.TextArea;
-import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
@@ -41,21 +29,27 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.events.ContactEvent;
 import dk.rohdef.client.events.ContactListener;
+import dk.rohdef.client.i18n.CustomerCareI18n;
+import dk.rohdef.client.panels.CompanyEditPanel;
 import dk.rohdef.client.panels.CreateContactPanel;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
-import dk.rohdef.client.specialtypes.VType;
-import dk.rohdef.client.specialtypes.VTypeValidator;
-import dk.rohdef.viewmodel.City;
 import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Contact;
 import dk.rohdef.viewmodel.Importance;
 import dk.rohdef.viewmodel.Trade;
 
+/**
+ * Handles company creation, with the two local steps create the new company or find an 
+ * existing, then insert the relevant contacts. The actual creation though is deferred 
+ * until the user presses create company. 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CreateCompany extends LayoutContainer {
 	public static EventType CompanyCreated = new EventType();
 	
 	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
 	private LoadingDialog loader = new LoadingDialog();
 	private boolean loadingCities = true, loadingTrades = true;
 	
@@ -63,8 +57,12 @@ public class CreateCompany extends LayoutContainer {
 	private ListStore<Contact> contactStore;
 	private Grid<Contact> contactGrid;
 
+	/**
+	 * 
+	 */
 	public CreateCompany() {
 		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
 		
 		newCompany = new Company();
 		newCompany.setImportance(Importance.I);
@@ -95,8 +93,8 @@ public class CreateCompany extends LayoutContainer {
 		this.add(newCompanyPanel);
 		
 		final FormButtonBinding companyButtonBinding = new FormButtonBinding(newCompanyPanel);
-		final Button previousBtn = new Button("Forrige");
-		final Button nextBtn = new Button("Næste");
+		final Button previousBtn = new Button(i18n.previous());
+		final Button nextBtn = new Button(i18n.next());
 		final Button createCompanyBtn = getCreateCompanyButton();
 		ButtonBar buttonBar = new ButtonBar();
 		
@@ -143,6 +141,9 @@ public class CreateCompany extends LayoutContainer {
 		checkLoader();
 	}
 	
+	/**
+	 * Checks if the system is loading data to determine wether to show the loader or not.
+	 */
 	private void checkLoader() {
 		if (loadingCities || loadingTrades)
 			loader.show();
@@ -151,138 +152,35 @@ public class CreateCompany extends LayoutContainer {
 	}
 
 	private FormPanel createNewCompanyPanel() {
-		final FormPanel formPanel = new FormPanel();
+		final CompanyEditPanel formPanel = new CompanyEditPanel();
 		formPanel.setAutoHeight(true);
 		formPanel.setWidth("50%");
 		formPanel.setHeading("Indtast virksomhedsoplysninger");
-
-		TextField<String> companynameFld = new TextField<String>();
-		companynameFld.setFieldLabel("Firmanavn:");
-		companynameFld.setName("companyname");
-		companynameFld.setAllowBlank(false);
-		companynameFld.setAutoValidate(true);
-		formPanel.add(companynameFld);
-
-		TextField<String> addressFld = new TextField<String>();
-		addressFld.setFieldLabel("Adresse:");
-		addressFld.setName("address");
-		formPanel.add(addressFld);
-
-		final ListStore<City> cityStore = new ListStore<City>();
-		cityStore.setMonitorChanges(true);
-		dataService.getCities(new AsyncCallback<ArrayList<City>>() {
-			public void onSuccess(ArrayList<City> result) {
-				cityStore.add(result);
-				cityStore.sort("postal", SortDir.ASC);
-				
-				loadingCities = false;
-				checkLoader();
-			}
-
-			public void onFailure(Throwable caught) {
-				throw new RuntimeException(caught);
-			}
-		});
 		
-		final ComboBox<City> postalBox = new ComboBox<City>();
-		postalBox.setFieldLabel("Postnummer");
-		postalBox.setDisplayField("postal");
-		postalBox.setTypeAhead(true);
-		postalBox.setStore(cityStore);
-		postalBox.setTriggerAction(TriggerAction.ALL);
-		formPanel.add(postalBox);
+		formPanel.bindCompany(newCompany);
 
-		final ComboBox<City> cityBox = new ComboBox<City>();
-		cityBox.setFieldLabel("By");
-		cityBox.setDisplayField("cityname");
-		cityBox.setTypeAhead(true);
-		cityBox.setStore(cityStore);
-		cityBox.setTriggerAction(TriggerAction.ALL);
-		formPanel.add(cityBox);
-
-		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
-					@Override
-					public void selectionChanged(SelectionChangedEvent<City> se) {
-						newCompany.setPostal(se.getSelectedItem().getPostal());
-						
-						if (cityBox.getSelection().equals(se.getSelection()))
-							return;
-						cityBox.setSelection(se.getSelection());
-					}
-				});
-
-		cityBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent<City> se) {
-				if (postalBox.getSelection().equals(se.getSelection()))
-					return;
-				postalBox.setSelection(se.getSelection());
-			}
-		});
-
-		TextField<String> phoneFld = new TextField<String>();
-		phoneFld.setFieldLabel("Telefon:");
-		phoneFld.setName("phone");
-		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
-		phoneFld.setAutoValidate(true);
-		formPanel.add(phoneFld);
-
-		final ListStore<Trade> tradeStore = new ListStore<Trade>();
-
-		dataService.getTrades(new AsyncCallback<ArrayList<Trade>>() {
-			public void onSuccess(ArrayList<Trade> result) {
-				tradeStore.removeAll();
-				tradeStore.add(result);
-				
-				loadingTrades = false;
-				checkLoader();
-			}
-
-			public void onFailure(Throwable caught) {
-			}
-		});
-		
-		ComboBox<Trade> tradeBox = new ComboBox<Trade>();
-		tradeBox.setFieldLabel("Branche:");
-		tradeBox.setDisplayField("trade");
-		tradeBox.setName("trade");
-		tradeBox.setTypeAhead(true);
-		tradeBox.setStore(tradeStore);
-		tradeBox.setTriggerAction(TriggerAction.ALL);
-		tradeBox.setValidator(new VTypeValidator(VType.ALPHABET));
-		formPanel.add(tradeBox);
-
-		final SimpleComboBox<Importance> importanceBox = new SimpleComboBox<Importance>();
-		importanceBox.setFieldLabel("Gruppe:");
-		importanceBox.add(Arrays.asList(Importance.values()));
-		importanceBox.setTriggerAction(TriggerAction.ALL);
-		importanceBox.setSimpleValue(newCompany.getImportance());
-		
-		importanceBox.addSelectionChangedListener(new SelectionChangedListener<SimpleComboValue<Importance>>() {
-					@Override
-					public void selectionChanged(
-							SelectionChangedEvent<SimpleComboValue<Importance>> se) {
-						newCompany.setImportance(importanceBox.getSimpleValue());
-					}
-				});
-		formPanel.add(importanceBox);
-
-		TextArea commentsFld = new TextArea();
-		commentsFld.setFieldLabel("Kommentarer:");
-		commentsFld.setName("comments");
-		formPanel.add(commentsFld);
-
-		FormBinding binding = new FormBinding(formPanel);
-		binding.autoBind();
-		binding.bind(newCompany);
+//		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
+//					@Override
+//					public void selectionChanged(SelectionChangedEvent<City> se) {
+//						newCompany.setPostal(se.getSelectedItem().getPostal());
+//						
+//						if (cityBox.getSelection().equals(se.getSelection()))
+//							return;
+//						cityBox.setSelection(se.getSelection());
+//					}
+//				});
 
 		return formPanel;
 	}
 	
+	/**
+	 * Creates a panel to list the added contacts
+	 * @return
+	 */
 	private ContentPanel getContactList() {
 		ContentPanel contactsPanel = new ContentPanel();
 		contactsPanel.setWidth("50%");
-		contactsPanel.setHeading("Kontakter");
+		contactsPanel.setHeading(i18n.contactList());
 		contactsPanel.setHeight(130);
 		
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();

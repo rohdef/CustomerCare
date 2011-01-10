@@ -25,6 +25,7 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import dk.rohdef.client.CreateCompany;
 import dk.rohdef.client.SalesmanAdminWindow;
 import dk.rohdef.client.TradeAdminDialog;
+import dk.rohdef.client.services.Global;
 
 public class CompanyGridToolBar extends ToolBar {
 	// Fields
@@ -46,6 +47,7 @@ public class CompanyGridToolBar extends ToolBar {
 		
 		searchFld = new TextField<String>();
 		searchFld.setWidth(100);
+		searchFld.setEmptyText(Global.getInstance().getI18n().insertSearchStringHere());
 		searchFld.addKeyListener(new KeyListener() {
 			@Override
 			public void handleEvent(ComponentEvent e) {

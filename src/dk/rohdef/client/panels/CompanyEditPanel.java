@@ -5,12 +5,8 @@ import java.util.Arrays;
 
 
 import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.binding.FieldBinding;
 import com.extjs.gxt.ui.client.binding.FormBinding;
-import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
-import com.extjs.gxt.ui.client.event.Events;
-import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
@@ -29,6 +25,7 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.CreateEventDialog;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.client.specialtypes.VType;
@@ -43,8 +40,8 @@ import dk.rohdef.viewmodel.Trade;
  * @author Rohde Fischer <rohdef@rohdef.dk>
  */
 public class CompanyEditPanel extends FormPanel {
-	private DataServiceAsync dataService = Global.getInstance()
-			.getDataService();
+	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private CustomerCareI18n i18n = Global.getInstance().getI18n();
 	
 	private ListStore<City> cityStore;
 	private Company original;
@@ -62,13 +59,26 @@ public class CompanyEditPanel extends FormPanel {
 	private FormButtonBinding buttonBinding;
 
 	private Button calendarBtn;
+	private TextField<String> companynameFld;
 
 	/**
 	 * 
 	 */
 	public CompanyEditPanel() {
-		this.setHeading("Firmadata");
+		this.setHeading(i18n.companyData());
 		binding = new FormBinding(this);
+		
+		companynameFld = new TextField<String>();
+		companynameFld.setFieldLabel(i18n.companyName());
+		companynameFld.setName("companyname");
+		companynameFld.setAllowBlank(false);
+		companynameFld.setAutoValidate(true);
+		this.add(companynameFld);
+		
+		addressFld = new TextField<String>();
+		addressFld.setFieldLabel(i18n.address());
+		addressFld.setName("address");
+		this.add(addressFld);
 
 		cityStore = new ListStore<City>();
 		dataService.getCities(new AsyncCallback<ArrayList<City>>() {
@@ -81,15 +91,9 @@ public class CompanyEditPanel extends FormPanel {
 				throw new RuntimeException(caught);
 			}
 		});
-
-		addressFld = new TextField<String>();
-		addressFld.setBorders(false);
-		addressFld.setFieldLabel("Adresse");
-		addressFld.setName("address");
-		this.add(addressFld);
-
+		
 		postalBox = new ComboBox<City>();
-		postalBox.setFieldLabel("Postnummer");
+		postalBox.setFieldLabel(i18n.postal());
 		postalBox.setDisplayField("postal");
 		postalBox.setTypeAhead(true);
 		postalBox.setStore(cityStore);
@@ -97,15 +101,14 @@ public class CompanyEditPanel extends FormPanel {
 		this.add(postalBox);
 
 		cityBox = new ComboBox<City>();
-		cityBox.setFieldLabel("By");
+		cityBox.setFieldLabel(i18n.city());
 		cityBox.setDisplayField("cityname");
 		cityBox.setTypeAhead(true);
 		cityBox.setStore(cityStore);
 		cityBox.setTriggerAction(TriggerAction.ALL);
 		this.add(cityBox);
 
-		postalBox
-				.addSelectionChangedListener(new SelectionChangedListener<City>() {
+		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
 					@Override
 					public void selectionChanged(SelectionChangedEvent<City> se) {
 						if (cityBox.getSelection().equals(se.getSelection()))
@@ -114,8 +117,7 @@ public class CompanyEditPanel extends FormPanel {
 					}
 				});
 
-		postalBox
-				.addSelectionChangedListener(new SelectionChangedListener<City>() {
+		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
 					@Override
 					public void selectionChanged(SelectionChangedEvent<City> se) {
 						if (binding.getModel() != null
@@ -138,15 +140,15 @@ public class CompanyEditPanel extends FormPanel {
 		});
 
 		phoneFld = new TextField<String>();
-		phoneFld.setBorders(false);
-		phoneFld.setFieldLabel("Telefon");
+		phoneFld.setFieldLabel(i18n.phone());
 		phoneFld.setName("phone");
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		phoneFld.setAutoValidate(true);
 		this.add(phoneFld);
 		
-		FieldBinding fb = new FieldBinding(phoneFld, "phone");
-		binding.addFieldBinding(fb);
+		// This seems redundant!
+//		FieldBinding fb = new FieldBinding(phoneFld, "phone");
+//		binding.addFieldBinding(fb);
 
 		tradeStore = new ListStore<Trade>();
 		tradeBox = new ComboBox<Trade>();
@@ -154,7 +156,7 @@ public class CompanyEditPanel extends FormPanel {
 			public void onSuccess(ArrayList<Trade> result) {
 				tradeStore.add(result);
 				Trade t = new Trade();
-				t.setTrade("Ingen branche valgt");
+				t.setTrade(i18n.noTradeSelected());
 				tradeStore.add(t);
 			}
 
@@ -163,7 +165,7 @@ public class CompanyEditPanel extends FormPanel {
 			}
 		});
 
-		tradeBox.setFieldLabel("Branche:");
+		tradeBox.setFieldLabel(i18n.trade());
 		tradeBox.setDisplayField("trade");
 		tradeBox.setName("trade");
 		tradeBox.setTypeAhead(true);
@@ -172,7 +174,7 @@ public class CompanyEditPanel extends FormPanel {
 		this.add(tradeBox);
 		
 		importanceBox = new SimpleComboBox<Importance>();
-		importanceBox.setFieldLabel("Gruppe:");
+		importanceBox.setFieldLabel(i18n.group());
 		importanceBox.add(Arrays.asList(Importance.values()));
 		importanceBox.setTriggerAction(TriggerAction.ALL);
 
@@ -183,28 +185,21 @@ public class CompanyEditPanel extends FormPanel {
 							SelectionChangedEvent<SimpleComboValue<Importance>> se) {
 						if (binding.getModel() != null)
 							((Company) binding.getModel())
-									.setImportance(importanceBox
-											.getSimpleValue());
+								.setImportance(importanceBox.getSimpleValue());
 					}
 				});
 
 		this.add(importanceBox);
 
 		TextArea commentsFld = new TextArea();
-		commentsFld.setFieldLabel("Kommentarer");
+		commentsFld.setFieldLabel(i18n.comments());
 		commentsFld.setName("comments");
-		commentsFld.setBorders(false);
 		this.add(commentsFld);
 		
-		binding.addListener(Events.UnBind, new Listener<BaseEvent>() {
-			public void handleEvent(BaseEvent be) {
-				setReadOnly(true);
-			}
-		});
-		
-		this.setTopComponent(getToolBar());
 		this.setReadOnly(true);
 		binding.autoBind();
+
+		this.setTopComponent(getToolBar());
 	}
 
 	/**
@@ -213,7 +208,6 @@ public class CompanyEditPanel extends FormPanel {
 	 */
 	public void bindCompany(Company company) {
 		this.original = company;
-		
 		Company dataClone = new Company();
 		dataClone.setProperties(company.getProperties());
 		
@@ -224,10 +218,10 @@ public class CompanyEditPanel extends FormPanel {
 		ArrayList<City> citySelect = new ArrayList<City>();
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
-		buttonBinding.addButton(saveBtn);
-
-		calendarBtn.enable();
 		this.setReadOnly(false);
+		
+		buttonBinding.addButton(saveBtn);
+		calendarBtn.enable();
 	}
 
 	/**
@@ -239,12 +233,14 @@ public class CompanyEditPanel extends FormPanel {
 		cityBox.clear();
 		postalBox.clear();
 		original = null;
+		this.setReadOnly(true);
 
 		buttonBinding.removeButton(saveBtn);
 		saveBtn.disable();
 		calendarBtn.disable();
-		
 	}
+	
+	// TODO from here and down belongs elsewhere
 
 	/**
 	 * Create a toolbar for the options.
