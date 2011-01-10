@@ -33,6 +33,7 @@
   <!-- Specify the paths for translatable code                    -->
   <source path='client'/>
   <source path='client.events'/>
+  <source path='client.i18n'/>
   <source path='client.panels'/>
   <source path='client.services'/>
   <source path='client.specialtypes'/>

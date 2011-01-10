@@ -28,6 +28,6 @@
 	
 	<application>
 		<test-mode>false</test-mode>
-		<connection-pool>true</connection-pool>
+		<connection-pool>false</connection-pool>
 	</application>
 </CustomerCare>
