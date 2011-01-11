@@ -337,7 +337,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 					+ " c.tradeid\n"
 					+ "		FROM companieswithcities c\n"
 					+ "		WHERE c.companyname ILIKE ?\n"
-					+ "		LIMIT 10;";
+					+ "		LIMIT 7;";
 			logger.debug("\tThe sql being used is: "+companyQuery);			
 
 			companyStatement = c.prepareStatement(companyQuery);
@@ -424,6 +424,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			c.setComments(comments);
 
 			Trade noTrade = new Trade();
+			// TODO Internationalize
 			noTrade.setTrade("Ingen branche valgt");
 			if (!companyResults.wasNull())
 				c.setTrade(tradeMap.get(new Integer(tradeid)));

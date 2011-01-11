@@ -16,6 +16,7 @@ import com.extjs.gxt.ui.client.widget.layout.AccordionLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.LoadingDialog;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.panels.CompanyGridPanel.CompanyGridType;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
@@ -32,6 +33,7 @@ public class CompanyListingPanel extends ContentPanel {
 	private static Logger logger = Logger.getLogger(CompanyListingPanel.class.getName());
 	private LoadingDialog loader = new LoadingDialog();
 	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private CustomerCareI18n i18n = Global.getInstance().getI18n();
 	
 	private boolean loadingCustomers = true,
 		loadingProspects = false;
@@ -71,7 +73,7 @@ public class CompanyListingPanel extends ContentPanel {
  	 */
 	private ContentPanel createCustomerListing() {
 		companyPanel = new CompanyGridPanel(CompanyGridType.CUSTOMERS);
-		companyPanel.setHeading("Kundeliste");
+		companyPanel.setHeading(i18n.customerList());
 				
 		return companyPanel;
 	}
@@ -82,7 +84,7 @@ public class CompanyListingPanel extends ContentPanel {
 	 */
 	private ContentPanel createProspectListing() {
 		prospectPanel = new CompanyGridPanel(CompanyGridType.PROSPECTS);
-		prospectPanel.setHeading("Kundeemner");
+		prospectPanel.setHeading(i18n.prospects());
 		
 		prospectPanel.addListener(Events.Expand, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
@@ -118,7 +120,7 @@ public class CompanyListingPanel extends ContentPanel {
 	 */
 	private ContentPanel createAllCompaniesListing() {
 		allCompaniesPanel = new CompanyGridPanel(CompanyGridType.ALL);
-		allCompaniesPanel.setHeading("Alle virksomheder");
+		allCompaniesPanel.setHeading(i18n.allCompanies());
 		
 		allCompaniesPanel.addListener(Events.Expand, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {

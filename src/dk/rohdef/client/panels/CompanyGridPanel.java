@@ -332,7 +332,9 @@ public class CompanyGridPanel extends ContentPanel {
 
 		public String render(GroupColumnData data) {
 			String f = cm.getColumnById(data.field).getHeader();
-			String l = data.models.size() == 1 ? "Item" : "Items";
+			String l = data.models.size() == 1 ? 
+					i18n.company().toLowerCase() : 
+					i18n.companies().toLowerCase();
 			return "<div class='x-grid3-group-checker'><div class='"
 					+ uncheckedStyle + "'> </div></div> " + f + ": "
 					+ data.group + " (" + data.models.size() + " " + l

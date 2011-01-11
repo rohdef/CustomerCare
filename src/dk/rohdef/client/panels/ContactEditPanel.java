@@ -32,6 +32,7 @@ import dk.rohdef.client.CreateContactWindow;
 import dk.rohdef.client.LoadingDialog;
 import dk.rohdef.client.events.ContactEvent;
 import dk.rohdef.client.events.ContactListener;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.client.specialtypes.VType;
@@ -56,7 +57,8 @@ public class ContactEditPanel extends FormPanel {
 	private TextArea commentFld;
 	private FormBinding contactBinding;
 	
-	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
 	private static Logger logger = Logger.getLogger(ContactEditPanel.class.getName());
 	
 	private ArrayList<ContactListener> contactListeners; 
@@ -70,13 +72,16 @@ public class ContactEditPanel extends FormPanel {
 	 * 
 	 */
 	public ContactEditPanel() {
-		this.setHeading("Kontakter");
+		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
+		
+		this.setHeading(i18n.contacts());
 
 		contactListeners = new ArrayList<ContactListener>();
 		emptyStore = new ListStore<Contact>();
 
 		contactsBox = new ComboBox<Contact>();
-		contactsBox.setFieldLabel("Kontaktliste");
+		contactsBox.setFieldLabel(i18n.contactList());
 		contactsBox.setDisplayField("contactname");
 		contactsBox.setTypeAhead(true);
 		contactsBox.setStore(emptyStore);
@@ -85,7 +90,7 @@ public class ContactEditPanel extends FormPanel {
 		
 		nameFld = new TextField<String>();
 		nameFld.setBorders(false);
-		nameFld.setFieldLabel("Navn");
+		nameFld.setFieldLabel(i18n.contactName());
 		nameFld.setName("contactname");
 		nameFld.setAllowBlank(false);
 		nameFld.setAutoValidate(true);
@@ -95,7 +100,7 @@ public class ContactEditPanel extends FormPanel {
 
 		titleFld = new TextField<String>();
 		titleFld.setBorders(false);
-		titleFld.setFieldLabel("Titel");
+		titleFld.setFieldLabel(i18n.contactTitle());
 		titleFld.setName("title");
 		titleFld.setAutoValidate(true);
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
@@ -103,7 +108,7 @@ public class ContactEditPanel extends FormPanel {
 
 		phoneFld = new TextField<String>();
 		phoneFld.setBorders(false);
-		phoneFld.setFieldLabel("Telefon");
+		phoneFld.setFieldLabel(i18n.contactPhone());
 		phoneFld.setName("phone");
 		phoneFld.setAutoValidate(true);
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
@@ -111,20 +116,20 @@ public class ContactEditPanel extends FormPanel {
 
 		mailFld = new TextField<String>();
 		mailFld.setBorders(false);
-		mailFld.setFieldLabel("Mail");
+		mailFld.setFieldLabel(i18n.contactEmail());
 		mailFld.setName("mail");
 		mailFld.setAutoValidate(true);
 		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		this.add(mailFld);
 
 		acceptsMailsBox = new CheckBox();
-		acceptsMailsBox.setFieldLabel("Ønsker mails");
+		acceptsMailsBox.setFieldLabel(i18n.contactAcceptsMail());
 		acceptsMailsBox.setName("acceptsmails");
 		this.add(acceptsMailsBox);
 
 		commentFld = new TextArea();
 		commentFld.setBorders(false);
-		commentFld.setFieldLabel("Kommentarer");
+		commentFld.setFieldLabel(i18n.contactComments());
 		commentFld.setName("comments");
 		this.add(commentFld);
 
@@ -169,7 +174,7 @@ public class ContactEditPanel extends FormPanel {
 		ToolBar toolbar = new ToolBar();
 		FormButtonBinding buttonBinding = new FormButtonBinding(this);
 		
-		saveBtn = new Button("Gem");
+		saveBtn = new Button(i18n.save());
 		saveBtn.disable();
 		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
 		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {

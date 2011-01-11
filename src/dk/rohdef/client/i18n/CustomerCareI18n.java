@@ -9,8 +9,8 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Insert search string")
 	public String insertSearchStringHere();
 	
-	@DefaultMessage("Contact list")
-	public String contactList();
+	@DefaultMessage("Save")
+	public String save();
 	
 	@DefaultMessage("Previous")
 	public String previous();
@@ -96,15 +96,56 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Search results")
 	public String searchResults();
 	
+	
+	//
+	// CONTACTS
+	//
+	
+	@DefaultMessage("Contacts")
+	public String contacts();
+	
+	@DefaultMessage("Contact list")
+	public String contactList();
+	
 	@DefaultMessage("Name")
 	public String contactName();
 	
 	@DefaultMessage("Title")
 	public String contactTitle();
 	
+	@DefaultMessage("Phone")
+	public String contactPhone();
+	
+	@DefaultMessage("E-mail")
+	public String contactEmail();
+	
 	@DefaultMessage("No contacts has been created yet")
 	public String noContacts();
 	
+	@DefaultMessage("Accepts e-mail")
+	public String contactAcceptsMail();
+	
+	@DefaultMessage("Comments")
+	public String contactComments();
+	
+	
+	
+	
 	@DefaultMessage("Insert company details")
 	public String insertCompanyDetails();
+	
+	@DefaultMessage("Company")
+	public String company();
+	
+	@DefaultMessage("Companies")
+	public String companies();
+	
+	@DefaultMessage("Customer list")
+	public String customerList();
+	
+	@DefaultMessage("Prospects")
+	public String prospects();
+	
+	@DefaultMessage("All companies")
+	public String allCompanies();
 }
