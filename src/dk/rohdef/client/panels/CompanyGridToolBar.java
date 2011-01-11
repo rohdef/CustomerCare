@@ -25,9 +25,12 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import dk.rohdef.client.CreateCompany;
 import dk.rohdef.client.SalesmanAdminWindow;
 import dk.rohdef.client.TradeAdminDialog;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.Global;
 
 public class CompanyGridToolBar extends ToolBar {
+	private CustomerCareI18n i18n;
+	
 	// Fields
 	private TextField<String> searchFld;
 	private Button newCompany;
@@ -39,11 +42,12 @@ public class CompanyGridToolBar extends ToolBar {
 	private ArrayList<SelectionListener<ComponentEvent>> deleteCompanyListeners;
 	
 	public CompanyGridToolBar(final StringFilter filter, final boolean prospect) {
+		i18n = Global.getInstance().getI18n();
 		createCompanyListeners = new ArrayList<ChangeListener>();
 		deleteCompanyListeners = new ArrayList<SelectionListener<ComponentEvent>>();
 		
 		this.setEnableOverflow(false);
-		this.add(new LabelToolItem("Søg: "));
+		this.add(new LabelToolItem(i18n.search() + ": "));
 		
 		searchFld = new TextField<String>();
 		searchFld.setWidth(100);
@@ -58,7 +62,7 @@ public class CompanyGridToolBar extends ToolBar {
 		this.add(searchFld);
 		
 		newCompany = new Button();
-		newCompany.setText("Opret ny virksomhed");
+		newCompany.setText(i18n.createCompany());
 		newCompany.setIcon(IconHelper.createPath("images/company_add.gif"));
 		newCompany.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -81,16 +85,17 @@ public class CompanyGridToolBar extends ToolBar {
 				createCompanyWindow.add(createCompany);
 				createCompanyWindow.setIcon(IconHelper.createPath("images/company_add.gif"));
 				createCompanyWindow.setWidth(650);
-				createCompanyWindow.setHeight(355);
+				createCompanyWindow.setHeight(360);
 				createCompanyWindow.setModal(true);
-				createCompanyWindow.setHeading("Opret ny virksomhed");
+				createCompanyWindow.setHeading(i18n.createCompany());
 				createCompanyWindow.show();
+				createCompanyWindow.setAutoHeight(true);
 			}
 		});
 		this.add(newCompany);
 		
 		deleteCompaniesBtn = new Button();
-		deleteCompaniesBtn.setText("Slet markerede firmaer");
+		deleteCompaniesBtn.setText(i18n.deleteSelectedCompanies());
 		deleteCompaniesBtn.disable();
 		deleteCompaniesBtn.setIcon(IconHelper.createPath("images/company_delete.gif"));
 		deleteCompaniesBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -106,7 +111,7 @@ public class CompanyGridToolBar extends ToolBar {
 		
 		if (!prospect) {
 			tradeAdminBtn = new Button();
-			tradeAdminBtn.setText("Administrer brancher");
+			tradeAdminBtn.setText(i18n.manageTrades());
 			tradeAdminBtn.setIcon(IconHelper.createPath("images/trades.gif"));
 			tradeAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 				@Override
@@ -118,7 +123,7 @@ public class CompanyGridToolBar extends ToolBar {
 			this.add(tradeAdminBtn);
 			
 			salesmanAdminBtn = new Button();
-			salesmanAdminBtn.setText("Administrer sælgere");
+			salesmanAdminBtn.setText(i18n.manageSalespeople());
 			salesmanAdminBtn.setIcon(IconHelper.createPath("images/salesmen.gif"));
 			salesmanAdminBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 				@Override
@@ -173,13 +178,14 @@ public class CompanyGridToolBar extends ToolBar {
 	
 	private class DeleteDialog extends Dialog {
 		public DeleteDialog(final boolean prospects) {
-			this.setTitle("Er du sikker på, at du vil slette?");
-			this.addText("Advarsel! Du kan ikke fortryde denne handling!"); 
-			this.addText("Er du sikker på, at du vil slette den markerede virksomhed?");
+			this.setTitle(i18n.deleteCompanyDialogTitle());
+			this.setHeading(i18n.deleteCompanyDialogTitle());
+			this.addText(i18n.cannotBeUndone()); 
+			this.addText(i18n.doYouWantToDelteTheCompany());
 			this.setButtons(Dialog.YESNO);
-			this.getButtonById(Dialog.YES).setText("Slet virksomhed");
+			this.getButtonById(Dialog.YES).setText(i18n.deleteCompany());
 			this.getButtonById(Dialog.YES).setIcon(IconHelper.createPath("images/company_delete.gif"));
-			this.getButtonById(Dialog.NO).setText("Fortryd");
+			this.getButtonById(Dialog.NO).setText(i18n.cancel());
 			this.getButtonById(Dialog.NO).setIcon(IconHelper.createPath("images/cancel_green.gif"));
 			this.setHideOnButtonClick(true);
 			

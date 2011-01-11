@@ -33,6 +33,7 @@ import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
@@ -41,6 +42,7 @@ public class CompanyGridPanel extends ContentPanel {
 	public enum CompanyGridType { ALL, PROSPECTS, CUSTOMERS, };
 	
 	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
 	private Grid<Company> companyGrid;
 	private GroupingStore<Company> companyStore;
 	
@@ -51,6 +53,7 @@ public class CompanyGridPanel extends ContentPanel {
 
 	public CompanyGridPanel(CompanyGridType companyGridType) {
 		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
 		this.companyGridType = companyGridType;
 		
 		this.setLayout(new FitLayout());
@@ -82,7 +85,7 @@ public class CompanyGridPanel extends ContentPanel {
 		companyGrid.setView(companyView);
 		companyGrid.addPlugin(sm);
 		companyGrid.addPlugin(filters);
-		companyGrid.getView().setEmptyText("Der er ingen virksomheder i listen.");
+		companyGrid.getView().setEmptyText(i18n.emptyCompanyList());
 		
 		this.addListener(Events.Collapse, new Listener<BaseEvent>() {
 			public void handleEvent(BaseEvent be) {
@@ -173,19 +176,19 @@ public class CompanyGridPanel extends ContentPanel {
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		configs.add(sm.getColumn());
 
-		ColumnConfig column = new ColumnConfig("companyname", "Firmanavn", 200);
+		ColumnConfig column = new ColumnConfig("companyname", i18n.companyName(), 200);
 		configs.add(column);
 
-		column = new ColumnConfig("postal", "Postnr", 35);
+		column = new ColumnConfig("postal", i18n.postal(), 35);
 		configs.add(column);
 
-		column = new ColumnConfig("city", "By", 125);
+		column = new ColumnConfig("city", i18n.city(), 125);
 		configs.add(column);
 		
-		column = new ColumnConfig("trade", "Branche", 125);
+		column = new ColumnConfig("trade", i18n.trade(), 125);
 		configs.add(column);
 		
-		column = new ColumnConfig("phone", "Telefon", 50);
+		column = new ColumnConfig("phone", i18n.phone(), 50);
 		configs.add(column);
 
 		return new ColumnModel(configs);

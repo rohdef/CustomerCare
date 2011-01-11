@@ -6,25 +6,18 @@ import java.util.Arrays;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
-import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
-import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.store.ListStore;
-import com.extjs.gxt.ui.client.util.IconHelper;
-import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.ComboBox;
 import com.extjs.gxt.ui.client.widget.form.ComboBox.TriggerAction;
-import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboBox;
 import com.extjs.gxt.ui.client.widget.form.SimpleComboValue;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
-import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import dk.rohdef.client.CreateEventDialog;
 import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
@@ -54,11 +47,11 @@ public class CompanyEditPanel extends FormPanel {
 	private ComboBox<City> postalBox;
 	private TextField<String> addressFld;
 
-	private Button saveBtn;
+//	private Button saveBtn;
 
-	private FormButtonBinding buttonBinding;
+//	private FormButtonBinding buttonBinding;
 
-	private Button calendarBtn;
+//	private Button calendarBtn;
 	private TextField<String> companynameFld;
 
 	/**
@@ -198,8 +191,6 @@ public class CompanyEditPanel extends FormPanel {
 		
 		this.setReadOnly(true);
 		binding.autoBind();
-
-		this.setTopComponent(getToolBar());
 	}
 
 	/**
@@ -220,8 +211,8 @@ public class CompanyEditPanel extends FormPanel {
 		postalBox.setSelection(citySelect);
 		this.setReadOnly(false);
 		
-		buttonBinding.addButton(saveBtn);
-		calendarBtn.enable();
+//		buttonBinding.addButton(saveBtn);
+//		calendarBtn.enable();
 	}
 
 	/**
@@ -235,64 +226,42 @@ public class CompanyEditPanel extends FormPanel {
 		original = null;
 		this.setReadOnly(true);
 
-		buttonBinding.removeButton(saveBtn);
-		saveBtn.disable();
-		calendarBtn.disable();
+//		buttonBinding.removeButton(saveBtn);
+//		saveBtn.disable();
+//		calendarBtn.disable();
 	}
 	
-	// TODO from here and down belongs elsewhere
-
 	/**
-	 * Create a toolbar for the options.
+	 * Get the original model (this is the one that components might listen to).
+	 * @see {@link #getShownModel()}
 	 * @return
 	 */
-	private ToolBar getToolBar() {
-		ToolBar toolBar = new ToolBar();
-		
-		saveBtn = new Button("Gem");
-		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
-		saveBtn.disable();
-		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				save();
-			}
-		});
-		toolBar.add(saveBtn);
-		
-		calendarBtn = new Button("Opret aftale");
-		calendarBtn.setIcon(IconHelper.createPath("images/calendar_add.gif"));
-		calendarBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
-			@Override
-			public void componentSelected(ButtonEvent ce) {
-				CreateEventDialog dialog = new CreateEventDialog(original);
-				dialog.show();
-			}
-		});
-		calendarBtn.disable();
-		toolBar.add(calendarBtn);
-		
-		buttonBinding = new FormButtonBinding(this);
-		
-		return toolBar;
+	public Company getOriginalModel() {
+		return original;
+	}
+	
+	/**
+	 * Get the model as it is show in the form.
+	 * @see {@link #getOriginalModel()}
+	 * @return
+	 */
+	public Company getShownModel() {
+		return (Company) binding.getModel();
 	}
 
 	/**
-	 * Save the company details in the database and update the model.
+	 * Save the data from the form into the model. This will cause any element obersving 
+	 * the model to be updated.
 	 */
-	// TODO clean up and send an event for the changes in stead.
-	private void save() {
-		final Company updated = (Company) binding.getModel();
-		final Company theOriginal = original;
-		
-		dataService.updateCompany(updated, new AsyncCallback<Void>() {
-			public void onSuccess(Void result) {
-				theOriginal.setProperties(updated.getProperties());
-			}
-			
-			public void onFailure(Throwable caught) {
-				throw new RuntimeException(caught);
-			}
-		});
+	public void saveToModel() {
+		original.setProperties(binding.getModel().getProperties());
+	}
+	
+	public void hideCompanyNameField() {
+		companynameFld.hide();
+	}
+	
+	public void showCompanyNameField() {
+		companynameFld.show();
 	}
 }

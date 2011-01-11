@@ -12,18 +12,22 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.util.Padding;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.Text;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout.HBoxLayoutAlign;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
+import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 
 import dk.rohdef.client.events.ContactEvent;
@@ -166,6 +170,9 @@ public class CustomerView extends LayoutContainer {
 		contactForm = new ContactEditPanel();
 		mailForm = new SelectMailRecipiantsPanel();
 		labelForm = new SelectLabelRecipiantsPanel();
+		
+		companyForm.setTopComponent(createCompanyEditToolBar(companyForm));
+		companyForm.hideCompanyNameField();
 
 		companyForm.setVisible(true);
 		contactForm.setVisible(true);
@@ -228,6 +235,60 @@ public class CustomerView extends LayoutContainer {
 		contactForm.addContactListener(new ContactEventListener());
 
 		return eastPanel;
+	}
+	
+	/**
+	 * Create a toolbar for the options.
+	 * @return
+	 */
+	private ToolBar createCompanyEditToolBar(final CompanyEditPanel companyForm) {
+		ToolBar toolBar = new ToolBar();
+		
+		Button saveBtn = new Button("Gem");
+		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
+		saveBtn.disable();
+		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				save(companyForm);
+			}
+		});
+		toolBar.add(saveBtn);
+		
+		Button calendarBtn = new Button("Opret aftale");
+		calendarBtn.setIcon(IconHelper.createPath("images/calendar_add.gif"));
+		calendarBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				CreateEventDialog dialog =
+					new CreateEventDialog(companyForm.getOriginalModel());
+				dialog.show();
+			}
+		});
+		calendarBtn.disable();
+		toolBar.add(calendarBtn);
+		
+		FormButtonBinding buttonBinding = new FormButtonBinding(companyForm);
+		buttonBinding.addButton(saveBtn);
+		
+		return toolBar;
+	}
+
+	/**
+	 * Save the company details in the database and update the model.
+	 */
+	private void save(final CompanyEditPanel companyForm) {
+		Global.getInstance().getDataService().updateCompany(
+				companyForm.getShownModel(),
+			new AsyncCallback<Void>() {
+				public void onSuccess(Void result) {
+					companyForm.saveToModel();
+				}
+				
+				public void onFailure(Throwable caught) {
+					throw new RuntimeException(caught);
+				}
+		});
 	}
 	
 	/**
