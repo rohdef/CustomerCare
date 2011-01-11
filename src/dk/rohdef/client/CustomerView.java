@@ -34,6 +34,7 @@ import dk.rohdef.client.events.ContactEvent;
 import dk.rohdef.client.events.ContactListener;
 import dk.rohdef.client.events.DeleteCompanyEvent;
 import dk.rohdef.client.events.DeleteCompanyListener;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.panels.CompanyEditPanel;
 import dk.rohdef.client.panels.CompanyListingPanel;
 import dk.rohdef.client.panels.ContactEditPanel;
@@ -49,6 +50,7 @@ import dk.rohdef.viewmodel.Salesman;
  */
 public class CustomerView extends LayoutContainer {
 	private static Logger logger = Logger.getLogger(CustomerView.class.getName());
+	private CustomerCareI18n i18n;
 	
 	private CompanyListingPanel companyListing;
 	private CompanyEditPanel companyForm;
@@ -64,6 +66,8 @@ public class CustomerView extends LayoutContainer {
 	 * @param salesman
 	 */
 	public CustomerView(Salesman salesman) {
+		i18n = Global.getInstance().getI18n();
+		
 		this.setLayout(new BorderLayout());
 
 		ContentPanel northPanel = createNorthPanel();
@@ -113,23 +117,22 @@ public class CustomerView extends LayoutContainer {
 		northPanel.add(profileImage);
 		
 		Text customersTxt = new Text();
-		customersTxt.setText("Kunder");
+		customersTxt.setText(i18n.customers());
 		customersTxt.setStyleAttribute("font-size", "3em;");
 		northPanel.add(customersTxt);
 
 		HBoxLayoutData flex = new HBoxLayoutData(0, 15, 0, 0);
 		northPanel.add(new Text(), flex);
 
-		Button changeSalesmanBtn = new Button("Skift logon",
+		Button changeSalesmanBtn = new Button(i18n.changeLogin(),
 				new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
 						final Dialog salesmanDialog = new Dialog();
 						salesmanDialog.setButtons(Dialog.CANCEL);
 						salesmanDialog.getButtonById(Dialog.CANCEL)
-							.setText("Anuller");
-						salesmanDialog
-							.setHeading("Hvilken sælger ønsker du at se kartoteket for?");
+							.setText(i18n.cancel());
+						salesmanDialog.setHeading(i18n.whichSalesman());
 						salesmanDialog.setHideOnButtonClick(true);
 						salesmanDialog.setSize(600, 450);
 						salesmanDialog.setScrollMode(Scroll.AUTO);
@@ -243,7 +246,7 @@ public class CustomerView extends LayoutContainer {
 	private ToolBar createCompanyEditToolBar(final CompanyEditPanel companyForm) {
 		ToolBar toolBar = new ToolBar();
 		
-		Button saveBtn = new Button("Gem");
+		Button saveBtn = new Button(i18n.save());
 		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
 		saveBtn.disable();
 		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {

@@ -6,6 +6,15 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("{0} - CustomerCare")
 	public String pageTitle(String companyName);
 	
+	@DefaultMessage("Customers")
+	public String customers();
+	
+	@DefaultMessage("Change login")
+	public String changeLogin();
+	
+	@DefaultMessage("Which salesman do you wist to see the customer listing for?")
+	public String whichSalesman();
+	
 	@DefaultMessage("Insert search string")
 	public String insertSearchStringHere();
 	
