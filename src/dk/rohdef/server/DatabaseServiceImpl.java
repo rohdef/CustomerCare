@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -309,6 +310,64 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		appCompany.set("vat-no", config.getString("company.vat-no"));
 		
 		return appCompany;
+	}
+	
+	public ArrayList<Company> searchForCompany(String searchString) {
+		logger.info("Searching for " + searchString);
+		getTrades();
+		getCities();
+		getSalesmen();
+		
+		String escSearchString = "%"+ searchString +"%";
+
+		PreparedStatement companyStatement = null;
+		ResultSet companyResults = null;
+		try {
+			connect();
+
+			String companyQuery = "SELECT DISTINCT\n"
+					+ "	c.companyid,\n"
+					+ "	c.companyname,\n"
+					+ "	c.address,\n"
+					+ "	c.postal,\n"
+					+ " c.city,\n"
+					+ "	c.phone,\n"
+					+ "	c.importance,\n"
+					+ "	c.comments,\n"
+					+ " c.tradeid\n"
+					+ "		FROM companieswithcities c\n"
+					+ "		WHERE c.companyname ILIKE ?\n"
+					+ "		LIMIT 10;";
+			logger.debug("\tThe sql being used is: "+companyQuery);			
+
+			companyStatement = c.prepareStatement(companyQuery);
+			companyStatement.setString(1, escSearchString);
+			companyResults = companyStatement.executeQuery();
+
+			ArrayList<Company> companies = fillCompanyArrayList(companyResults);
+			logger.info(companies.size() + " companies fetched");
+			
+			return companies;
+		} catch (SQLException e) {
+			logger.fatal("Searching companies: " + searchString, e);
+			throw new RuntimeException("Kunne ikke søge på " + searchString);
+		} finally {
+			if (companyResults != null) {
+				try {
+					companyResults.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (companyStatement != null) {
+				try {
+					companyStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+			close();
+		}
 	}
 	
 	private ArrayList<Company> fillCompanyArrayList(ResultSet companyResults)

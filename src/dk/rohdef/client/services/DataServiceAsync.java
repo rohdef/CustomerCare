@@ -48,4 +48,6 @@ public interface DataServiceAsync {
 	void getCompanyFor(Contact contact, AsyncCallback<Company> callback);
 	void getAllCompanies(AsyncCallback<ArrayList<Company>> callback);
 	void loaded(AsyncCallback<Void> callback);
+	void searchForCompany(String searchString,
+			AsyncCallback<ArrayList<Company>> callback);
 }

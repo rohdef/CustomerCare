@@ -1,16 +1,22 @@
 package dk.rohdef.client;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.extjs.gxt.ui.client.data.ChangeEvent;
 import com.extjs.gxt.ui.client.data.ChangeEventSource;
 import com.extjs.gxt.ui.client.data.ChangeEventSupport;
 import com.extjs.gxt.ui.client.data.ChangeListener;
+import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.EventType;
 import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.FieldEvent;
+import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.store.GroupingStore;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.util.DelayedTask;
 import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
@@ -18,10 +24,12 @@ import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.button.ButtonBar;
 import com.extjs.gxt.ui.client.widget.form.FormButtonBinding;
-import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
+import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
+import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
+import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.VBoxLayout;
@@ -52,6 +60,7 @@ public class CreateCompany extends LayoutContainer {
 	private CustomerCareI18n i18n;
 	private LoadingDialog loader = new LoadingDialog();
 	private boolean loadingCities = true, loadingTrades = true;
+	private boolean existingCompany = false;
 	
 	private Company newCompany;
 	private ListStore<Contact> contactStore;
@@ -71,14 +80,31 @@ public class CreateCompany extends LayoutContainer {
 		
 		this.setLayout(new VBoxLayout());
 		
-		final FormPanel newCompanyPanel = createNewCompanyPanel();
+		final LayoutContainer companyArea = new LayoutContainer();
+		companyArea.setAutoWidth(true);
+		companyArea.setHeight(320);
+		companyArea.setLayout(new HBoxLayout());
+		this.add(companyArea);
 		
-		final LayoutContainer contacts = new LayoutContainer();
-		contacts.setAutoWidth(true);
-		contacts.setHeight(470);
-		contacts.setLayout(new HBoxLayout());
-		contacts.setVisible(false);
-		this.add(contacts);
+		final CompanyEditPanel newCompanyPanel = createNewCompanyPanel();
+		final SearchGrid searchResultArea = new SearchGrid();
+		searchResultArea.setHeight(300);
+		
+		final DelayedTask companyNameTask = new DelayedTask(
+			new SearchListener(newCompanyPanel,
+					searchResultArea));
+				newCompanyPanel.addCompanyNameFieldKeyListener(new Listener<FieldEvent>() {
+					public void handleEvent(FieldEvent be) {
+						companyNameTask.delay(500);
+					}
+				});
+		
+		final LayoutContainer contactsArea = new LayoutContainer();
+		contactsArea.setAutoWidth(true);
+		contactsArea.setHeight(470);
+		contactsArea.setLayout(new HBoxLayout());
+		contactsArea.setVisible(false);
+		this.add(contactsArea);
 		
 		CreateContactPanel createNewContactPanel = new CreateContactPanel();
 		createNewContactPanel.addNewContactListener(new ContactListener() {
@@ -87,10 +113,11 @@ public class CreateCompany extends LayoutContainer {
 			}
 		});
 		
-		contacts.add(createNewContactPanel, new HBoxLayoutData());
-		contacts.add(getContactList(), new HBoxLayoutData());
+		contactsArea.add(createNewContactPanel, new HBoxLayoutData());
+		contactsArea.add(getContactList(), new HBoxLayoutData());
 		
-		this.add(newCompanyPanel);
+		companyArea.add(newCompanyPanel);
+		companyArea.add(searchResultArea);
 		
 		final FormButtonBinding companyButtonBinding = new FormButtonBinding(newCompanyPanel);
 		final Button previousBtn = new Button(i18n.previous());
@@ -104,8 +131,8 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.addButton(nextBtn);
-				contacts.setVisible(false);
-				newCompanyPanel.setVisible(true);
+				contactsArea.setVisible(false);
+				companyArea.setVisible(true);
 				nextBtn.enable();
 				previousBtn.disable();
 				createCompanyBtn.disable();
@@ -118,8 +145,8 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.removeButton(nextBtn);
-				newCompanyPanel.setVisible(false);
-				contacts.setVisible(true);
+				companyArea.setVisible(false);
+				contactsArea.setVisible(true);
 				previousBtn.enable();
 				nextBtn.disable();
 				createCompanyBtn.enable();
@@ -151,24 +178,13 @@ public class CreateCompany extends LayoutContainer {
 			loader.hide();
 	}
 
-	private FormPanel createNewCompanyPanel() {
+	private CompanyEditPanel createNewCompanyPanel() {
 		final CompanyEditPanel formPanel = new CompanyEditPanel();
 		formPanel.setAutoHeight(true);
 		formPanel.setWidth("50%");
-		formPanel.setHeading("Indtast virksomhedsoplysninger");
+		formPanel.setHeading(i18n.insertCompanyDetails());
 		
 		formPanel.bindCompany(newCompany);
-
-//		postalBox.addSelectionChangedListener(new SelectionChangedListener<City>() {
-//					@Override
-//					public void selectionChanged(SelectionChangedEvent<City> se) {
-//						newCompany.setPostal(se.getSelectedItem().getPostal());
-//						
-//						if (cityBox.getSelection().equals(se.getSelection()))
-//							return;
-//						cityBox.setSelection(se.getSelection());
-//					}
-//				});
 
 		return formPanel;
 	}
@@ -184,8 +200,8 @@ public class CreateCompany extends LayoutContainer {
 		contactsPanel.setHeight(130);
 		
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
-		configs.add(new ColumnConfig("contactname", "Navn", 125));
-		configs.add(new ColumnConfig("title", "Titel", 75));
+		configs.add(new ColumnConfig("contactname", i18n.contactName(), 125));
+		configs.add(new ColumnConfig("title", i18n.contactTitle(), 75));
 		
 		ColumnModel cm = new ColumnModel(configs);
 		
@@ -194,7 +210,7 @@ public class CreateCompany extends LayoutContainer {
 		contactGrid.setStripeRows(true);
 		contactGrid.setHeight(120);
 		
-		contactGrid.getView().setEmptyText("Ingen kontakter oprettet endnu.");
+		contactGrid.getView().setEmptyText(i18n.noContacts());
 		
 		contactsPanel.add(contactGrid);
 		
@@ -217,9 +233,9 @@ public class CreateCompany extends LayoutContainer {
 	public void removeChangeListener(ChangeListener... listener) {
 		changeEventSupport.removeChangeListener(listener);
 	}
-
+	
 	private Button getCreateCompanyButton() {
-		createBtn = new Button("Opret firma",
+		createBtn = new Button(i18n.createCompany(),
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -230,13 +246,12 @@ public class CreateCompany extends LayoutContainer {
 					confirmDialog.setButtons(Dialog.YESNO);
 					confirmDialog.setHideOnButtonClick(true);
 					
-					confirmDialog.setHeading("Ønsker du at oprette som kundeemne?");
-					confirmDialog.addText("Vil du oprette en virksomhed uden kontakter.");
-					confirmDialog.addText("En virksomhed uden kontakter vil dukke op som" +
-							"et kundeemne.");
+					confirmDialog.setHeading(i18n.createProspectTitle());
+					confirmDialog.addText(i18n.noContactsQuestion());
+					confirmDialog.addText(i18n.noContactCompanyIsProspect());
 					
-					confirmDialog.getButtonById(Dialog.NO).setText("Fortryd");
-					confirmDialog.getButtonById(Dialog.YES).setText("Opret kundeemne");
+					confirmDialog.getButtonById(Dialog.NO).setText(i18n.cancel());
+					confirmDialog.getButtonById(Dialog.YES).setText(i18n.createProspect());
 					confirmDialog.getButtonById(Dialog.YES).addSelectionListener(
 							new SelectionListener<ButtonEvent>() {
 								@Override
@@ -253,7 +268,7 @@ public class CreateCompany extends LayoutContainer {
 	}
 	
 	private Button getCancelButton() {
-		cancelBtn = new Button("Anuller", new SelectionListener<ButtonEvent>() {
+		cancelBtn = new Button(i18n.cancel(), new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				fireEvent(Events.Close);
@@ -277,7 +292,7 @@ public class CreateCompany extends LayoutContainer {
 				
 				if (newCompany.getTrade() == null) {
 					Trade noTrade = new Trade();
-					noTrade.setTrade("Ingen branche valgt");
+					noTrade.setTrade(i18n.noTradeSelected());
 					newCompany.setTrade(noTrade);
 				}
 				
@@ -292,5 +307,108 @@ public class CreateCompany extends LayoutContainer {
 				throw new RuntimeException(caught);
 			}
 		});
+	}
+	
+	private class SearchListener implements Listener<BaseEvent> {
+		private CompanyEditPanel formPanel;
+		private SearchGrid searchResultArea;
+		
+		public SearchListener(CompanyEditPanel formPanel, SearchGrid searchResultArea) {
+			this.formPanel = formPanel;
+			this.searchResultArea = searchResultArea;
+		}
+		
+		public void handleEvent(BaseEvent be) {
+			if (formPanel.getCompanyName() == null ||
+					formPanel.getCompanyName().length() < 3) {
+				searchResultArea.setCompanyStore(new GroupingStore<Company>());
+			} else {
+				dataService.searchForCompany(formPanel.getCompanyName(),
+					new AsyncCallback<ArrayList<Company>>() {
+						public void onSuccess(ArrayList<Company> result) {
+							GroupingStore<Company> store = new GroupingStore<Company>();
+							store.setMonitorChanges(true);
+							store.add(result);
+							searchResultArea.setCompanyStore(store);
+						}
+		
+						public void onFailure(Throwable caught) {
+						}
+				});
+			}
+		}
+		
+	}
+	
+	private class SearchGrid extends ContentPanel {
+		private CustomerCareI18n i18n;
+		private Grid<Company> companyGrid;
+		private ListStore<Company> companyStore;
+		
+		public SearchGrid() {
+			i18n = Global.getInstance().getI18n();
+			
+			this.setLayout(new FitLayout());
+			this.setHeading(i18n.searchResults());
+
+			ColumnModel cm = createColumnConfigs();
+			
+			companyStore = new ListStore<Company>();
+			companyGrid = new Grid<Company>(companyStore, cm);
+			companyGrid.setBorders(false);
+			companyGrid.setColumnLines(true);
+			companyGrid.setColumnReordering(true);
+			companyGrid.setLoadMask(true);
+			companyGrid.setStripeRows(true);
+			companyGrid.getView().setEmptyText(i18n.emptyCompanyList());
+			
+			this.addListener(Events.Collapse, new Listener<BaseEvent>() {
+				public void handleEvent(BaseEvent be) {
+					companyGrid.getSelectionModel().deselectAll();
+				}
+			});
+			
+			this.add(companyGrid);
+		}
+		
+		public void setCompanyStore(GroupingStore<Company> store) {
+			companyGrid.reconfigure(store, companyGrid.getColumnModel());
+			this.companyStore = store;
+		}
+		
+		/**
+		 * Create a set of column configs for the company grid. The selection model is to 
+		 * get the checkboxes into the grid too.
+		 * @param sm
+		 * @return
+		 */
+		private ColumnModel createColumnConfigs() {
+			List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
+
+			ColumnConfig column = null;
+			column = new ColumnConfig("companyname", i18n.companyName(), 120);
+			configs.add(column);
+
+			column = new ColumnConfig("city", i18n.city(), 65);
+			configs.add(column);
+			
+			column = new ColumnConfig("phone", i18n.phone(), 50);
+			configs.add(column);
+			
+			column = new ColumnConfig();
+			column.setHeader("Vælg");
+			column.setRenderer(new GridCellRenderer<Company>() {
+				public Object render(Company model, String property,
+						ColumnData config, int rowIndex, int colIndex,
+						ListStore<Company> store, Grid<Company> grid) {
+					return new Button("Vælg");
+				}
+			});
+			
+			column.setWidth(70);
+			configs.add(column);
+
+			return new ColumnModel(configs);
+		}
 	}
 }

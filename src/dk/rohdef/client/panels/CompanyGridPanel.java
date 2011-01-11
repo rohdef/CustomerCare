@@ -176,19 +176,20 @@ public class CompanyGridPanel extends ContentPanel {
 		List<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		configs.add(sm.getColumn());
 
-		ColumnConfig column = new ColumnConfig("companyname", i18n.companyName(), 200);
+		ColumnConfig column = null;
+		column = new ColumnConfig("companyname", i18n.companyName(), 200);
 		configs.add(column);
 
 		column = new ColumnConfig("postal", i18n.postal(), 35);
 		configs.add(column);
 
-		column = new ColumnConfig("city", i18n.city(), 125);
+		column = new ColumnConfig("city", i18n.city(), 100);
 		configs.add(column);
 		
 		column = new ColumnConfig("trade", i18n.trade(), 125);
 		configs.add(column);
 		
-		column = new ColumnConfig("phone", i18n.phone(), 50);
+		column = new ColumnConfig("phone", i18n.phone(), 40);
 		configs.add(column);
 
 		return new ColumnModel(configs);

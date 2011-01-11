@@ -81,4 +81,30 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("There is no companies in the list.")
 	public String emptyCompanyList();
 	
+	@DefaultMessage("Do you wish to create a prospect company?")
+	public String createProspectTitle();
+	
+	@DefaultMessage("Do you want to create a company without contacts?")
+	public String noContactsQuestion();
+	
+	@DefaultMessage("A company without any contacts will be a prospect.")
+	public String noContactCompanyIsProspect();
+	
+	@DefaultMessage("Create prospect")
+	public String createProspect();
+	
+	@DefaultMessage("Search results")
+	public String searchResults();
+	
+	@DefaultMessage("Name")
+	public String contactName();
+	
+	@DefaultMessage("Title")
+	public String contactTitle();
+	
+	@DefaultMessage("No contacts has been created yet")
+	public String noContacts();
+	
+	@DefaultMessage("Insert company details")
+	public String insertCompanyDetails();
 }

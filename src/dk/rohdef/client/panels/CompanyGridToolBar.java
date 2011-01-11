@@ -85,7 +85,7 @@ public class CompanyGridToolBar extends ToolBar {
 				createCompanyWindow.add(createCompany);
 				createCompanyWindow.setIcon(IconHelper.createPath("images/company_add.gif"));
 				createCompanyWindow.setWidth(650);
-				createCompanyWindow.setHeight(360);
+				createCompanyWindow.setHeight(380);
 				createCompanyWindow.setModal(true);
 				createCompanyWindow.setHeading(i18n.createCompany());
 				createCompanyWindow.show();

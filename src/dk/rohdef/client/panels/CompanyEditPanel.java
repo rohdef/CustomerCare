@@ -6,6 +6,9 @@ import java.util.Arrays;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
+import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.FieldEvent;
+import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionChangedEvent;
 import com.extjs.gxt.ui.client.event.SelectionChangedListener;
 import com.extjs.gxt.ui.client.store.ListStore;
@@ -263,5 +266,17 @@ public class CompanyEditPanel extends FormPanel {
 	
 	public void showCompanyNameField() {
 		companynameFld.show();
+	}
+	
+	public void addCompanyNameFieldKeyListener(Listener<FieldEvent> listener) {
+		companynameFld.addListener(Events.KeyPress, listener);
+	}
+	
+	public void removeCompanyNameFieldKeyListener(Listener<FieldEvent> listener) {
+		companynameFld.removeListener(Events.KeyPress, listener);
+	}
+	
+	public String getCompanyName() {
+		return companynameFld.getValue();
 	}
 }
