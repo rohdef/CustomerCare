@@ -257,7 +257,7 @@ public class CustomerView extends LayoutContainer {
 		});
 		toolBar.add(saveBtn);
 		
-		Button calendarBtn = new Button("Opret aftale");
+		Button calendarBtn = new Button(i18n.createEvent());
 		calendarBtn.setIcon(IconHelper.createPath("images/calendar_add.gif"));
 		calendarBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override

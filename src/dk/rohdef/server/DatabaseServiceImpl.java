@@ -114,7 +114,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 	}
 
 	private void close() {
-		if (loading) {
+		if (loading && !config.getBoolean("application.test-mode")) {
 			logger.info("Still loading. omitting close request.");
 			return;
 		}
