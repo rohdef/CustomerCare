@@ -28,6 +28,11 @@ import dk.rohdef.client.TradeAdminDialog;
 import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.Global;
 
+/**
+ * Toolbar to use together with the grid panel for companies.
+ * @see {@link CompanyGridPanel} 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CompanyGridToolBar extends ToolBar {
 	private CustomerCareI18n i18n;
 	
@@ -41,6 +46,12 @@ public class CompanyGridToolBar extends ToolBar {
 	private ArrayList<ChangeListener> createCompanyListeners;
 	private ArrayList<SelectionListener<ComponentEvent>> deleteCompanyListeners;
 	
+	/**
+	 * 
+	 * @param filter the string filter used for searching the list.
+	 * @param prospect set to true for procpect toolbar. This removes the manage trades 
+	 * and manage salespeople buttons
+	 */
 	public CompanyGridToolBar(final StringFilter filter, final boolean prospect) {
 		i18n = Global.getInstance().getI18n();
 		createCompanyListeners = new ArrayList<ChangeListener>();
@@ -148,34 +159,64 @@ public class CompanyGridToolBar extends ToolBar {
 			deleteCompaniesBtn.disable();
 	}
 	
+	/**
+	 * Add a listener, to react when a new company is created.
+	 * @param listener
+	 */
 	public void addCreateCompanyListener(ChangeListener listener) {
 		createCompanyListeners.add(listener);
 	}
 	
+	/**
+	 * Remove a listener previously added.
+	 * @see {@link #addCreateCompanyListener(ChangeListener)}
+	 * @param listener
+	 */
 	public void removeCreateCompanyListener(ChangeListener listener) {
 		createCompanyListeners.remove(listener);
 	}
 	
+	/**
+	 * Fire the registered listeners to inform that a new company has been created.
+	 * @param event
+	 */
 	private void fireCreateCompanyListeners(ChangeEvent event) {
 		for (ChangeListener l : createCompanyListeners) {
 			l.modelChanged(event);
 		}
 	}
 	
+	/**
+	 * Add a listener to monitor when a company is deleted from the list.
+	 * @param listener
+	 */
 	public void addDeleteCompanyListener(SelectionListener<ComponentEvent> listener) {
 		deleteCompanyListeners.add(listener);
 	}
 	
+	/**
+	 * Remove a listener that monitors when companies are deleted from the list.
+	 * @see {@link #addDeleteCompanyListener(SelectionListener)}
+	 * @param listener
+	 */
 	public void removeDeleteCompanyListener(SelectionListener<ComponentEvent> listener) {
 		deleteCompanyListeners.remove(listener);
 	}
 	
+	/**
+	 * Tell the delete listeners that a company has been deleted.
+	 * @param event
+	 */
 	private void fireDeleteCompanyListeners(ComponentEvent event) {
 		for (SelectionListener<ComponentEvent> l : deleteCompanyListeners) {
 			l.componentSelected(event);
 		}
 	}
 	
+	/**
+	 * Dialog to confirm if the user want to delete the selected company. 
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class DeleteDialog extends Dialog {
 		public DeleteDialog(final boolean prospects) {
 			this.setTitle(i18n.deleteCompanyDialogTitle());

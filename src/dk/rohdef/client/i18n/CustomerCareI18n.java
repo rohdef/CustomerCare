@@ -128,6 +128,8 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Comments")
 	public String contactComments();
 	
+	@DefaultMessage("Add contact")
+	public String addContact();
 	
 	
 	

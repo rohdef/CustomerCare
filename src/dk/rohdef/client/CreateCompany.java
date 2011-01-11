@@ -39,7 +39,7 @@ import dk.rohdef.client.events.ContactEvent;
 import dk.rohdef.client.events.ContactListener;
 import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.panels.CompanyEditPanel;
-import dk.rohdef.client.panels.CreateContactPanel;
+import dk.rohdef.client.panels.ContactEditPanel;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
@@ -106,7 +106,7 @@ public class CreateCompany extends LayoutContainer {
 		contactsArea.setVisible(false);
 		this.add(contactsArea);
 		
-		CreateContactPanel createNewContactPanel = new CreateContactPanel();
+		ContactEditPanel createNewContactPanel = new ContactEditPanel(false);
 		createNewContactPanel.addNewContactListener(new ContactListener() {
 			public void handleEvent(ContactEvent be) {
 				contactStore.add(be.getContact());
@@ -145,8 +145,8 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.removeButton(nextBtn);
-				companyArea.setVisible(false);
-				contactsArea.setVisible(true);
+				companyArea.hide();
+				contactsArea.show();
 				previousBtn.enable();
 				nextBtn.disable();
 				createCompanyBtn.enable();

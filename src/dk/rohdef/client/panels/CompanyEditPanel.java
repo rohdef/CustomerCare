@@ -21,6 +21,7 @@ import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import dk.rohdef.client.CreateCompany;
 import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
@@ -260,22 +261,30 @@ public class CompanyEditPanel extends FormPanel {
 		original.setProperties(binding.getModel().getProperties());
 	}
 	
-	public void hideCompanyNameField() {
-		companynameFld.hide();
-	}
-	
-	public void showCompanyNameField() {
-		companynameFld.show();
-	}
-	
+	/**
+	 * Allows reacting to changes in the company name field. This is used for the automatic 
+	 * searching in create company.
+	 * @see {@link CreateCompany}
+	 * @param listener
+	 */
 	public void addCompanyNameFieldKeyListener(Listener<FieldEvent> listener) {
 		companynameFld.addListener(Events.KeyPress, listener);
 	}
 	
+	/**
+	 * Removes a listener for company names.
+	 * @see {@link #addCompanyNameFieldKeyListener(Listener)}
+	 * @param listener
+	 */
 	public void removeCompanyNameFieldKeyListener(Listener<FieldEvent> listener) {
 		companynameFld.removeListener(Events.KeyPress, listener);
 	}
 	
+	/**
+	 * Get the value from the company name field (this is due to delays in updating the 
+	 * model.
+	 * @return
+	 */
 	public String getCompanyName() {
 		return companynameFld.getValue();
 	}

@@ -15,7 +15,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import dk.rohdef.client.events.ContactEvent;
 import dk.rohdef.client.events.ContactListener;
 import dk.rohdef.client.panels.ContactEditPanel;
-import dk.rohdef.client.panels.CreateContactPanel;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Contact;
 
@@ -41,7 +40,7 @@ public class CreateContactWindow extends Window {
 		this.setWidth(350);
 
 		contactListeners = new ArrayList<ContactListener>();
-		CreateContactPanel createContact = new CreateContactPanel();
+		ContactEditPanel createContact = new ContactEditPanel(false);
 		createContact.setHeaderVisible(false);
 		createContact.setWidth("100%");
 		

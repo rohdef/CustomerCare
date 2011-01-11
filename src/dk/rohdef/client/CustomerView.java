@@ -172,7 +172,6 @@ public class CustomerView extends LayoutContainer {
 		labelForm = new SelectLabelRecipiantsPanel();
 		
 		companyForm.setTopComponent(createCompanyEditToolBar(companyForm));
-		companyForm.hideCompanyNameField();
 
 		companyForm.setVisible(true);
 		contactForm.setVisible(true);

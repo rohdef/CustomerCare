@@ -38,6 +38,13 @@ import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
 
+/**
+ * Creates and configures a grid for showing company. This takes care of creating the 
+ * column configuration, make it grouped with checkboxes, takes care of internal listeners 
+ * etc. This also adds a toolbar.
+ * @see {@link CompanyGridToolBar} 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class CompanyGridPanel extends ContentPanel {
 	public enum CompanyGridType { ALL, PROSPECTS, CUSTOMERS, };
 	
@@ -51,6 +58,12 @@ public class CompanyGridPanel extends ContentPanel {
 	
 	private CompanyGridType companyGridType;
 
+	/**
+	 * 
+	 * @param companyGridType Set what this specific panel shows, if it is all companies 
+	 * the prospects or the customers for the current salesman. This is used to ensure 
+	 * that some events are handled correctly.
+	 */
 	public CompanyGridPanel(CompanyGridType companyGridType) {
 		dataService = Global.getInstance().getDataService();
 		i18n = Global.getInstance().getI18n();
@@ -98,31 +111,63 @@ public class CompanyGridPanel extends ContentPanel {
 		this.setTopComponent(initializeToolBar(companyNameFilter));
 	}
 	
+	/**
+	 * Change the data store for this panel. This ensures to reconfigure the grid 
+	 * correctly. This might not work if the store if the store does not monitor changes. 
+	 * @see {@link GroupingStore}
+	 * @param store
+	 */
 	public void setCompanyStore(GroupingStore<Company> store) {
 		companyGrid.reconfigure(store, companyGrid.getColumnModel());
 		this.companyStore = store;
 	}
 	
+	/**
+	 * Add a company to the store. This might not work if the store is not set to 
+	 * monitor changes.
+	 * @param company
+	 */
 	public void addCompany(Company company) {
 		companyStore.add(company);
 	}
 	
+	/**
+	 * Remove a company from the list. This might fail if the store does not monitor changes.
+	 * @param company
+	 */
 	public void removeCompany(Company company) {
 		companyStore.remove(company);
 	}
 	
+	/**
+	 * Listen for when the selection of companies changes.
+	 * @param listener
+	 */
 	public void addSelectionListener(Listener<SelectionChangedEvent<Company>> listener) {
 		companyGrid.getSelectionModel().addListener(Events.SelectionChange, listener);
 	}
 	
+	/**
+	 * @see {@link #addSelectionListener(Listener)}
+	 * @param listener
+	 */
 	public void removeSelectionListener(Listener<SelectionChangedEvent<Company>> listener) {
 		companyGrid.getSelectionModel().removeListener(Events.SelectionChange, listener);
 	}
 	
+	/**
+	 * Deselect all companies
+	 * @param company
+	 */
 	public void deselectCompany(Company company) {
 		companyGrid.getSelectionModel().deselect(company);
 	}
 	
+	/**
+	 * Create the toolbar for the current company listing
+	 * @param filter
+	 * @return
+	 */
 	private ToolBar initializeToolBar(StringFilter filter) {
 		final GridSelectionModel<Company> sm = companyGrid.getSelectionModel();
 		
@@ -195,6 +240,14 @@ public class CompanyGridPanel extends ContentPanel {
 		return new ColumnModel(configs);
 	}
 	
+	/**
+	 * Ext GWT 2.2.1 - Ext for GWT 
+	 * Copyright(c) 2007-2010, Ext JS, LLC. 
+	 * <a href="mailto:licensing@extjs.com">licensing@extjs.com</a>
+	 *  
+	 * <a href="http://extjs.com/license">http://extjs.com/license</a> 
+	 * @author Ext GWT 2.2.1 - Ext for GWT 
+	 */
 	private class CustomGroupingView extends GroupingView {
 		@Override
 		protected void onMouseDown(GridEvent<ModelData> ge) {
@@ -237,6 +290,14 @@ public class CompanyGridPanel extends ContentPanel {
 		}
 	}
 
+	/**
+	 * Ext GWT 2.2.1 - Ext for GWT 
+	 * Copyright(c) 2007-2010, Ext JS, LLC. 
+	 * <a href="mailto:licensing@extjs.com">licensing@extjs.com</a>
+	 *  
+	 * <a href="http://extjs.com/license">http://extjs.com/license</a> 
+	 * @author Ext GWT 2.2.1 - Ext for GWT 
+	 */
 	private class CustomCheckBoxSelectionModel extends CheckBoxSelectionModel<Company> {
 		private GroupingView companyView;
 		
@@ -323,6 +384,14 @@ public class CompanyGridPanel extends ContentPanel {
 		}
 	}
 
+	/**
+	 * Ext GWT 2.2.1 - Ext for GWT 
+	 * Copyright(c) 2007-2010, Ext JS, LLC. 
+	 * <a href="mailto:licensing@extjs.com">licensing@extjs.com</a>
+	 *  
+	 * <a href="http://extjs.com/license">http://extjs.com/license</a> 
+	 * @author Ext GWT 2.2.1 - Ext for GWT 
+	 */
 	private class CustomGridGroupRenderer implements GridGroupRenderer {
 		private ColumnModel cm;
 		

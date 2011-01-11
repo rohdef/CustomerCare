@@ -62,6 +62,7 @@ public class ContactEditPanel extends FormPanel {
 	private static Logger logger = Logger.getLogger(ContactEditPanel.class.getName());
 	
 	private ArrayList<ContactListener> contactListeners; 
+	private ArrayList<ContactListener> newContactListeners = new ArrayList<ContactListener>();
 	private LoadingDialog loader = new LoadingDialog();
 	private Button changeSalesman;
 	private Company company;
@@ -69,9 +70,15 @@ public class ContactEditPanel extends FormPanel {
 	private Button saveBtn;
 
 	/**
-	 * 
+	 * Constructs an contact editor for editing existing contacts
 	 */
 	public ContactEditPanel() {
+		this(true);
+	}
+	/**
+	 * 
+	 */
+	public ContactEditPanel(boolean editContact) {
 		dataService = Global.getInstance().getDataService();
 		i18n = Global.getInstance().getI18n();
 		
@@ -80,13 +87,15 @@ public class ContactEditPanel extends FormPanel {
 		contactListeners = new ArrayList<ContactListener>();
 		emptyStore = new ListStore<Contact>();
 
-		contactsBox = new ComboBox<Contact>();
-		contactsBox.setFieldLabel(i18n.contactList());
-		contactsBox.setDisplayField("contactname");
-		contactsBox.setTypeAhead(true);
-		contactsBox.setStore(emptyStore);
-		contactsBox.setTriggerAction(TriggerAction.ALL);
-		this.add(contactsBox);
+		if (editContact) {
+			contactsBox = new ComboBox<Contact>();
+			contactsBox.setFieldLabel(i18n.contactList());
+			contactsBox.setDisplayField("contactname");
+			contactsBox.setTypeAhead(true);
+			contactsBox.setStore(emptyStore);
+			contactsBox.setTriggerAction(TriggerAction.ALL);
+			this.add(contactsBox);
+		}
 		
 		nameFld = new TextField<String>();
 		nameFld.setBorders(false);
@@ -135,18 +144,39 @@ public class ContactEditPanel extends FormPanel {
 
 		contactBinding = new FormBinding(this, true);
 
-		contactsBox.addSelectionChangedListener(
-						new SelectionChangedListener<Contact>() {
-					@Override
-					public void selectionChanged(SelectionChangedEvent<Contact> se) {
-						contactBinding.bind(se.getSelectedItem());
-						setReadOnly(false);
-						changeSalesman.enable();
-					}
-				});
-		
-		this.setReadOnly(true);	
-		this.setTopComponent(getToolbar());
+		if (editContact) {
+			contactsBox.addSelectionChangedListener(
+							new SelectionChangedListener<Contact>() {
+						@Override
+						public void selectionChanged(SelectionChangedEvent<Contact> se) {
+							contactBinding.bind(se.getSelectedItem());
+							setReadOnly(false);
+							changeSalesman.enable();
+						}
+					});
+			
+			this.setReadOnly(true);	
+			this.setTopComponent(getToolbar());
+		} else {
+			Button addContactBtn = new Button(i18n.addContact(), new SelectionListener<ButtonEvent>() {
+				@Override
+				public void componentSelected(ButtonEvent ce) {
+					Contact newContact = new Contact();
+					newContact.setName(nameFld.getValue());
+					newContact.setTitle(titleFld.getValue());
+					newContact.setPhone(phoneFld.getValue());
+					newContact.setMail(mailFld.getValue());
+					newContact.setAcceptsMails(acceptsMailsBox.getValue());
+					newContact.setComments(commentFld.getValue());
+
+					fireNewContactEvent(new ContactEvent(ContactEvent.NEW_CONTACT_TYPE, newContact));
+					clear();
+				}
+			});
+			addContactBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
+			addContactBtn.setType("submit");
+			this.addButton(addContactBtn);
+		}
 	}
 	
 	/**
@@ -401,7 +431,11 @@ public class ContactEditPanel extends FormPanel {
 	 */
 	public void bindCompany(Company company, Salesman contactSalesman) {
 		this.company = company;
+		if (contactsBox == null)
+			return;
+		
 		contactsBox.setStore(emptyStore);
+	
 		loader.show();
 		addContactBtn.enable();
 		
@@ -424,6 +458,7 @@ public class ContactEditPanel extends FormPanel {
 					throw new RuntimeException(caught);
 				}
 			});
+		
 	}
 	
 	/**
@@ -431,6 +466,8 @@ public class ContactEditPanel extends FormPanel {
 	 * the panel read only. This should be used when no company is selected any more.
 	 */
 	public void unbindCompany() {
+		if (contactsBox == null)
+			return;
 		addContactBtn.disable();
 		contactsBox.setStore(emptyStore);
 		contactBinding.unbind();
@@ -461,6 +498,33 @@ public class ContactEditPanel extends FormPanel {
 	 */
 	private void fireContactEvent(ContactEvent event) {
 		for (ContactListener l : contactListeners) {
+			l.handleEvent(event);
+		}
+	}
+	
+	/**
+	 * Listen to when a new contact is created. This can only be fired if 
+	 * {@link #ContactEditPanel(boolean)} has been called with the boolean set to false.
+	 * @param listener
+	 */
+	public void addNewContactListener(ContactListener listener) {
+		newContactListeners.add(listener);
+	}
+	
+	/**
+	 * @see {@link #addNewContactListener(ContactListener)}
+	 * @param listener
+	 */
+	public void removeNewContactListener(ContactListener listener) {
+		newContactListeners.remove(listener);
+	}
+	
+	/**
+	 * Tell the listeners that a new contact has been created
+	 * @param event
+	 */
+	private void fireNewContactEvent(ContactEvent event) {
+		for (ContactListener l : newContactListeners) {
 			l.handleEvent(event);
 		}
 	}
