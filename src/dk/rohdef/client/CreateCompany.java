@@ -3,6 +3,7 @@ package dk.rohdef.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.extjs.gxt.ui.client.Style.HideMode;
 import com.extjs.gxt.ui.client.data.ChangeEvent;
 import com.extjs.gxt.ui.client.data.ChangeEventSource;
 import com.extjs.gxt.ui.client.data.ChangeEventSupport;
@@ -145,8 +146,12 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.removeButton(nextBtn);
+				companyArea.setHideMode(HideMode.DISPLAY);
 				companyArea.hide();
-				contactsArea.show();
+				contactsArea.setVisible(true);
+//				remove(contactsArea);
+//				add(contactsArea);
+				layout();
 				previousBtn.enable();
 				nextBtn.disable();
 				createCompanyBtn.enable();
