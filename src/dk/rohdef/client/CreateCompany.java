@@ -2,6 +2,7 @@ package dk.rohdef.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.extjs.gxt.ui.client.data.ChangeEvent;
 import com.extjs.gxt.ui.client.data.ChangeEventSource;
@@ -58,6 +59,7 @@ public class CreateCompany extends LayoutContainer {
 	public static EventType CompanyCreated = new EventType();
 	
 	private ChangeEventSupport changeEventSupport = new ChangeEventSupport();
+	private static Logger logger = Logger.getLogger(CreateCompany.class.getName());
 	private DataServiceAsync dataService;
 	private CustomerCareI18n i18n;
 	private LoadingDialog loader = new LoadingDialog();
@@ -369,39 +371,40 @@ public class CreateCompany extends LayoutContainer {
 	 */
 	private void createCompany() {
 		if (existingCompany) {
+			logger.info("Editing existing company");
+			newCompany.set("prospect", false);
 			changeEventSupport.notify(
 					new ChangeEvent(ChangeEventSource.Add, newCompany));
 			fireEvent(Events.Close);
-			return;
-		}
-		
-		loader.show();
-		
-		dataService.createCompany(newCompany,
-				new ArrayList<Contact>(contactStore.getModels()),
-				Global.getInstance().getCurrentSalesman(),
-				new AsyncCallback<Integer>() {
-			public void onSuccess(Integer result) {
-				newCompany.set("companyid", result);
-				newCompany.set("prospect", contactStore.getCount()==0);
-				
-				if (newCompany.getTrade() == null) {
-					Trade noTrade = new Trade();
-					noTrade.setTrade(i18n.noTradeSelected());
-					newCompany.setTrade(noTrade);
+		} else {
+			loader.show();
+			
+			dataService.createCompany(newCompany,
+					new ArrayList<Contact>(contactStore.getModels()),
+					Global.getInstance().getCurrentSalesman(),
+					new AsyncCallback<Integer>() {
+				public void onSuccess(Integer result) {
+					newCompany.set("companyid", result);
+					newCompany.set("prospect", contactStore.getCount()==0);
+					
+					if (newCompany.getTrade() == null) {
+						Trade noTrade = new Trade();
+						noTrade.setTrade(i18n.noTradeSelected());
+						newCompany.setTrade(noTrade);
+					}
+					
+					changeEventSupport.notify(
+							new ChangeEvent(ChangeEventSource.Add, newCompany));
+					
+					loader.hide();
+					fireEvent(Events.Close);
 				}
 				
-				changeEventSupport.notify(
-						new ChangeEvent(ChangeEventSource.Add, newCompany));
-				
-				loader.hide();
-				fireEvent(Events.Close);
-			}
-			
-			public void onFailure(Throwable caught) {
-				throw new RuntimeException(caught);
-			}
-		});
+				public void onFailure(Throwable caught) {
+					throw new RuntimeException(caught);
+				}
+			});
+		}
 	}
 	
 	/**
@@ -472,12 +475,6 @@ public class CreateCompany extends LayoutContainer {
 			companyGrid.setLoadMask(true);
 			companyGrid.setStripeRows(true);
 			companyGrid.getView().setEmptyText(i18n.emptyCompanyList());
-			
-			this.addListener(Events.Collapse, new Listener<BaseEvent>() {
-				public void handleEvent(BaseEvent be) {
-					companyGrid.getSelectionModel().deselectAll();
-				}
-			});
 			
 			this.add(companyGrid);
 		}
