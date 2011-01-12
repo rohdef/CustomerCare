@@ -6,8 +6,27 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("{0} - CustomerCare")
 	public String pageTitle(String companyName);
 	
+	@DefaultMessage("Customers")
+	public String customers();
+	
+	@DefaultMessage("Change login")
+	public String changeLogin();
+	
+	@DefaultMessage("Which salesman do you wist to see the customer listing for?")
+	public String whichSalesman();
+	
+	@DefaultMessage("Create event")
+	public String createEvent();
+	
+	@DefaultMessage("Send e-mail")
+	public String sendEMail();
+	
 	@DefaultMessage("Insert search string")
 	public String insertSearchStringHere();
+	
+
+	@DefaultMessage("Search results")
+	public String searchResults();
 	
 	@DefaultMessage("Save")
 	public String save();
@@ -18,50 +37,31 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Next")
 	public String next();
 	
-	@DefaultMessage("Company data")
-	public String companyData();
-	
-	@DefaultMessage("Company name")
-	public String companyName();
-	
-	@DefaultMessage("Address")
-	public String address();
-	
-	@DefaultMessage("Postal")
-	public String postal();
-	
-	@DefaultMessage("City")
-	public String city();
-	
-	@DefaultMessage("Phone")
-	public String phone();
-	
-	@DefaultMessage("Trade")
-	public String trade();
-	
-	@DefaultMessage("No trade selected")
-	public String noTradeSelected();
-	
-	@DefaultMessage("Group")
-	public String group();
-	
-	@DefaultMessage("Comments")
-	public String comments();
-	
 	@DefaultMessage("Search")
 	public String search();
-	
-	@DefaultMessage("Create new company")
-	public String createCompany();
-	
-	@DefaultMessage("Delete selected companies")
-	public String deleteSelectedCompanies();
 	
 	@DefaultMessage("Mangage trades")
 	public String manageTrades();
 	
+	//
+	// SALESPEOPLE
+	//
 	@DefaultMessage("Manages salespeople")
 	public String manageSalespeople();
+
+	@DefaultMessage("Move to salesman")
+	public String moveToSalesman();
+	
+	@DefaultMessage("Which salesperson do you want to transfer the customer to?")
+	public String whichSalesPersonToMoveTo();
+	
+	@DefaultMessage("Chose salesman")
+	public String choseSalesman();
+	
+	@DefaultMessage("Select salesman")
+	public String selectSalesman();
+	
+	
 	
 	@DefaultMessage("Are you sure you want to delete?")
 	public String deleteCompanyDialogTitle();
@@ -92,9 +92,6 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Create prospect")
 	public String createProspect();
-	
-	@DefaultMessage("Search results")
-	public String searchResults();
 	
 	
 	//
@@ -131,8 +128,22 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Add contact")
 	public String addContact();
 	
+	@DefaultMessage("Delete contact")
+	public String deleteContact();
+	
+	@DefaultMessage("Are you sure you want to delete {0}?")
+	public String areYouSureYouWantToDeleteContact(String contactName);
+	
+	@DefaultMessage("Do you want to delete {0}?")
+	public String doYouWantToDeleteContact(String contactName);
+	
+	@DefaultMessage("Delete the contact")
+	public String deleteTheContact();
 	
 	
+	//
+	// COMPANIES
+	//	
 	@DefaultMessage("Insert company details")
 	public String insertCompanyDetails();
 	
@@ -150,4 +161,40 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("All companies")
 	public String allCompanies();
+	
+	@DefaultMessage("Company data")
+	public String companyData();
+	
+	@DefaultMessage("Company name")
+	public String companyName();
+	
+	@DefaultMessage("Address")
+	public String address();
+	
+	@DefaultMessage("Postal")
+	public String postal();
+	
+	@DefaultMessage("City")
+	public String city();
+	
+	@DefaultMessage("Phone")
+	public String phone();
+	
+	@DefaultMessage("Trade")
+	public String trade();
+	
+	@DefaultMessage("No trade selected")
+	public String noTradeSelected();
+	
+	@DefaultMessage("Group")
+	public String group();
+	
+	@DefaultMessage("Comments")
+	public String comments();
+	
+	@DefaultMessage("Create new company")
+	public String createCompany();
+	
+	@DefaultMessage("Delete selected companies")
+	public String deleteSelectedCompanies();
 }

@@ -217,14 +217,14 @@ public class ContactEditPanel extends FormPanel {
 		buttonBinding.addButton(saveBtn);
 		
 		changeSalesman = new Button();
-		changeSalesman.setText("Flyt til sælger");
+		changeSalesman.setText(i18n.moveToSalesman());
 		changeSalesman.setIcon(IconHelper.createPath("images/user_go.gif"));
 		changeSalesman.disable();
 		changeSalesman.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				final Dialog setSalesmanDialog = new Dialog();
-				setSalesmanDialog.setTitle("Hvem ønsker du skal overtage kunden?");
+				setSalesmanDialog.setTitle(i18n.whichSalesPersonToMoveTo());
 				setSalesmanDialog.setButtons(Dialog.OKCANCEL);
 				setSalesmanDialog.setIcon(IconHelper.createPath("images/user_go.gif"));
 				setSalesmanDialog.setHideOnButtonClick(true);
@@ -238,7 +238,7 @@ public class ContactEditPanel extends FormPanel {
 				final ListStore<Salesman> salesmanStore = new ListStore<Salesman>();
 				final ComboBox<Salesman> salesmanBox = new ComboBox<Salesman>();
 				salesmanBox.setDisplayField("salesman");
-				salesmanBox.setFieldLabel("Vælg sælger");
+				salesmanBox.setFieldLabel(i18n.choseSalesman());
 				salesmanBox.setStore(salesmanStore);
 				salesmanBox.setAutoWidth(true);
 				dataService.getSalesmen(new AsyncCallback<ArrayList<Salesman>>() {
@@ -256,10 +256,10 @@ public class ContactEditPanel extends FormPanel {
 				selectSalesmanPanel.add(salesmanBox);
 				setSalesmanDialog.add(selectSalesmanPanel);
 				
-				setSalesmanDialog.getButtonById(Dialog.OK).setText("Skift saelger");
+				setSalesmanDialog.getButtonById(Dialog.OK).setText(i18n.selectSalesman());
 				setSalesmanDialog.getButtonById(Dialog.OK).setIcon(
 						IconHelper.createPath("images/user_go.gif"));
-				setSalesmanDialog.getButtonById(Dialog.CANCEL).setText("Anuller");
+				setSalesmanDialog.getButtonById(Dialog.CANCEL).setText(i18n.cancel());
 				setSalesmanDialog.getButtonById(Dialog.CANCEL).setIcon(
 						IconHelper.createPath("images/cancel.gif"));
 				
@@ -294,7 +294,7 @@ public class ContactEditPanel extends FormPanel {
 		buttonBinding.addButton(changeSalesman);
 		
 		addContactBtn = new Button();
-		addContactBtn.setText("Tilføj kontakt");
+		addContactBtn.setText(i18n.addContact());
 		addContactBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
 		addContactBtn.disable();
 		addContactBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -329,7 +329,7 @@ public class ContactEditPanel extends FormPanel {
 		toolbar.add(addContactBtn);
 		
 		final Button deleteContactBtn = new Button();
-		deleteContactBtn.setText("Slet kontakt");
+		deleteContactBtn.setText(i18n.deleteContact());
 		deleteContactBtn.setIcon(IconHelper.createPath("images/user_delete.gif"));
 		deleteContactBtn.disable();
 		deleteContactBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -339,16 +339,17 @@ public class ContactEditPanel extends FormPanel {
 				deleteDialog.setHideOnButtonClick(true);
 				deleteDialog.setButtons(Dialog.YESNO);
 				deleteDialog.setIcon(IconHelper.createPath("images/user_delete.gif"));
-				deleteDialog.setHeading("Er du sikker på, at du vil slette "+
-						contactBinding.getModel().get("contactname"));
-				deleteDialog.addText("Vil du slette "+
-						contactBinding.getModel().get("contactname")+
-						"? Denne handling kan ikke fortrydes!");
+				deleteDialog.setHeading(i18n.areYouSureYouWantToDeleteContact(
+						(String)contactBinding.getModel().get("contactname")));
+				deleteDialog.addText(i18n.doYouWantToDeleteContact((String)
+						contactBinding.getModel().get("contactname"))+
+						"?");
+				deleteDialog.addText(i18n.cannotBeUndone());
 				
-				deleteDialog.getButtonById(Dialog.NO).setText("Fortyd");
+				deleteDialog.getButtonById(Dialog.NO).setText(i18n.cancel());
 				deleteDialog.getButtonById(Dialog.NO).setIcon(
 						IconHelper.createPath("images/cancel_green.gif"));
-				deleteDialog.getButtonById(Dialog.YES).setText("Slet kontakten");
+				deleteDialog.getButtonById(Dialog.YES).setText(i18n.deleteTheContact());
 				deleteDialog.getButtonById(Dialog.YES).setIcon(
 						IconHelper.createPath("images/user_delete.gif"));
 				deleteDialog.getButtonById(Dialog.YES).addSelectionListener(
@@ -389,7 +390,7 @@ public class ContactEditPanel extends FormPanel {
 		
 		toolbar.add(deleteContactBtn);
 		
-		final Button sendMailBtn = new Button("Send mail");
+		final Button sendMailBtn = new Button(i18n.sendEMail());
 		sendMailBtn.setIcon(IconHelper.createPath("images/email.gif"));
 		sendMailBtn.disable();
 		sendMailBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {

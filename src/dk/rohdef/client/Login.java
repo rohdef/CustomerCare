@@ -18,23 +18,27 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Image;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Salesman;
 
 public class Login extends LayoutContainer implements Observable {
+	CustomerCareI18n i18n;
+	
 	public Login() {
 	}
 
 	@Override
 	protected void onRender(Element parent, int index) {
 		super.onRender(parent, index);
+		i18n = Global.getInstance().getI18n();
 		
 		ContentPanel panel = new ContentPanel();
 		panel.setBodyStyle("padding: 0.5em;");
 		panel.setWidth("80%");
 		panel.setBorders(true);
-		panel.setHeading("Hvis kundekartotek vil du se?");
+		panel.setHeading(i18n.whichSalesman());
 
 		
 		final Portal content = new Portal(3);
@@ -90,6 +94,4 @@ public class Login extends LayoutContainer implements Observable {
 			this.add(b);
 		}
 	}
-	
-
 }
