@@ -9,27 +9,17 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Customers")
 	public String customers();
 	
-	@DefaultMessage("Change login")
-	public String changeLogin();
-	
-	@DefaultMessage("Which salesman do you wist to see the customer listing for?")
-	public String whichSalesman();
-	
-	@DefaultMessage("Create event")
-	public String createEvent();
-	
-	@DefaultMessage("Send e-mail")
-	public String sendEMail();
-	
 	@DefaultMessage("Insert search string")
 	public String insertSearchStringHere();
-	
 
 	@DefaultMessage("Search results")
 	public String searchResults();
 	
 	@DefaultMessage("Save")
 	public String save();
+	
+	@DefaultMessage("Cancel")
+	public String cancel();
 	
 	@DefaultMessage("Previous")
 	public String previous();
@@ -40,8 +30,56 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Search")
 	public String search();
 	
+	@DefaultMessage("Warning! This cannot be undone!")
+	public String cannotBeUndone();
+
+	
+	//
+	// DIV FUNCTIONS/PANELS
+	//
+	
+	@DefaultMessage("Create event")
+	public String createEvent();
+	
+	@DefaultMessage("Send e-mail")
+	public String sendEMail();
+	
+	@DefaultMessage("Write e-mail")
+	public String writeEMail();
+	
+	@DefaultMessage("Message")
+	public String eMailMessage();
+	
 	@DefaultMessage("Mangage trades")
 	public String manageTrades();
+	
+	@DefaultMessage("Label settings ({0} label(s) selected)")
+	public String labelSettings(int labelCount);
+	
+	@DefaultMessage("Mail settings")
+	public String mailSettings();
+	
+	@DefaultMessage("Recipient")
+	public String recipient();
+	
+	@DefaultMessage("Remove recipient")
+	public String removeRecipient();
+	
+	@DefaultMessage("Select recipients")
+	public String selectRecipients();
+	
+	@DefaultMessage("Select all")
+	public String selectAll();
+	
+	@DefaultMessage("Select contacts")
+	public String selectContacts();
+	
+	@DefaultMessage("Select companies")
+	public String selectCompanies();
+	
+	@DefaultMessage("Print labels")
+	public String printLabels();
+	
 	
 	//
 	// SALESPEOPLE
@@ -61,22 +99,16 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Select salesman")
 	public String selectSalesman();
 	
+	@DefaultMessage("Change login")
+	public String changeLogin();
 	
+	@DefaultMessage("Which salesman do you wist to see the customer listing for?")
+	public String whichSalesman();
 	
-	@DefaultMessage("Are you sure you want to delete?")
-	public String deleteCompanyDialogTitle();
-	
-	@DefaultMessage("Warning! This cannot be undone!")
-	public String cannotBeUndone();
-	
-	@DefaultMessage("Are you sure you want to delete the selected company?")
-	public String doYouWantToDelteTheCompany();
-	
-	@DefaultMessage("Delete company")
-	public String deleteCompany();
-	
-	@DefaultMessage("Cancel")
-	public String cancel();
+
+	//
+	// PROSPECTS
+	//
 	
 	@DefaultMessage("There is no companies in the list.")
 	public String emptyCompanyList();
@@ -144,6 +176,7 @@ public interface CustomerCareI18n extends Messages {
 	//
 	// COMPANIES
 	//	
+	
 	@DefaultMessage("Insert company details")
 	public String insertCompanyDetails();
 	
@@ -197,4 +230,13 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Delete selected companies")
 	public String deleteSelectedCompanies();
+	
+	@DefaultMessage("Are you sure you want to delete?")
+	public String deleteCompanyDialogTitle();
+	
+	@DefaultMessage("Are you sure you want to delete the selected company?")
+	public String doYouWantToDelteTheCompany();
+	
+	@DefaultMessage("Delete company")
+	public String deleteCompany();
 }

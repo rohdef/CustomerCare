@@ -33,6 +33,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.events.DeleteCompanyEvent;
 import dk.rohdef.client.events.DeleteCompanyListener;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.client.specialtypes.LabelRecipientCondition;
@@ -48,12 +49,11 @@ import dk.rohdef.viewmodel.LabelRecipient;
  * @author Rohde Fischer <rohdef@rohdef.dk>
  */
 public class SelectLabelRecipiantsPanel extends FormPanel {
-	private String headingTextStart = "Labelindstillinger ("
-		, headingTextEnd = " labels valgt)";
 	private int selectionCount;
 	
 	private static Logger logger = Logger.getLogger(SelectLabelRecipiantsPanel.class.getName());
-	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
 	private ArrayList<ComboBox<LabelRecipient>> boxes;
 	private Grid<Company> mtGrid;
 	private ListStore<Company> selectedCompanies, emptyStore;
@@ -63,11 +63,14 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 	 * 
 	 */
 	public SelectLabelRecipiantsPanel() {
+		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
+		
 		boxes = new ArrayList<ComboBox<LabelRecipient>>();
 		deleteListeners = new ArrayList<DeleteCompanyListener>();
 
 		selectionCount = 0;
-		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
+		this.setHeading(i18n.labelSettings(selectionCount));
 		
 		ColumnModel cm = getColumnModel();
 
@@ -140,17 +143,17 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 
 		ColumnConfig companyName = new ColumnConfig();
 		companyName.setId("companyname");
-		companyName.setHeader("Virksomhed");
+		companyName.setHeader(i18n.company());
 		companyName.setWidth(190);
 
 		ColumnConfig mailTo = new ColumnConfig();
-		mailTo.setHeader("Modtager");
+		mailTo.setHeader(i18n.recipient());
 		mailTo.setRenderer(recipientRenderer);
 		mailTo.setWidth(130);
 
 		ColumnConfig removeBtnConfig = new ColumnConfig();
 		removeBtnConfig.setId("remove");
-		removeBtnConfig.setHeader("Fjern modtager");
+		removeBtnConfig.setHeader(i18n.removeRecipient());
 		removeBtnConfig.setRenderer(removeBtnRenderer);
 		removeBtnConfig.setWidth(85);
 
@@ -174,7 +177,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		ToolBar toolBar = new ToolBar();
 		toolBar.setEnableOverflow(false);
 		
-		Button printBtn = new Button("Print labels", new SelectionListener<ButtonEvent>() {
+		Button printBtn = new Button(i18n.printLabels(), new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				createPdfForPrint();
@@ -184,13 +187,13 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		printBtn.setIcon(IconHelper.createPath("images/printer.gif"));
 		
 		Button selectionMenuBtn = new Button();
-		selectionMenuBtn.setText("Vælg modtagere");
+		selectionMenuBtn.setText(i18n.selectRecipients());
 		selectionMenuBtn.setIcon(IconHelper.createPath("images/select_recipients.gif"));
 		
 		Menu selectionMenu = new Menu();
 		
 		MenuItem selectAll = new MenuItem();
-		selectAll.setText("Vælg alle");
+		selectAll.setText(i18n.selectAll());
 		selectAll.addSelectionListener(new SelectionListener<MenuEvent>() {
 			@Override
 			public void componentSelected(MenuEvent ce) {
@@ -200,7 +203,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		selectionMenu.add(selectAll);
 		
 		MenuItem selectContacts = new MenuItem();
-		selectContacts.setText("Vælg kontakterne (att.)");
+		selectContacts.setText(i18n.selectContacts());
 		selectContacts.addSelectionListener(new SelectionListener<MenuEvent>() {
 			@Override
 			public void componentSelected(MenuEvent ce) {
@@ -210,7 +213,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		selectionMenu.add(selectContacts);
 		
 		MenuItem selectCompanies = new MenuItem();
-		selectCompanies.setText("Vælg virksomehederne (ikke att.)");
+		selectCompanies.setText(i18n.selectCompanies());
 		selectCompanies.addSelectionListener(new SelectionListener<MenuEvent>() {
 			@Override
 			public void componentSelected(MenuEvent ce) {
@@ -256,7 +259,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 	 */
 	public void bindCompanies(List<Company> companies) {
 		selectionCount = 0;
-		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
+		this.setHeading(i18n.labelSettings(selectionCount));
 		
 		selectedCompanies = new ListStore<Company>();
 		selectedCompanies.add(companies);
@@ -270,7 +273,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		mtGrid.reconfigure(emptyStore, mtGrid.getColumnModel());
 		
 		selectionCount = 0;
-		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
+		this.setHeading(i18n.labelSettings(selectionCount));
 	}
 	
 	/**
@@ -286,7 +289,7 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 			selectionCount += combo.getSelection().size();
 		}
 		
-		this.setHeading(headingTextStart + selectionCount + headingTextEnd);
+		this.setHeading(i18n.labelSettings(selectionCount));
 	}
 	
 	/**

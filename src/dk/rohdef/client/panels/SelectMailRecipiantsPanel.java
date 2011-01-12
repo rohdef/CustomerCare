@@ -32,6 +32,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import dk.rohdef.client.MailLayout;
 import dk.rohdef.client.events.DeleteCompanyEvent;
 import dk.rohdef.client.events.DeleteCompanyListener;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.client.specialtypes.XComboBox;
@@ -39,20 +40,32 @@ import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Contact;
 import dk.rohdef.viewmodel.MailRecipient;
 
+/**
+ * Panel for selecting who should recieve mails on mass sending 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class SelectMailRecipiantsPanel extends FormPanel {
 	private static Logger logger = Logger.getLogger(SelectMailRecipiantsPanel.class.getName());
-	private DataServiceAsync dataService = Global.getInstance().getDataService();
+	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
+	
 	private ArrayList<ComboBox<MailRecipient>> boxes;
 	private Grid<Company> mtGrid;
 	private ListStore<Company> selectedCompanies, emptyStore;
 	private ColumnModel cm;
 	private ArrayList<DeleteCompanyListener> deleteListeners;
 
+	/**
+	 * 
+	 */
 	public SelectMailRecipiantsPanel() {
+		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
+		
 		boxes = new ArrayList<ComboBox<MailRecipient>>();
 		deleteListeners = new ArrayList<DeleteCompanyListener>();
 
-		this.setHeading("Mailindstillinger");
+		this.setHeading(i18n.mailSettings());
 		
 		GridCellRenderer<Company> recipientRenderer = new RecipientCellRenderer();
 
@@ -62,17 +75,17 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 
 		ColumnConfig companyName = new ColumnConfig();
 		companyName.setId("companyname");
-		companyName.setHeader("Virksomhed");
+		companyName.setHeader(i18n.company());
 		companyName.setWidth(190);
 
 		ColumnConfig mailTo = new ColumnConfig();
-		mailTo.setHeader("Modtager");
+		mailTo.setHeader(i18n.recipient());
 		mailTo.setRenderer(recipientRenderer);
 		mailTo.setWidth(130);
 
 		ColumnConfig removeBtnConfig = new ColumnConfig();
 		removeBtnConfig.setId("remove");
-		removeBtnConfig.setHeader("Fjern modtager");
+		removeBtnConfig.setHeader(i18n.removeRecipient());
 		removeBtnConfig.setRenderer(removeBtnRenderer);
 		removeBtnConfig.setWidth(85);
 
@@ -91,7 +104,7 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		mtGrid.setStripeRows(true);
 		this.add(mtGrid);
 		
-		Button mailBtn = new Button("Skriv mail",
+		Button mailBtn = new Button(i18n.writeEMail(),
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -121,7 +134,7 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 				final Window mailWin = new Window();
 				mailWin.setSize(700, 550);
 				mailWin.setModal(true);
-				mailWin.setHeading("Mail besked");
+				mailWin.setHeading(i18n.eMailMessage());
 				mailWin.setLayout(new FitLayout());
 
 				MailLayout mailLayout = new MailLayout(recipients);
@@ -143,28 +156,43 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		this.setTopComponent(toolBar);
 	}
 	
+	/**
+	 * Bind a list of companies to the panel to enable recipient selection.
+	 * @param companies
+	 */
 	public void bindCompanies(List<Company> companies) {
 		selectedCompanies = new ListStore<Company>();
 		selectedCompanies.add(companies);
 		mtGrid.reconfigure(selectedCompanies, cm);
 	}
 	
+	/**
+	 * Unbind the companies to clear the listing
+	 */
 	public void unbindCompanies() {
 		mtGrid.reconfigure(emptyStore, cm);
 	}
 	
+	/**
+	 * Listen for when the user wants to remove a company from the selection
+	 * @param listener
+	 */
 	public void addDeleteListener(DeleteCompanyListener listener) {
 		deleteListeners.add(listener);
 	}
 	
+	/**
+	 * @see {@link #addDeleteListener(DeleteCompanyListener)}	
+	 * @param listener
+	 */
 	public void removeDeleteListener(DeleteCompanyListener listener) {
 		deleteListeners.remove(listener);
 	}
-	
-	private static native void openUrl(String url, String name) /*-{
-		$wnd.open(url, name);
-	}-*/;
-	
+
+	/**
+	 * Cell rendere that renders {@link XComboBox} cells for selecting recipients. 
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class RecipientCellRenderer implements GridCellRenderer<Company> {
 		public Object render(Company model, String property,
 				ColumnData config, int rowIndex, int colIndex,
@@ -210,10 +238,14 @@ public class SelectMailRecipiantsPanel extends FormPanel {
 		}
 	}
 
+	/**
+	 * Button cell renderer for the remove buttons
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class RemoveCellRenderer implements GridCellRenderer<Company> {
 		public Object render(final Company model, String property, ColumnData config,
 				int rowIndex, int colIndex, ListStore<Company> store, Grid<Company> grid) {
-			Button removeBtn = new Button("Fjern");
+			Button removeBtn = new Button(i18n.removeRecipient());
 			removeBtn.setIcon(IconHelper.createPath("images/delete.gif"));
 			removeBtn.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 
