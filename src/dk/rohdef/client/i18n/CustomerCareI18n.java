@@ -27,6 +27,9 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Next")
 	public String next();
 	
+	@DefaultMessage("Select")
+	public String select();
+	
 	@DefaultMessage("Search")
 	public String search();
 	

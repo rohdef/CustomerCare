@@ -57,6 +57,7 @@ import dk.rohdef.viewmodel.Trade;
 public class CreateCompany extends LayoutContainer {
 	public static EventType CompanyCreated = new EventType();
 	
+	private ChangeEventSupport changeEventSupport = new ChangeEventSupport();
 	private DataServiceAsync dataService;
 	private CustomerCareI18n i18n;
 	private LoadingDialog loader = new LoadingDialog();
@@ -66,6 +67,9 @@ public class CreateCompany extends LayoutContainer {
 	private Company newCompany;
 	private ListStore<Contact> contactStore;
 	private Grid<Contact> contactGrid;
+	private CompanyEditPanel newCompanyPanel;
+	private Button cancelBtn;
+	private Button createBtn;
 
 	/**
 	 * 
@@ -93,7 +97,7 @@ public class CreateCompany extends LayoutContainer {
 		companyArea.setLayout(new HBoxLayout());
 		visibleArea.add(companyArea);
 		
-		final CompanyEditPanel newCompanyPanel = createNewCompanyPanel();
+		newCompanyPanel = createNewCompanyPanel();
 		final SearchGrid searchResultArea = new SearchGrid();
 		searchResultArea.setHeight(300);
 		
@@ -190,6 +194,10 @@ public class CreateCompany extends LayoutContainer {
 			loader.hide();
 	}
 
+	/**
+	 * Create a panel for adding a new company
+	 * @return
+	 */
 	private CompanyEditPanel createNewCompanyPanel() {
 		final CompanyEditPanel formPanel = new CompanyEditPanel();
 		formPanel.setAutoHeight(true);
@@ -229,23 +237,35 @@ public class CreateCompany extends LayoutContainer {
 		return contactsPanel;
 	}
 	
+	/**
+	 * Get the "new" company, this might be set to an existing company
+	 * @return
+	 */
 	public Company getNewCompany() {
 		return newCompany;
 	}
-	
-	private ChangeEventSupport changeEventSupport = new ChangeEventSupport();
 
-	private Button cancelBtn;
-
-	private Button createBtn;
+	/**
+	 * Listen for when the model changes, this is fired when a new company is added 
+	 * or when the user has finished updating an existing company.
+	 * @param listener
+	 */
 	public void addChangeListener(ChangeListener... listener) {
 		changeEventSupport.addChangeListener(listener);
 	}
 	
+	/**
+	 * @see {@link #addChangeListener(ChangeListener...)}
+	 * @param listener
+	 */
 	public void removeChangeListener(ChangeListener... listener) {
 		changeEventSupport.removeChangeListener(listener);
 	}
 	
+	/**
+	 * Create the button for creating company or ending editing.
+	 * @return
+	 */
 	private Button getCreateCompanyButton() {
 		createBtn = new Button(i18n.createCompany(),
 				new SelectionListener<ButtonEvent>() {
@@ -279,6 +299,10 @@ public class CreateCompany extends LayoutContainer {
 		return createBtn;
 	}
 	
+	/**
+	 * Get the cancel button
+	 * @return
+	 */
 	private Button getCancelButton() {
 		cancelBtn = new Button(i18n.cancel(), new SelectionListener<ButtonEvent>() {
 			@Override
@@ -291,40 +315,73 @@ public class CreateCompany extends LayoutContainer {
 		return cancelBtn; 
 	}
 	
-	private void createCompany() {
-		loader.show();
+	/**
+	 * Change the company selection to an already defined company.
+	 * @param company
+	 */
+	private void selectCompany(Company company) {
+		existingCompany = true;
 		
-		dataService.createCompany(newCompany,
-				new ArrayList<Contact>(contactStore.getModels()),
-				Global.getInstance().getCurrentSalesman(),
-				new AsyncCallback<Integer>() {
-			public void onSuccess(Integer result) {
-				newCompany.set("companyid", result);
-				newCompany.set("prospect", contactStore.getCount()==0);
-				
-				if (newCompany.getTrade() == null) {
-					Trade noTrade = new Trade();
-					noTrade.setTrade(i18n.noTradeSelected());
-					newCompany.setTrade(noTrade);
-				}
-				
-				changeEventSupport.notify(
-						new ChangeEvent(ChangeEventSource.Add, newCompany));
-				
-				loader.hide();
-				fireEvent(Events.Close);
-			}
-			
-			public void onFailure(Throwable caught) {
-				throw new RuntimeException(caught);
-			}
-		});
+		newCompany = company;
+		newCompanyPanel.bindCompany(newCompany);
+		newCompanyPanel.setReadOnly(true);
+		// TODO Internationalize this!
+		createBtn.setText("AAABBBCCCDDDD");
 	}
 	
+	/**
+	 * The actions to perform when the create company button is pressed
+	 */
+	private void createCompany() {
+		
+		if (existingCompany) {
+			changeEventSupport.notify(
+					new ChangeEvent(ChangeEventSource.Update, newCompany));
+					fireEvent(Events.Close);
+		} else {
+			loader.show();
+			
+			dataService.createCompany(newCompany,
+					new ArrayList<Contact>(contactStore.getModels()),
+					Global.getInstance().getCurrentSalesman(),
+					new AsyncCallback<Integer>() {
+				public void onSuccess(Integer result) {
+					newCompany.set("companyid", result);
+					newCompany.set("prospect", contactStore.getCount()==0);
+					
+					if (newCompany.getTrade() == null) {
+						Trade noTrade = new Trade();
+						noTrade.setTrade(i18n.noTradeSelected());
+						newCompany.setTrade(noTrade);
+					}
+					
+					changeEventSupport.notify(
+							new ChangeEvent(ChangeEventSource.Add, newCompany));
+					
+					loader.hide();
+					fireEvent(Events.Close);
+				}
+				
+				public void onFailure(Throwable caught) {
+					throw new RuntimeException(caught);
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Listener to initiate search and fill the search grid with the results. 
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class SearchListener implements Listener<BaseEvent> {
 		private CompanyEditPanel formPanel;
 		private SearchGrid searchResultArea;
 		
+		/**
+		 * 
+		 * @param formPanel the CompanyEditPanel containing the typed company name to search from
+		 * @param searchResultArea the SearchGrid to insert the data into.
+		 */
 		public SearchListener(CompanyEditPanel formPanel, SearchGrid searchResultArea) {
 			this.formPanel = formPanel;
 			this.searchResultArea = searchResultArea;
@@ -352,11 +409,18 @@ public class CreateCompany extends LayoutContainer {
 		
 	}
 	
+	/**
+	 * Displays a grid of companies to display the search results 
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class SearchGrid extends ContentPanel {
 		private CustomerCareI18n i18n;
 		private Grid<Company> companyGrid;
 		private ListStore<Company> companyStore;
 		
+		/**
+		 * 
+		 */
 		public SearchGrid() {
 			i18n = Global.getInstance().getI18n();
 			
@@ -383,6 +447,10 @@ public class CreateCompany extends LayoutContainer {
 			this.add(companyGrid);
 		}
 		
+		/**
+		 * Set the company store to show the search results.
+		 * @param store
+		 */
 		public void setCompanyStore(GroupingStore<Company> store) {
 			companyGrid.reconfigure(store, companyGrid.getColumnModel());
 			this.companyStore = store;
@@ -408,12 +476,17 @@ public class CreateCompany extends LayoutContainer {
 			configs.add(column);
 			
 			column = new ColumnConfig();
-			column.setHeader("Vælg");
+			column.setHeader(i18n.select());
 			column.setRenderer(new GridCellRenderer<Company>() {
-				public Object render(Company model, String property,
+				public Object render(final Company model, String property,
 						ColumnData config, int rowIndex, int colIndex,
 						ListStore<Company> store, Grid<Company> grid) {
-					return new Button("Vælg");
+					return new Button(i18n.select(), new SelectionListener<ButtonEvent>() {
+						@Override
+						public void componentSelected(ButtonEvent ce) {
+							selectCompany(model);
+						}
+					});
 				}
 			});
 			
