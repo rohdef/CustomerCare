@@ -3,7 +3,6 @@ package dk.rohdef.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.extjs.gxt.ui.client.Style.HideMode;
 import com.extjs.gxt.ui.client.data.ChangeEvent;
 import com.extjs.gxt.ui.client.data.ChangeEventSource;
 import com.extjs.gxt.ui.client.data.ChangeEventSupport;
@@ -30,6 +29,7 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnData;
 import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
+import com.extjs.gxt.ui.client.widget.layout.CardLayout;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayout;
 import com.extjs.gxt.ui.client.widget.layout.HBoxLayoutData;
@@ -80,12 +80,18 @@ public class CreateCompany extends LayoutContainer {
 		contactStore = new ListStore<Contact>();
 		
 		this.setLayout(new VBoxLayout());
+
+		LayoutContainer visibleArea = new LayoutContainer();
+		visibleArea.setAutoWidth(true);
+		visibleArea.setHeight(320);
+		final CardLayout visibleLayout = new CardLayout();
+		visibleArea.setLayout(visibleLayout);
 		
 		final LayoutContainer companyArea = new LayoutContainer();
 		companyArea.setAutoWidth(true);
-		companyArea.setHeight(320);
+		companyArea.setAutoHeight(true);
 		companyArea.setLayout(new HBoxLayout());
-		this.add(companyArea);
+		visibleArea.add(companyArea);
 		
 		final CompanyEditPanel newCompanyPanel = createNewCompanyPanel();
 		final SearchGrid searchResultArea = new SearchGrid();
@@ -101,11 +107,10 @@ public class CreateCompany extends LayoutContainer {
 				});
 		
 		final LayoutContainer contactsArea = new LayoutContainer();
-		contactsArea.setAutoWidth(true);
-		contactsArea.setHeight(470);
+		contactsArea.setWidth(640);
+		contactsArea.setAutoHeight(true);
 		contactsArea.setLayout(new HBoxLayout());
-		contactsArea.setVisible(false);
-		this.add(contactsArea);
+		visibleArea.add(contactsArea);
 		
 		ContactEditPanel createNewContactPanel = new ContactEditPanel(false);
 		createNewContactPanel.addNewContactListener(new ContactListener() {
@@ -124,7 +129,7 @@ public class CreateCompany extends LayoutContainer {
 		final Button previousBtn = new Button(i18n.previous());
 		final Button nextBtn = new Button(i18n.next());
 		final Button createCompanyBtn = getCreateCompanyButton();
-		ButtonBar buttonBar = new ButtonBar();
+		final ButtonBar buttonBar = new ButtonBar();
 		
 		previousBtn.disable();
 		previousBtn.setIcon(IconHelper.createPath("images/arrow_left.gif"));
@@ -132,8 +137,9 @@ public class CreateCompany extends LayoutContainer {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.addButton(nextBtn);
-				contactsArea.setVisible(false);
-				companyArea.setVisible(true);
+
+				visibleLayout.setActiveItem(companyArea);
+				
 				nextBtn.enable();
 				previousBtn.disable();
 				createCompanyBtn.disable();
@@ -141,30 +147,31 @@ public class CreateCompany extends LayoutContainer {
 		});
 		buttonBar.add(previousBtn);
 		
+		buttonBar.add(nextBtn);
+		companyButtonBinding.addButton(nextBtn);
+
+		createCompanyBtn.disable();
+		buttonBar.add(createCompanyBtn);
+		buttonBar.add(getCancelButton());
+		
 		nextBtn.setIcon(IconHelper.createPath("images/arrow_right.gif"));
 		nextBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.removeButton(nextBtn);
-				companyArea.setHideMode(HideMode.DISPLAY);
-				companyArea.hide();
-				contactsArea.setVisible(true);
-//				remove(contactsArea);
-//				add(contactsArea);
-				layout();
+				
+				visibleLayout.setActiveItem(contactsArea);
+				
 				previousBtn.enable();
 				nextBtn.disable();
 				createCompanyBtn.enable();
 			}
 		});
-		buttonBar.add(nextBtn);
-		companyButtonBinding.addButton(nextBtn);
 		
-		createCompanyBtn.disable();
-		buttonBar.add(createCompanyBtn);
-		buttonBar.add(getCancelButton());
-		
+		this.add(visibleArea);
 		this.add(buttonBar);
+		
+		visibleLayout.setActiveItem(companyArea);
 	}
 	
 	@Override
