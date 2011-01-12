@@ -123,11 +123,42 @@ public class CreateCompany extends LayoutContainer {
 			}
 		});
 		
+		final LayoutContainer existingCompanyContactsArea = new LayoutContainer();
+		existingCompanyContactsArea.setWidth(640);
+		existingCompanyContactsArea.setAutoHeight(true);
+		existingCompanyContactsArea.setLayout(new HBoxLayout());
+		visibleArea.add(existingCompanyContactsArea);
+		
+		final ListStore<Contact> existingContactStore = new ListStore<Contact>();
+		// TODO load data into store
+		
+		ContactEditPanel existingCreateNewContactPanel = new ContactEditPanel(false);
+		existingCreateNewContactPanel.addNewContactListener(new ContactListener() {
+			public void handleEvent(final ContactEvent be) {
+				dataService.insertContact(be.getContact(),
+						(Integer) Global.getInstance().getCurrentSalesman().get("salesmanid"),
+						(Integer) newCompany.get("companyid"),
+						new AsyncCallback<Integer>() {
+							public void onSuccess(Integer result) {
+								be.getContact().set("contactid", result);
+								existingContactStore.add(be.getContact());
+							}
+							
+							public void onFailure(Throwable caught) {
+								caught.printStackTrace();
+							}
+						});
+			}
+		});
+		
 		contactsArea.add(createNewContactPanel, new HBoxLayoutData());
-		contactsArea.add(getContactList(), new HBoxLayoutData());
+		contactsArea.add(getContactList(contactStore), new HBoxLayoutData());
 		
 		companyArea.add(newCompanyPanel);
 		companyArea.add(searchResultArea);
+		
+		existingCompanyContactsArea.add(existingCreateNewContactPanel);
+		existingCompanyContactsArea.add(getContactList(existingContactStore));
 		
 		final FormButtonBinding companyButtonBinding = new FormButtonBinding(newCompanyPanel);
 		final Button previousBtn = new Button(i18n.previous());
@@ -164,7 +195,10 @@ public class CreateCompany extends LayoutContainer {
 			public void componentSelected(ButtonEvent ce) {
 				companyButtonBinding.removeButton(nextBtn);
 				
-				visibleLayout.setActiveItem(contactsArea);
+				if (existingCompany)
+					visibleLayout.setActiveItem(existingCompanyContactsArea);
+				else
+					visibleLayout.setActiveItem(contactsArea);
 				
 				previousBtn.enable();
 				nextBtn.disable();
@@ -213,7 +247,7 @@ public class CreateCompany extends LayoutContainer {
 	 * Creates a panel to list the added contacts
 	 * @return
 	 */
-	private ContentPanel getContactList() {
+	private ContentPanel getContactList(ListStore<Contact> store) {
 		ContentPanel contactsPanel = new ContentPanel();
 		contactsPanel.setWidth("50%");
 		contactsPanel.setHeading(i18n.contactList());
@@ -225,7 +259,7 @@ public class CreateCompany extends LayoutContainer {
 		
 		ColumnModel cm = new ColumnModel(configs);
 		
-		contactGrid = new Grid<Contact>(contactStore, cm);
+		contactGrid = new Grid<Contact>(store, cm);
 		contactGrid.setBorders(false);
 		contactGrid.setStripeRows(true);
 		contactGrid.setHeight(120);
@@ -271,9 +305,11 @@ public class CreateCompany extends LayoutContainer {
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
-				if (contactStore.getCount() > 0)
+				if (existingCompany) {
 					createCompany();
-				else {
+				} else if (contactStore.getCount() > 0) {
+					createCompany();
+				} else {
 					Dialog confirmDialog = new Dialog();
 					confirmDialog.setButtons(Dialog.YESNO);
 					confirmDialog.setHideOnButtonClick(true);
@@ -325,48 +361,47 @@ public class CreateCompany extends LayoutContainer {
 		newCompany = company;
 		newCompanyPanel.bindCompany(newCompany);
 		newCompanyPanel.setReadOnly(true);
-		// TODO Internationalize this!
-		createBtn.setText("AAABBBCCCDDDD");
+		createBtn.setText(i18n.createCompanyStopEditing());
 	}
 	
 	/**
 	 * The actions to perform when the create company button is pressed
 	 */
 	private void createCompany() {
-		
 		if (existingCompany) {
 			changeEventSupport.notify(
-					new ChangeEvent(ChangeEventSource.Update, newCompany));
-					fireEvent(Events.Close);
-		} else {
-			loader.show();
-			
-			dataService.createCompany(newCompany,
-					new ArrayList<Contact>(contactStore.getModels()),
-					Global.getInstance().getCurrentSalesman(),
-					new AsyncCallback<Integer>() {
-				public void onSuccess(Integer result) {
-					newCompany.set("companyid", result);
-					newCompany.set("prospect", contactStore.getCount()==0);
-					
-					if (newCompany.getTrade() == null) {
-						Trade noTrade = new Trade();
-						noTrade.setTrade(i18n.noTradeSelected());
-						newCompany.setTrade(noTrade);
-					}
-					
-					changeEventSupport.notify(
-							new ChangeEvent(ChangeEventSource.Add, newCompany));
-					
-					loader.hide();
-					fireEvent(Events.Close);
+					new ChangeEvent(ChangeEventSource.Add, newCompany));
+			fireEvent(Events.Close);
+			return;
+		}
+		
+		loader.show();
+		
+		dataService.createCompany(newCompany,
+				new ArrayList<Contact>(contactStore.getModels()),
+				Global.getInstance().getCurrentSalesman(),
+				new AsyncCallback<Integer>() {
+			public void onSuccess(Integer result) {
+				newCompany.set("companyid", result);
+				newCompany.set("prospect", contactStore.getCount()==0);
+				
+				if (newCompany.getTrade() == null) {
+					Trade noTrade = new Trade();
+					noTrade.setTrade(i18n.noTradeSelected());
+					newCompany.setTrade(noTrade);
 				}
 				
-				public void onFailure(Throwable caught) {
-					throw new RuntimeException(caught);
-				}
-			});
-		}
+				changeEventSupport.notify(
+						new ChangeEvent(ChangeEventSource.Add, newCompany));
+				
+				loader.hide();
+				fireEvent(Events.Close);
+			}
+			
+			public void onFailure(Throwable caught) {
+				throw new RuntimeException(caught);
+			}
+		});
 	}
 	
 	/**

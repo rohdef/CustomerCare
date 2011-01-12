@@ -242,4 +242,7 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Delete company")
 	public String deleteCompany();
+	
+	@DefaultMessage("Ok")
+	public String createCompanyStopEditing();
 }
