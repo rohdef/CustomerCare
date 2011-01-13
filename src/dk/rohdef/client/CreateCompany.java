@@ -195,6 +195,7 @@ public class CreateCompany extends LayoutContainer {
 		nextBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
+				newCompanyPanel.saveToModel();
 				companyButtonBinding.removeButton(nextBtn);
 				
 				if (existingCompany)
