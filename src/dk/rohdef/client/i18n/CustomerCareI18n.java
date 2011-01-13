@@ -91,9 +91,6 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Sender")
 	public String eMailSender();
 	
-	@DefaultMessage("Mangage trades")
-	public String manageTrades();
-	
 	@DefaultMessage("Mail settings")
 	public String mailSettings();
 	
@@ -132,6 +129,42 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Which salesman do you wist to see the customer listing for?")
 	public String whichSalesman();
+	
+	@DefaultMessage("Name")
+	public String salesmanName();
+	
+	@DefaultMessage("Title")
+	public String salesmanTitle();
+	
+	@DefaultMessage("There is no salespeople in the list")
+	public String salespeopleEmptyList();
+	
+	@DefaultMessage("Create new salesman")
+	public String salespeopleCreateNew();
+	
+	@DefaultMessage("E-mail")
+	public String salespeopleEMail();
+	
+	@DefaultMessage("Cell phone")
+	public String salespeopleCellPhone();
+	
+	@DefaultMessage("Salesman details")
+	public String salesmanDetails();
+	
+	@DefaultMessage("Delete salesman")
+	public String salesmanDelete();
+	
+	@DefaultMessage("Delete {0}")
+	public String salesmanDeleteSalesman(String name);
+	
+	@DefaultMessage("Are you sure you want to delete {0}?")
+	public String salesmanAreYouSureYouWantToDelete(String name);
+	
+	@DefaultMessage("Do you want to delete {0}?")
+	public String salesmanDeleteDialogTitle(String name);
+	
+	@DefaultMessage("Save changes")
+	public String salesmanSaveChanges();
 	
 
 	//
@@ -244,12 +277,6 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Phone")
 	public String phone();
 	
-	@DefaultMessage("Trade")
-	public String trade();
-	
-	@DefaultMessage("No trade selected")
-	public String noTradeSelected();
-	
 	@DefaultMessage("Group")
 	public String group();
 	
@@ -311,4 +338,39 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Meeting location")
 	public String meetingLocation();
+
+
+	//
+	// TRADES
+	//
+	
+	@DefaultMessage("Mangage trades")
+	public String manageTrades();
+	
+	@DefaultMessage("Trade id")
+	public String tradeId();
+	
+	@DefaultMessage("Trade")
+	public String trade();
+	
+	@DefaultMessage("No trade selected")
+	public String noTradeSelected();
+	
+	@DefaultMessage("Delete trade")
+	public String tradeDelete();
+	
+	@DefaultMessage("There is no trades in the list")
+	public String tradesEmptyList();
+	
+	@DefaultMessage("Trade name")
+	public String tradeName();
+	
+	@DefaultMessage("Add trade")
+	public String addTrade();
+	
+	@DefaultMessage("Delete the trade {0}?")
+	public String tradeDeleteDialogTitle(String tradename);
+	
+	@DefaultMessage("Are you sure want to delete the trade {0}?")
+	public String tradeDeleteDialogMessage(String tradename);
 }

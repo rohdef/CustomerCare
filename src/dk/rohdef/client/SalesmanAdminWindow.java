@@ -28,6 +28,7 @@ import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.client.specialtypes.VType;
@@ -35,9 +36,11 @@ import dk.rohdef.client.specialtypes.VTypeValidator;
 import dk.rohdef.viewmodel.Salesman;
 
 public class SalesmanAdminWindow extends Window {
+	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
+	
 	private Salesman originalSalesman;
 	private Grid<Salesman> salespeopleGrid;
-	private DataServiceAsync dataService;
 	private boolean loadingSalespeople = false;
 	private LoadingDialog loader = new LoadingDialog();
 	private ListStore<Salesman> salespeopleStore;
@@ -47,7 +50,10 @@ public class SalesmanAdminWindow extends Window {
 	private FormButtonBinding editButtonBinding;
 
 	public SalesmanAdminWindow() {
-		this.setHeading("Administrer sælgere");
+		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
+		
+		this.setHeading(i18n.manageSalespeople());
 		this.setIcon(IconHelper.createPath("images/salesmen.gif"));
 		this.setLayout(new RowLayout(Orientation.HORIZONTAL));
 		this.setWidth(625);
@@ -55,8 +61,8 @@ public class SalesmanAdminWindow extends Window {
 		
 		salespeopleStore = new ListStore<Salesman>();
 		
-		ColumnConfig nameConfig = new ColumnConfig("salesman", "Navn", 150);
-		ColumnConfig titleConfig = new ColumnConfig("title", "Titel", 150);
+		ColumnConfig nameConfig = new ColumnConfig("salesman", i18n.salesmanName(), 150);
+		ColumnConfig titleConfig = new ColumnConfig("title", i18n.salesmanTitle(), 150);
 		
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		configs.add(nameConfig);
@@ -68,7 +74,7 @@ public class SalesmanAdminWindow extends Window {
 		salespeopleGrid.setAutoHeight(true);
 		salespeopleGrid.setBorders(false);
 		salespeopleGrid.setStripeRows(true);
-		salespeopleGrid.getView().setEmptyText("Der er ingen salgsfolk i listen.");
+		salespeopleGrid.getView().setEmptyText(i18n.salespeopleEmptyList());
 		
 		this.add(salespeopleGrid);
 		
@@ -84,8 +90,6 @@ public class SalesmanAdminWindow extends Window {
 		editArea.add(editorArea);
 		
 		this.add(editArea);
-		
-		dataService = Global.getInstance().getDataService();
 	}
 	
 	@Override
@@ -126,40 +130,40 @@ public class SalesmanAdminWindow extends Window {
 	
 	private FormPanel getCreateArea() {
 		final FormPanel editArea = new FormPanel();
-		editArea.setHeading("Opret ny sælger");
+		editArea.setHeading(i18n.salespeopleCreateNew());
 		editArea.setFrame(false);
 		editArea.setBorders(false);
 		
 		final TextField<String> nameFld = new TextField<String>();
-		nameFld.setFieldLabel("Navn:");
+		nameFld.setFieldLabel(i18n.salesmanName());
 		nameFld.setAllowBlank(false);
 		nameFld.setValidator(new VTypeValidator(VType.NAME));
 		nameFld.setAutoValidate(true);
 		editArea.add(nameFld);
 
 		final TextField<String> titleFld = new TextField<String>();
-		titleFld.setFieldLabel("Titel:");
+		titleFld.setFieldLabel(i18n.salesmanTitle());
 		titleFld.setAllowBlank(false);
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		titleFld.setAutoValidate(true);
 		editArea.add(titleFld);
 
 		final TextField<String> mailFld = new TextField<String>();
-		mailFld.setFieldLabel("E-mail");
+		mailFld.setFieldLabel(i18n.salespeopleEMail());
 		mailFld.setAllowBlank(false);
 		mailFld.setValidator(new VTypeValidator(VType.EMAIL));
 		mailFld.setAutoValidate(true);
 		editArea.add(mailFld);
 
 		final TextField<String> phoneFld = new TextField<String>();
-		phoneFld.setFieldLabel("Mobil:");
+		phoneFld.setFieldLabel(i18n.salespeopleCellPhone());
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
 		phoneFld.setAutoValidate(true);
 		editArea.add(phoneFld);
 
 		Button createBtn = new Button();
 		createBtn.setIcon(IconHelper.createPath("images/user_add.gif"));
-		createBtn.setText("Opret sælger");
+		createBtn.setText(i18n.salespeopleCreateNew());
 		createBtn.setType("Submit");
 		createBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -192,12 +196,12 @@ public class SalesmanAdminWindow extends Window {
 	
 	private FormPanel getEditArea() {
 		FormPanel editArea = new FormPanel();
-		editArea.setHeading("Sælgerdetaljer");
+		editArea.setHeading(i18n.salesmanDetails());
 		editArea.setFrame(false);
 		editArea.setBorders(false);
 		
 		TextField<String> nameFld = new TextField<String>();
-		nameFld.setFieldLabel("Navn:");
+		nameFld.setFieldLabel(i18n.salesmanName());
 		nameFld.setName("salesman");
 		nameFld.setAllowBlank(false);
 		nameFld.setAutoValidate(true);
@@ -205,7 +209,7 @@ public class SalesmanAdminWindow extends Window {
 		editArea.add(nameFld);
 
 		TextField<String> titleFld = new TextField<String>();
-		titleFld.setFieldLabel("Titel:");
+		titleFld.setFieldLabel(i18n.salesmanTitle());
 		titleFld.setName("title");
 		titleFld.setAllowBlank(false);
 		titleFld.setAutoValidate(true);
@@ -213,7 +217,7 @@ public class SalesmanAdminWindow extends Window {
 		editArea.add(titleFld);
 
 		TextField<String> mailFld = new TextField<String>();
-		mailFld.setFieldLabel("E-mail");
+		mailFld.setFieldLabel(i18n.salespeopleEMail());
 		mailFld.setName("mail");
 		mailFld.setAllowBlank(false);
 		mailFld.setAutoValidate(true);
@@ -221,7 +225,7 @@ public class SalesmanAdminWindow extends Window {
 		editArea.add(mailFld);
 
 		TextField<String> phoneFld = new TextField<String>();
-		phoneFld.setFieldLabel("Mobil:");
+		phoneFld.setFieldLabel(i18n.salespeopleCellPhone());
 		phoneFld.setName("phone");
 		phoneFld.setAutoValidate(true);
 		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
@@ -240,7 +244,7 @@ public class SalesmanAdminWindow extends Window {
 		ToolBar toolBar = new ToolBar();
 		
 		Button saveBtn = new Button();
-		saveBtn.setText("Gem ændringer");
+		saveBtn.setText(i18n.salesmanSaveChanges());
 		saveBtn.setIcon(IconHelper.createPath("images/accept.gif"));
 		saveBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -252,7 +256,7 @@ public class SalesmanAdminWindow extends Window {
 		editButtonBinding.addButton(saveBtn);
 		
 		final Button deleteBtn = new Button();
-		deleteBtn.setText("Slet sælger");
+		deleteBtn.setText(i18n.salesmanDelete());
 		deleteBtn.disable();
 		deleteBtn.setIcon(IconHelper.createPath("images/user_delete.gif"));
 		deleteBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -260,15 +264,16 @@ public class SalesmanAdminWindow extends Window {
 			public void componentSelected(ButtonEvent ce) {
 				Dialog dialog = new Dialog();
 				dialog.setButtons(Dialog.YESNO);
-				dialog.setHeading("Vil du slette "+editBinding.getModel().get("salesman"));
-				dialog.addText("Er du sikker på, at du vil slette "
-						+editBinding.getModel().get("salesman")+"? Denne handling"
-						+"kan ikke fortrydes!");
+				dialog.setHeading(i18n.salesmanDeleteDialogTitle(
+						(String) editBinding.getModel().get("salesman")));
+				dialog.addText(i18n.cannotBeUndone());
+				dialog.addText(i18n.salesmanAreYouSureYouWantToDelete(
+						(String) editBinding.getModel().get("salesman")));
 				dialog.setHideOnButtonClick(true);
 				
-				dialog.getButtonById(Dialog.NO).setText("Fortryd");
-				dialog.getButtonById(Dialog.YES).setText("Slet "+editBinding
-						.getModel().get("salesman"));
+				dialog.getButtonById(Dialog.NO).setText(i18n.cancel());
+				dialog.getButtonById(Dialog.YES).setText(i18n.salesmanDeleteSalesman(
+						(String) editBinding.getModel().get("salesman")));
 				dialog.getButtonById(Dialog.YES).addSelectionListener(
 						new SelectionListener<ButtonEvent>() {
 							@Override

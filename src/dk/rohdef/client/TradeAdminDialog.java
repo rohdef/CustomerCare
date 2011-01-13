@@ -23,6 +23,7 @@ import com.extjs.gxt.ui.client.widget.layout.FormLayout;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.client.specialtypes.VType;
 import dk.rohdef.client.specialtypes.VTypeValidator;
@@ -30,11 +31,14 @@ import dk.rohdef.viewmodel.Trade;
 
 public class TradeAdminDialog extends Dialog {
 	private LoadingDialog loader = new LoadingDialog();
+	private CustomerCareI18n i18n;
 	private boolean loadingTrades = true;
 	
 	public TradeAdminDialog() {
+		i18n = Global.getInstance().getI18n();
+		
 		setModal(true);
-		setHeading("Administrer brancher");
+		setHeading(i18n.manageSalespeople());
 		setLayout(new RowLayout(Orientation.VERTICAL));
 		this.setWidth(550);
 		this.setHideOnButtonClick(true);
@@ -47,15 +51,15 @@ public class TradeAdminDialog extends Dialog {
 		
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		
-		ColumnConfig idColumn = new ColumnConfig("tradeid", "Id", 50);
+		ColumnConfig idColumn = new ColumnConfig("tradeid", i18n.tradeId(), 50);
 		configs.add(idColumn);
 		
-		ColumnConfig tradeColumn = new ColumnConfig("trade", "Branche", 300);
+		ColumnConfig tradeColumn = new ColumnConfig("trade", i18n.trade(), 300);
 		configs.add(tradeColumn);
 		
 		ColumnConfig deleteColumn = new ColumnConfig();
 		deleteColumn.setId("remove");
-		deleteColumn.setHeader("Slet branche");
+		deleteColumn.setHeader(i18n.tradeDelete());
 		deleteColumn.setRenderer(deleteBtnRenderer);
 		deleteColumn.setWidth(80);
 		configs.add(deleteColumn);
@@ -68,7 +72,7 @@ public class TradeAdminDialog extends Dialog {
 		tradeGrid.setColumnReordering(true);
 		tradeGrid.setStripeRows(true);
 		tradeGrid.setHeight(350);
-		tradeGrid.getView().setEmptyText("Der er ingen bracher i listen.");
+		tradeGrid.getView().setEmptyText(i18n.tradesEmptyList());
 		
 		this.add(tradeGrid);
 		
@@ -81,21 +85,21 @@ public class TradeAdminDialog extends Dialog {
 		addTradePanel.setLayout(addTradeLayout);
 		
 		final TextField<String> idFld = new TextField<String>();
-		idFld.setFieldLabel("Brancheid");
+		idFld.setFieldLabel(i18n.tradeId());
 		idFld.setValidator(new VTypeValidator(VType.NUMERIC));
 		idFld.setAutoValidate(true);
 		idFld.setAllowBlank(false);
 		addTradePanel.add(idFld);
 		
 		final TextField<String> tradeFld = new TextField<String>();
-		tradeFld.setFieldLabel("Branchenavn");
+		tradeFld.setFieldLabel(i18n.tradeName());
 		tradeFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		tradeFld.setAllowBlank(false);
 		tradeFld.setAutoValidate(true);
 		addTradePanel.add(tradeFld);
 		
 		Button addBtn = new Button();
-		addBtn.setText("Tilføj");
+		addBtn.setText(i18n.addTrade());
 		addBtn.setIcon(IconHelper.createPath("images/trade_add.gif"));
 		addBtn.setType("Submit");
 		addBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -156,7 +160,7 @@ public class TradeAdminDialog extends Dialog {
 		public Object render(Trade model, String property, ColumnData config,
 				int rowIndex, int colIndex, ListStore<Trade> store,
 				Grid<Trade> grid) {
-			Button deleteBtn = new Button("Slet");
+			Button deleteBtn = new Button(i18n.tradeDelete());
 			deleteBtn.setIcon(IconHelper.createPath("images/trade_delete.gif"));
 			deleteBtn.setWidth(grid.getColumnModel().getColumnWidth(colIndex) - 10);
 			
@@ -180,9 +184,9 @@ public class TradeAdminDialog extends Dialog {
 			Dialog confirmDelete = new Dialog();
 			confirmDelete.setButtons(Dialog.YESNO);
 			confirmDelete.setHideOnButtonClick(true);
-			confirmDelete.setHeading("Slet branchen "+trade.getTrade());
-			confirmDelete.addText("Er du sikker på, at du vil slette"
-				+ trade.getTrade() + "? Advarsel! Dette kan ikke fortrydes!");
+			confirmDelete.setHeading(i18n.tradeDeleteDialogTitle(trade.getTrade()));
+			confirmDelete.addText(i18n.cannotBeUndone());
+			confirmDelete.addText(i18n.tradeDeleteDialogMessage(trade.getTrade()));
 			
 			confirmDelete.getButtonById(Dialog.NO).setText("Behold");
 			confirmDelete.getButtonById(Dialog.YES).setText("Slet branche");
