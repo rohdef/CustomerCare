@@ -903,6 +903,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				contactQuery += "\t\tAND k.salesmanid = " + salesman.get("salesmanid") + ";";
 			else
 				contactQuery += "\t\tAND k.salesmanid IS NULL;";
+			
+			logger.debug("SQL string for fetching contacts is: \n"+contactQuery);
 
 			connect();
 			contactStatement = c.createStatement();

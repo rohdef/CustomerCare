@@ -2,6 +2,7 @@ package dk.rohdef.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.extjs.gxt.ui.client.data.ChangeEvent;
@@ -258,7 +259,7 @@ public class CreateCompany extends LayoutContainer {
 		ContentPanel contactsPanel = new ContentPanel();
 		contactsPanel.setWidth("50%");
 		contactsPanel.setHeading(i18n.contactList());
-		contactsPanel.setHeight(130);
+		contactsPanel.setHeight(300);
 		
 		ArrayList<ColumnConfig> configs = new ArrayList<ColumnConfig>();
 		configs.add(new ColumnConfig("contactname", i18n.contactName(), 125));
@@ -269,7 +270,7 @@ public class CreateCompany extends LayoutContainer {
 		contactGrid = new Grid<Contact>(store, cm);
 		contactGrid.setBorders(false);
 		contactGrid.setStripeRows(true);
-		contactGrid.setHeight(120);
+		contactGrid.setHeight(280);
 		
 		contactGrid.getView().setEmptyText(i18n.noContacts());
 		
@@ -370,12 +371,13 @@ public class CreateCompany extends LayoutContainer {
 		newCompanyPanel.setReadOnly(true);
 		createBtn.setText(i18n.createCompanyStopEditing());
 		
-		dataService.getContactsFor(null, newCompany, new AsyncCallback<ArrayList<Contact>>() {
+		dataService.getAllContacts(newCompany, new AsyncCallback<ArrayList<Contact>>() {
 			public void onSuccess(ArrayList<Contact> result) {
 				existingContactStore.add(result);
 			}
 			
 			public void onFailure(Throwable caught) {
+				logger.log(Level.SEVERE, "Couldn't fetch contacts", caught);
 			}
 		});
 	}

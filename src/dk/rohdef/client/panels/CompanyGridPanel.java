@@ -87,6 +87,7 @@ public class CompanyGridPanel extends ContentPanel {
 		filters.addFilter(companyNameFilter);
 		
 		companyStore = new GroupingStore<Company>();
+		companyStore.setMonitorChanges(true);
 		companyGrid = new Grid<Company>(companyStore, cm);
 		companyGrid.setAutoExpandColumn("companyname");
 		companyGrid.setBorders(false);
