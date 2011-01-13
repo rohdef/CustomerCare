@@ -25,6 +25,7 @@ import com.extjs.gxt.ui.client.widget.layout.FormData;
 import com.extjs.gxt.ui.client.widget.layout.FormLayout;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
@@ -33,10 +34,13 @@ import dk.rohdef.viewmodel.Salesman;
 
 public class MailLayout extends LayoutContainer {
 	private DataServiceAsync dataService;
+	private CustomerCareI18n i18n;
 	private Company appCompany;
 	
 	public MailLayout(final List<MailRecipient> recipients) {
 		dataService = Global.getInstance().getDataService();
+		i18n = Global.getInstance().getI18n();
+		
 		this.setLayout(new FitLayout());
 
 		FormPanel formPanel = new FormPanel();
@@ -62,15 +66,15 @@ public class MailLayout extends LayoutContainer {
 			}
 		});
 
-		senderBox.setFieldLabel("Afsender");
+		senderBox.setFieldLabel(i18n.eMailSender());
 		senderBox.setDisplayField("salesman");
 		senderBox.setStore(salespeopleStore);
 		
 		final TextField<String> subjectField = new TextField<String>();
-		subjectField.setFieldLabel("Emne");
+		subjectField.setFieldLabel(i18n.eMailSubject());
 
 		final HtmlEditor contentEditor = new HtmlEditor();
-		contentEditor.setFieldLabel("Indhold");
+		contentEditor.setFieldLabel(i18n.eMailMessage());
 		contentEditor.setHeight(380);
 		
 		dataService.getAppCompany(new AsyncCallback<Company>() {
@@ -97,7 +101,7 @@ public class MailLayout extends LayoutContainer {
 		formPanel.add(subjectField, formData);
 		formPanel.add(contentEditor, formData);
 
-		Button sendMailBtn = new Button("Send mail",
+		Button sendMailBtn = new Button(i18n.sendEMail(),
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -115,22 +119,18 @@ public class MailLayout extends LayoutContainer {
 		sendMailBtn.setIcon(IconHelper.createPath("images/email_go.gif"));
 		formPanel.addButton(sendMailBtn);
 
-		Button cancelBtn = new Button("Anuller",
+		Button cancelBtn = new Button(i18n.cancel(),
 				new SelectionListener<ButtonEvent>() {
 			@Override
 			public void componentSelected(ButtonEvent ce) {
 				final Dialog confirmDialog = new Dialog();
-				confirmDialog
-						.setHeading("Vil du slette det du har skrevet?");
+				confirmDialog.setHeading(i18n.eMailDeleteDialogTitle());
 				confirmDialog.setModal(true);
 				confirmDialog.setButtons(Dialog.YESNO);
 
-				confirmDialog
-						.addText("Er du sikker på, at du vil slette mailen?");
-				confirmDialog.getButtonById(Dialog.YES).setText(
-						"Slet mail");
-				confirmDialog.getButtonById(Dialog.NO).setText(
-						"Tilbage til mailen");
+				confirmDialog.addText(i18n.eMailDeleteDialogMessage());
+				confirmDialog.getButtonById(Dialog.YES).setText(i18n.eMailDeleteMail());
+				confirmDialog.getButtonById(Dialog.NO).setText(i18n.eMailGoBackToMail());
 
 				confirmDialog.getButtonById(Dialog.YES)
 						.addSelectionListener(

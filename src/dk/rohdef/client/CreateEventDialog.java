@@ -42,6 +42,7 @@ import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Contact;
@@ -55,6 +56,7 @@ import dk.rohdef.viewmodel.Salesman;
  */
 public class CreateEventDialog extends Dialog {
 	private static Logger logger = Logger.getLogger(CreateEventDialog.class.getName());
+	private CustomerCareI18n i18n;
 	private Company company;
 
 	private TextField<String> titleFld;
@@ -75,10 +77,11 @@ public class CreateEventDialog extends Dialog {
 	 * @param company the company the meeting is going to be held with.
 	 */
 	public CreateEventDialog(Company company) {
+		i18n = Global.getInstance().getI18n();
 		this.company = company;
 		
 		setModal(true);
-		setHeading("Opret aftale");
+		setHeading(i18n.createEvent());
 		setLayout(new RowLayout(Orientation.HORIZONTAL));
 		setSize(725, 450);
 		
@@ -87,9 +90,9 @@ public class CreateEventDialog extends Dialog {
 		setMapLocation("Danmark");
 		
 		setButtons(Dialog.OKCANCEL);
-		getButtonById(Dialog.CANCEL).setText("Anuller");
+		getButtonById(Dialog.CANCEL).setText(i18n.cancel());
 		getButtonById(Dialog.CANCEL).setIcon(IconHelper.createPath("images/cancel.gif"));
-		getButtonById(Dialog.OK).setText("Opret aftale");
+		getButtonById(Dialog.OK).setText(i18n.createEvent());
 		getButtonById(Dialog.OK).setIcon(IconHelper.createPath("images/calendar_add.gif"));
 		
 		getButtonById(Dialog.OK).addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -131,6 +134,7 @@ public class CreateEventDialog extends Dialog {
 				}
 				guests = URL.encode(guests);
 				
+				// TODO config!!!
 				String sprop = "http%3A%2F%2Fwww.markon.as";
 				String spropName = "name:MarkOn%20A%2FS";
 
@@ -162,13 +166,12 @@ public class CreateEventDialog extends Dialog {
 	private FormPanel createEventArea() {
 		FormPanel panel = new FormPanel();
 		buttonBinding = new FormButtonBinding(panel);
-		panel.setHeading("Aftalens detaljer");
+		panel.setHeading(i18n.eventDetails());
 		
 		titleFld = new TextField<String>();
 		titleFld.setAllowBlank(false);
 		titleFld.setAutoValidate(true);
-		titleFld.setFieldLabel("Titel");
-		titleFld.setValue("Møde: " + company.getCompanyName() + " og ");
+		titleFld.setFieldLabel(i18n.eventTitleLabel());
 		panel.add(titleFld);
 
 		FormLayout topLabelLayout = new FormLayout();
@@ -181,15 +184,13 @@ public class CreateEventDialog extends Dialog {
 		startDateFld = new DateField();
 		startDateFld.setAllowBlank(false);
 		startDateFld.setAutoValidate(true);
-//		startDateFld.setAutoWidth(true);
-		startDateFld.setFieldLabel("Start dato");
+		startDateFld.setFieldLabel(i18n.startDate());
 		left.add(startDateFld);
 		
 		endDateFld = new DateField();
 		endDateFld.setAllowBlank(false);
 		endDateFld.setAutoValidate(true);
-//		endDateFld.setAutoWidth(true);
-		endDateFld.setFieldLabel("Slut dato");
+		endDateFld.setFieldLabel(i18n.endDate());
 		left.add(endDateFld);
 		
 		startDateFld.addListener(Events.Change, new Listener<BaseEvent>() {
@@ -206,14 +207,14 @@ public class CreateEventDialog extends Dialog {
 		right.setWidth("30%");
 		
 		startTimeFld = new TimeField();
-		startTimeFld.setFieldLabel("Starttid");
+		startTimeFld.setFieldLabel(i18n.startTime());
 		startTimeFld.setAutoWidth(true);
 		startTimeFld.setValue(startTimeFld.findModel(9, 0));
 		startTimeFld.setTriggerAction(TriggerAction.ALL);
 		right.add(startTimeFld);
 		
 		endTimeFld = new TimeField();
-		endTimeFld.setFieldLabel("Sluttid");
+		endTimeFld.setFieldLabel(i18n.endTime());
 		endTimeFld.setAutoWidth(true);
 		endTimeFld.setValue(endTimeFld.findModel(10, 0));
 		endTimeFld.setTriggerAction(TriggerAction.ALL);
@@ -235,7 +236,7 @@ public class CreateEventDialog extends Dialog {
 		panel.add(dateTimeContainer);
 				
 		locationFld = new TextField<String>();
-		locationFld.setFieldLabel("Placering");
+		locationFld.setFieldLabel(i18n.location());
 		locationFld.addListener(Events.Change, new Listener<FieldEvent>() {
 			public void handleEvent(FieldEvent be) {
 				setMapLocation(locationFld.getValue());
@@ -244,14 +245,16 @@ public class CreateEventDialog extends Dialog {
 		panel.add(locationFld);
 		
 		ButtonBar locationBtnBar = new ButtonBar();		
-		final Button locationMarkOnBtn = new Button("Hos ");
+		final Button locationMarkOnBtn = new Button();
 		locationMarkOnBtn.setIcon(IconHelper.createPath("images/home.gif"));
 		
 		Global.getInstance().getDataService().getAppCompany(new AsyncCallback<Company>() {
 			public void onSuccess(final Company result) {
-				titleFld.setTitle(titleFld.getId()+result.getCompanyName());
 				
-				locationMarkOnBtn.setText("Hos " + result.getCompanyName());
+				titleFld.setTitle(i18n.eventTitle(company.getCompanyName(),
+						titleFld.getId()+result.getCompanyName()));
+				
+				locationMarkOnBtn.setText(i18n.eventLocationAt(result.getCompanyName()));
 				locationMarkOnBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 					@Override
 					public void componentSelected(ButtonEvent ce) {
@@ -270,7 +273,8 @@ public class CreateEventDialog extends Dialog {
 		});
 		locationBtnBar.add(locationMarkOnBtn);
 		
-		Button locationAtClientBtn = new Button("Hos " + company.getCompanyName());
+		Button locationAtClientBtn =
+			new Button(i18n.eventLocationAt(company.getCompanyName()));
 		locationAtClientBtn.setIcon(IconHelper.createPath("images/map.gif"));
 		locationAtClientBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -288,7 +292,7 @@ public class CreateEventDialog extends Dialog {
 		panel.add(locationBtnBar);
 		
 		detailsFld = new TextArea();
-		detailsFld.setFieldLabel("Detaljer");
+		detailsFld.setFieldLabel(i18n.eventDetails());
 		panel.add(detailsFld);
 
 		final ListStore<Contact> custormerContactsStore = new ListStore<Contact>();
@@ -338,7 +342,7 @@ public class CreateEventDialog extends Dialog {
 	 */
 	private ContentPanel createMapsArea() {
 		ContentPanel panel = new ContentPanel();
-		panel.setHeading("Lokation for mødet");
+		panel.setHeading(i18n.meetingLocation());
 		panel.setSize(300, 300);
 		
 		map = new MapWidget();

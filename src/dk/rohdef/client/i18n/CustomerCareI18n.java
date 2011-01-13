@@ -41,26 +41,8 @@ public interface CustomerCareI18n extends Messages {
 	// DIV FUNCTIONS/PANELS
 	//
 	
-	@DefaultMessage("Create event")
-	public String createEvent();
-	
-	@DefaultMessage("Send e-mail")
-	public String sendEMail();
-	
-	@DefaultMessage("Write e-mail")
-	public String writeEMail();
-	
-	@DefaultMessage("Message")
-	public String eMailMessage();
-	
-	@DefaultMessage("Mangage trades")
-	public String manageTrades();
-	
 	@DefaultMessage("Label settings ({0} label(s) selected)")
 	public String labelSettings(int labelCount);
-	
-	@DefaultMessage("Mail settings")
-	public String mailSettings();
 	
 	@DefaultMessage("Recipient")
 	public String recipient();
@@ -83,6 +65,49 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Print labels")
 	public String printLabels();
 	
+	@DefaultMessage("Loading")
+	public String loadingTitle();
+	
+	@DefaultMessage("Loading data from the database, please wait.")
+	public String loadingPleaseWait();
+
+	
+	//
+	// E-MAIL
+	//
+	
+	@DefaultMessage("Send e-mail")
+	public String sendEMail();
+	
+	@DefaultMessage("Write e-mail")
+	public String writeEMail();
+	
+	@DefaultMessage("Message")
+	public String eMailMessage();
+	
+	@DefaultMessage("Subject")
+	public String eMailSubject();
+	
+	@DefaultMessage("Sender")
+	public String eMailSender();
+	
+	@DefaultMessage("Mangage trades")
+	public String manageTrades();
+	
+	@DefaultMessage("Mail settings")
+	public String mailSettings();
+	
+	@DefaultMessage("Delete the mail?")
+	public String eMailDeleteDialogTitle();
+
+	@DefaultMessage("Do you want to delete what you have written?")
+	public String eMailDeleteDialogMessage();
+	
+	@DefaultMessage("Delete the e-mail")
+	public String eMailDeleteMail();
+	
+	@DefaultMessage("Go back to the e-mail")
+	public String eMailGoBackToMail();
 	
 	//
 	// SALESPEOPLE
@@ -175,6 +200,9 @@ public interface CustomerCareI18n extends Messages {
 	@DefaultMessage("Delete the contact")
 	public String deleteTheContact();
 	
+	@DefaultMessage("Create new contact")
+	public String createNewContactTitle();
+	
 	
 	//
 	// COMPANIES
@@ -245,4 +273,42 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Ok")
 	public String createCompanyStopEditing();
+	
+	
+	//
+	// EVENTS
+	//
+	
+	@DefaultMessage("Create event")
+	public String createEvent();
+	
+	@DefaultMessage("Event details")
+	public String eventDetails();
+	
+	@DefaultMessage("Title")
+	public String eventTitleLabel();
+	
+	@DefaultMessage("Meeting: {0} and {1}")
+	public String eventTitle(String part1, String part2);
+	
+	@DefaultMessage("Start date")
+	public String startDate();
+	
+	@DefaultMessage("End date")
+	public String endDate();
+	
+	@DefaultMessage("Start time")
+	public String startTime();
+	
+	@DefaultMessage("End time")
+	public String endTime();
+	
+	@DefaultMessage("Location")
+	public String location();
+	
+	@DefaultMessage("At {0}")
+	public String eventLocationAt(String location);
+	
+	@DefaultMessage("Meeting location")
+	public String meetingLocation();
 }

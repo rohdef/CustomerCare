@@ -23,6 +23,11 @@ import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Salesman;
 
+/**
+ * Layout for choosing login/salesman. Shows the list of salespeople with profile images 
+ * loaded from <a href="http://gravatar.com">gravatar.com</a> 
+ * @author Rohde Fischer <rohdef@rohdef.dk>
+ */
 public class Login extends LayoutContainer implements Observable {
 	CustomerCareI18n i18n;
 	
@@ -72,6 +77,10 @@ public class Login extends LayoutContainer implements Observable {
 		this.add(panel);
 	}
 	
+	/**
+	 * A "portlet" for showing the login items. 
+	 * @author Rohde Fischer <rohdef@rohdef.dk>
+	 */
 	private class LoginItem extends Portlet {
 		private Salesman salesman;
 		

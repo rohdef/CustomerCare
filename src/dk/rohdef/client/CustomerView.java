@@ -59,6 +59,7 @@ public class CustomerView extends LayoutContainer {
 	private SelectLabelRecipiantsPanel labelForm;
 
 	private Image profileImage;
+	private Button calendarBtn;
 
 	/**
 	 * Creates a new instance of the view. This needs a salesman to fetch the correct 
@@ -190,6 +191,10 @@ public class CustomerView extends LayoutContainer {
 		companyListing.addSelectionListener(
 			new Listener<SelectionChangedEvent<Company>>() {
 				public void handleEvent(SelectionChangedEvent<Company> be) {
+					if (be.getSelection().size() == 1)
+						calendarBtn.enable();
+					else
+						calendarBtn.disable();
 					
 					if (be.getSelection().size() > 1) {
 						companyForm.hide();
@@ -257,7 +262,7 @@ public class CustomerView extends LayoutContainer {
 		});
 		toolBar.add(saveBtn);
 		
-		Button calendarBtn = new Button(i18n.createEvent());
+		calendarBtn = new Button(i18n.createEvent());
 		calendarBtn.setIcon(IconHelper.createPath("images/calendar_add.gif"));
 		calendarBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override

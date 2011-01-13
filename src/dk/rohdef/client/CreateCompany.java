@@ -65,6 +65,7 @@ public class CreateCompany extends LayoutContainer {
 	private LoadingDialog loader = new LoadingDialog();
 	private boolean loadingCities = true, loadingTrades = true;
 	private boolean existingCompany = false;
+	private boolean addedContact = false;
 	
 	private Company newCompany;
 	private ListStore<Contact> contactStore;
@@ -72,6 +73,8 @@ public class CreateCompany extends LayoutContainer {
 	private CompanyEditPanel newCompanyPanel;
 	private Button cancelBtn;
 	private Button createBtn;
+
+	private ListStore<Contact> existingContactStore;
 
 	/**
 	 * 
@@ -131,9 +134,9 @@ public class CreateCompany extends LayoutContainer {
 		existingCompanyContactsArea.setLayout(new HBoxLayout());
 		visibleArea.add(existingCompanyContactsArea);
 		
-		final ListStore<Contact> existingContactStore = new ListStore<Contact>();
-		// TODO load data into store
-		
+		existingContactStore = new ListStore<Contact>();
+		existingContactStore.setMonitorChanges(true);
+				
 		ContactEditPanel existingCreateNewContactPanel = new ContactEditPanel(false);
 		existingCreateNewContactPanel.addNewContactListener(new ContactListener() {
 			public void handleEvent(final ContactEvent be) {
@@ -144,6 +147,7 @@ public class CreateCompany extends LayoutContainer {
 							public void onSuccess(Integer result) {
 								be.getContact().set("contactid", result);
 								existingContactStore.add(be.getContact());
+								addedContact = true;
 							}
 							
 							public void onFailure(Throwable caught) {
@@ -365,6 +369,15 @@ public class CreateCompany extends LayoutContainer {
 		newCompanyPanel.bindCompany(newCompany);
 		newCompanyPanel.setReadOnly(true);
 		createBtn.setText(i18n.createCompanyStopEditing());
+		
+		dataService.getContactsFor(null, newCompany, new AsyncCallback<ArrayList<Contact>>() {
+			public void onSuccess(ArrayList<Contact> result) {
+				existingContactStore.add(result);
+			}
+			
+			public void onFailure(Throwable caught) {
+			}
+		});
 	}
 	
 	/**
@@ -373,7 +386,7 @@ public class CreateCompany extends LayoutContainer {
 	private void createCompany() {
 		if (existingCompany) {
 			logger.info("Editing existing company");
-			newCompany.set("prospect", false);
+			newCompany.set("prospect", !addedContact);
 			changeEventSupport.notify(
 					new ChangeEvent(ChangeEventSource.Add, newCompany));
 			fireEvent(Events.Close);

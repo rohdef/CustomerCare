@@ -14,6 +14,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import dk.rohdef.client.events.ContactEvent;
 import dk.rohdef.client.events.ContactListener;
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.panels.ContactEditPanel;
 import dk.rohdef.client.services.Global;
 import dk.rohdef.viewmodel.Contact;
@@ -26,6 +27,7 @@ import dk.rohdef.viewmodel.Contact;
  */
 public class CreateContactWindow extends Window {
 	private ArrayList<ContactListener> contactListeners;
+	private CustomerCareI18n i18n;
 	
 	/**
 	 * 
@@ -33,7 +35,9 @@ public class CreateContactWindow extends Window {
 	 * @param companyid
 	 */
 	public CreateContactWindow(final int salesmanid, final int companyid) {
-		this.setHeading("Opret ny kontakt");
+		i18n = Global.getInstance().getI18n();
+		
+		this.setHeading(i18n.createNewContactTitle());
 		this.setBorders(false);
 		this.setIcon(IconHelper.createPath("images/user_add.gif"));
 		this.setLayout(new RowLayout(Orientation.VERTICAL));
@@ -66,7 +70,7 @@ public class CreateContactWindow extends Window {
 			}
 		});
 		
-		Button cancelBtn = new Button("Anuller");
+		Button cancelBtn = new Button(i18n.cancel());
 		cancelBtn.setIcon(IconHelper.createPath("images/cancel.gif"));
 		cancelBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
 			@Override
@@ -79,14 +83,26 @@ public class CreateContactWindow extends Window {
 		this.add(createContact);
 	}
 
+	/**
+	 * Listen for when a contact is added
+	 * @param l
+	 */
 	public void addContactListener(ContactListener l) {
 		contactListeners.add(l);
 	}
 	
+	/**
+	 * @see {@link #addContactListener(ContactListener)}
+	 * @param l
+	 */
 	public void removeContactListener(ContactListener l) {
 		contactListeners.remove(l);
 	}
 	
+	/**
+	 * Fire the contact listeners, to inform of a new contact
+	 * @param event
+	 */
 	private void fireContactEvent(ContactEvent event) {
 		for (ContactListener l : contactListeners)
 			l.handleEvent(event);

@@ -1,5 +1,6 @@
 package dk.rohdef.server;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,9 +24,11 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.log4j.Logger;
+import org.scb.gwt.web.server.i18n.GWTI18N;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
+import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataService;
 import dk.rohdef.viewmodel.City;
 import dk.rohdef.viewmodel.Company;
@@ -424,8 +427,12 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			c.setComments(comments);
 
 			Trade noTrade = new Trade();
-			// TODO Internationalize
-			noTrade.setTrade("Ingen branche valgt");
+			try {
+				CustomerCareI18n i18n = GWTI18N.create(CustomerCareI18n.class);
+				noTrade.setTrade(i18n.noTradeSelected());
+			} catch (IOException e) {
+				logger.fatal("How can this even happen?", e);
+			}
 			if (!companyResults.wasNull())
 				c.setTrade(tradeMap.get(new Integer(tradeid)));
 			else
