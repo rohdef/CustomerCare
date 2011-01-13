@@ -184,13 +184,16 @@ public class TradeAdminDialog extends Dialog {
 			Dialog confirmDelete = new Dialog();
 			confirmDelete.setButtons(Dialog.YESNO);
 			confirmDelete.setHideOnButtonClick(true);
+			confirmDelete.setIcon(IconHelper.createPath("images/trade_delete.gif"));
 			confirmDelete.setHeading(i18n.tradeDeleteDialogTitle(trade.getTrade()));
 			confirmDelete.addText(i18n.cannotBeUndone());
 			confirmDelete.addText(i18n.tradeDeleteDialogMessage(trade.getTrade()));
 			
-			confirmDelete.getButtonById(Dialog.NO).setText("Behold");
-			confirmDelete.getButtonById(Dialog.YES).setText("Slet branche");
-			confirmDelete.getButtonById(Dialog.YES).addSelectionListener(
+			Button yesBtn = confirmDelete.getButtonById(Dialog.YES); 
+			confirmDelete.getButtonById(Dialog.NO).setText(i18n.tradeKeep());
+			yesBtn.setText(i18n.tradeDelete());
+			yesBtn.setIcon(IconHelper.createPath("images/trade_delete.gif"));
+			yesBtn.addSelectionListener(
 					new SelectionListener<ButtonEvent>() {
 						@Override
 						public void componentSelected(ButtonEvent ce) {

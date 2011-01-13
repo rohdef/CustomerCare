@@ -373,4 +373,7 @@ public interface CustomerCareI18n extends Messages {
 	
 	@DefaultMessage("Are you sure want to delete the trade {0}?")
 	public String tradeDeleteDialogMessage(String tradename);
+	
+	@DefaultMessage("Keep trade")
+	public String tradeKeep();
 }
