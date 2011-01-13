@@ -179,7 +179,8 @@ public class CompanyGridPanel extends ContentPanel {
 				Company company = (Company) event.getSource();
 				if ((Boolean)company.get("prospect") == (companyGridType == CompanyGridType.PROSPECTS)
 						|| companyGridType == CompanyGridType.ALL)
-					companyStore.add(company);
+					if (!companyStore.contains(company))
+						companyStore.add(company);
 			}
 		});
 		
