@@ -3,7 +3,6 @@ package dk.rohdef.client.panels;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
 import com.extjs.gxt.ui.client.event.Events;
@@ -25,8 +24,6 @@ import dk.rohdef.client.CreateCompany;
 import dk.rohdef.client.i18n.CustomerCareI18n;
 import dk.rohdef.client.services.DataServiceAsync;
 import dk.rohdef.client.services.Global;
-import dk.rohdef.client.specialtypes.VType;
-import dk.rohdef.client.specialtypes.VTypeValidator;
 import dk.rohdef.viewmodel.City;
 import dk.rohdef.viewmodel.Company;
 import dk.rohdef.viewmodel.Importance;
@@ -46,16 +43,11 @@ public class CompanyEditPanel extends FormPanel {
 	private SimpleComboBox<Importance> importanceBox;
 	private ComboBox<Trade> tradeBox;
 	private ListStore<Trade> tradeStore;
-	private TextField<String> phoneFld;
+//	private TextField<String> phoneFld;
 	private ComboBox<City> cityBox;
 	private ComboBox<City> postalBox;
 	private TextField<String> addressFld;
 
-//	private Button saveBtn;
-
-//	private FormButtonBinding buttonBinding;
-
-//	private Button calendarBtn;
 	private TextField<String> companynameFld;
 
 	/**
@@ -136,17 +128,8 @@ public class CompanyEditPanel extends FormPanel {
 			}
 		});
 
-		phoneFld = new TextField<String>();
-		phoneFld.setFieldLabel(i18n.phone());
-		phoneFld.setName("phone");
-		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
-		phoneFld.setAutoValidate(true);
-		this.add(phoneFld);
+		this.add(new PhoneNumberPanel());		
 		
-		// This seems redundant!
-//		FieldBinding fb = new FieldBinding(phoneFld, "phone");
-//		binding.addFieldBinding(fb);
-
 		tradeStore = new ListStore<Trade>();
 		tradeBox = new ComboBox<Trade>();
 		dataService.getTrades(new AsyncCallback<ArrayList<Trade>>() {
@@ -214,9 +197,6 @@ public class CompanyEditPanel extends FormPanel {
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
 		this.setReadOnly(false);
-		
-//		buttonBinding.addButton(saveBtn);
-//		calendarBtn.enable();
 	}
 
 	/**
@@ -229,10 +209,6 @@ public class CompanyEditPanel extends FormPanel {
 		postalBox.clear();
 		original = null;
 		this.setReadOnly(true);
-
-//		buttonBinding.removeButton(saveBtn);
-//		saveBtn.disable();
-//		calendarBtn.disable();
 	}
 	
 	/**
