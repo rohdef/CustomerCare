@@ -1,5 +1,7 @@
 package dk.rohdef.viewmodel;
 
+import java.util.List;
+
 import com.extjs.gxt.ui.client.data.BaseModel;
 
 public class Company extends BaseModel {
@@ -41,12 +43,6 @@ public class Company extends BaseModel {
 			if (!getAddress().equals(other.getAddress()))
 				return false;
 		}
-		
-		if (getPhone() == null) {
-			if (other.getPhone() != null)
-				return false;
-		} else if (!getPhone().equals(other.getPhone()))
-			return false;
 		
 		return true;
 	}
@@ -93,14 +89,32 @@ public class Company extends BaseModel {
 		set("postal", postal);
 	}
 
-	public String getPhone() {
+//	public String getPhone() {
+//		return get("phone");
+//	}
+//
+//	public void setPhone(String phone) {
+//		set("phone", phone);
+//	}
+
+	public List<String> getPhones() {
 		return get("phone");
 	}
-
-	public void setPhone(String phone) {
+	
+	public void setPhones(List<String> phone) {
 		set("phone", phone);
 	}
 
+	@SuppressWarnings("unchecked")
+	public void addPhone(String phone) {
+		((List<String>) get("phones")).add(phone);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void removePhone(String phone) {
+		((List<String>) get("phones")).remove(phone);
+	}
+	
 	public String getMail() {
 		return get("mail");
 	}

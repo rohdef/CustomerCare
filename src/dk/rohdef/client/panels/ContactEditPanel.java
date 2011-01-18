@@ -51,7 +51,7 @@ public class ContactEditPanel extends FormPanel {
 	private ComboBox<Contact> contactsBox;
 	private TextField<String> nameFld;
 	private TextField<String> titleFld;
-	private TextField<String> phoneFld;
+//	private TextField<String> phoneFld;
 	private TextField<String> mailFld;
 	private CheckBox acceptsMailsBox;
 	private TextArea commentFld;
@@ -115,13 +115,13 @@ public class ContactEditPanel extends FormPanel {
 		titleFld.setValidator(new VTypeValidator(VType.ALPHABET));
 		this.add(titleFld);
 
-		phoneFld = new TextField<String>();
-		phoneFld.setBorders(false);
-		phoneFld.setFieldLabel(i18n.contactPhone());
-		phoneFld.setName("phone");
-		phoneFld.setAutoValidate(true);
-		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
-		this.add(phoneFld);
+//		phoneFld = new TextField<String>();
+//		phoneFld.setBorders(false);
+//		phoneFld.setFieldLabel(i18n.contactPhone());
+//		phoneFld.setName("phone");
+//		phoneFld.setAutoValidate(true);
+//		phoneFld.setValidator(new VTypeValidator(VType.PHONE));
+//		this.add(phoneFld);
 
 		mailFld = new TextField<String>();
 		mailFld.setBorders(false);
@@ -164,7 +164,8 @@ public class ContactEditPanel extends FormPanel {
 					Contact newContact = new Contact();
 					newContact.setName(nameFld.getValue());
 					newContact.setTitle(titleFld.getValue());
-					newContact.setPhone(phoneFld.getValue());
+					// TODO fix phone
+//					newContact.setPhone(phoneFld.getValue());
 					newContact.setMail(mailFld.getValue());
 					newContact.setAcceptsMails(acceptsMailsBox.getValue());
 					newContact.setComments(commentFld.getValue());

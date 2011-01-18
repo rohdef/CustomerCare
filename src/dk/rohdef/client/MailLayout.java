@@ -202,12 +202,13 @@ public class MailLayout extends LayoutContainer {
 			+ appCompany.getCity() + "<br />"
 			+ appCompany.get("country") + "<address>"
 			
-			+ "<address>Direct: " + appCompany.getPhone() + "<br />"
+			// TODO update to better phone handling
+			+ "<address>Direct: " + appCompany.get("phone") + "<br />"
 			+ "Mobile: {mobil}"
 			+ "</address>"
 			
 			+ "<address>"
-			+ "Company tel.: " + appCompany.getPhone() + "<br />"
+			+ "Company tel.: " + appCompany.get("phone") + "<br />"
 			+ "Fax: " + appCompany.get("fax")
 			+ "</address>"
 			

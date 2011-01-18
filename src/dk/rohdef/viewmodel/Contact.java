@@ -1,5 +1,7 @@
 package dk.rohdef.viewmodel;
 
+import java.util.List;
+
 import com.extjs.gxt.ui.client.data.BaseModel;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
@@ -51,14 +53,32 @@ public class Contact extends BaseModel implements IsSerializable {
 		set("title", title);
 	}
 
-	public String getPhone() {
-		return get("phone");
+//	public String getPhone() {
+//		return get("phone");
+//	}
+//
+//	public void setPhone(String phone) {
+//		set("phone", phone);
+//	}
+	
+	public List<String> getPhones() {
+		return get("phones");
 	}
-
-	public void setPhone(String phone) {
-		set("phone", phone);
+	
+	public void setPhones(List<String> phones) {
+		set("phones", phones);
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	public void addPhone(String phone) {
+		((List<String>) get("phones")).add(phone);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void removePhone(String phone) {
+		((List<String>) get("phones")).remove(phone);
+	}
+	
 	public String getMail() {
 		return get("mail");
 	}
