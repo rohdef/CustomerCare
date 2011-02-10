@@ -21,6 +21,10 @@ import com.extjs.gxt.ui.client.widget.grid.filters.StringFilter;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.LabelToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.streetview.Pov;
+import com.google.gwt.maps.client.streetview.StreetviewPanoramaOptions;
+import com.google.gwt.maps.client.streetview.StreetviewPanoramaWidget;
 
 import dk.rohdef.client.CreateCompany;
 import dk.rohdef.client.SalesmanAdminWindow;
@@ -68,6 +72,27 @@ public class CompanyGridToolBar extends ToolBar {
 			public void handleEvent(ComponentEvent e) {
 				super.handleEvent(e);
 				filter.setValue(searchFld.getValue());
+				
+				if ("syng en sang".equals(searchFld.getValue().toLowerCase().trim())) {
+					Dialog w = new Dialog();
+					w.setSize(510, 375);
+					
+					LatLng place = LatLng.newInstance(56.196254, 10.200591);
+					StreetviewPanoramaOptions options = StreetviewPanoramaOptions.newInstance();
+					options.setLatLng(place);
+					Pov pov = Pov.newInstance();
+					pov.setYaw(40);
+					pov.setZoom(10.0);
+					options.setPov(pov);
+					StreetviewPanoramaWidget panorama = new StreetviewPanoramaWidget(options);
+					panorama.setSize("500px", "300px");
+					
+					w.add(panorama);
+					w.setModal(true);
+					w.setHideOnButtonClick(true);
+					w.setButtons(Dialog.CLOSE);
+					w.show();
+				}
 			}
 		});
 		this.add(searchFld);
@@ -96,7 +121,7 @@ public class CompanyGridToolBar extends ToolBar {
 				createCompanyWindow.add(createCompany);
 				createCompanyWindow.setIcon(IconHelper.createPath("images/company_add.gif"));
 				createCompanyWindow.setWidth(650);
-				createCompanyWindow.setHeight(380);
+				createCompanyWindow.setHeight(430);
 				createCompanyWindow.setModal(true);
 				createCompanyWindow.setHeading(i18n.createCompany());
 				createCompanyWindow.show();

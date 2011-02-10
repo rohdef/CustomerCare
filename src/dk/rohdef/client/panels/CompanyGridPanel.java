@@ -235,9 +235,6 @@ public class CompanyGridPanel extends ContentPanel {
 		
 		column = new ColumnConfig("trade", i18n.trade(), 125);
 		configs.add(column);
-		
-		column = new ColumnConfig("phone", i18n.phone(), 40);
-		configs.add(column);
 
 		return new ColumnModel(configs);
 	}

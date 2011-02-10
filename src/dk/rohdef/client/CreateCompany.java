@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.data.ChangeEvent;
 import com.extjs.gxt.ui.client.data.ChangeEventSource;
 import com.extjs.gxt.ui.client.data.ChangeEventSupport;
@@ -77,6 +78,8 @@ public class CreateCompany extends LayoutContainer {
 
 	private ListStore<Contact> existingContactStore;
 
+	private ContentPanel visibleArea;
+
 	/**
 	 * 
 	 */
@@ -91,33 +94,42 @@ public class CreateCompany extends LayoutContainer {
 		
 		this.setLayout(new VBoxLayout());
 
-		LayoutContainer visibleArea = new LayoutContainer();
-		visibleArea.setAutoWidth(true);
-		visibleArea.setHeight(320);
+		visibleArea = new ContentPanel();
+		visibleArea.setHeaderVisible(false);
+		visibleArea.setWidth("100%");
+		visibleArea.setHeight(400);
+//		visibleArea.setAutoHeight(true);
 		final CardLayout visibleLayout = new CardLayout();
 		visibleArea.setLayout(visibleLayout);
 		
-		final LayoutContainer companyArea = new LayoutContainer();
-		companyArea.setAutoWidth(true);
+		final ContentPanel companyArea = new ContentPanel();
+//		companyArea.setHeight(375);
+		companyArea.setHeaderVisible(false);
+		companyArea.setBodyBorder(false);
+		companyArea.setBorders(false);
+		companyArea.setFrame(false);
 		companyArea.setAutoHeight(true);
+		companyArea.setAutoWidth(true);
 		companyArea.setLayout(new HBoxLayout());
 		visibleArea.add(companyArea);
 		
 		newCompanyPanel = createNewCompanyPanel();
+//		newCompanyPanel.setHeight(375);
+		newCompanyPanel.setAutoHeight(true);
 		final SearchGrid searchResultArea = new SearchGrid();
-		searchResultArea.setHeight(300);
+		searchResultArea.setAutoHeight(true);
 		
 		final DelayedTask companyNameTask = new DelayedTask(
 			new SearchListener(newCompanyPanel,
 					searchResultArea));
-				newCompanyPanel.addCompanyNameFieldKeyListener(new Listener<FieldEvent>() {
-					public void handleEvent(FieldEvent be) {
-						companyNameTask.delay(500);
-					}
-				});
+		newCompanyPanel.addCompanyNameFieldKeyListener(new Listener<FieldEvent>() {
+			public void handleEvent(FieldEvent be) {
+				companyNameTask.delay(500);
+			}
+		});
 		
 		final LayoutContainer contactsArea = new LayoutContainer();
-		contactsArea.setWidth(640);
+		contactsArea.setAutoWidth(true);
 		contactsArea.setAutoHeight(true);
 		contactsArea.setLayout(new HBoxLayout());
 		visibleArea.add(contactsArea);
@@ -171,7 +183,6 @@ public class CreateCompany extends LayoutContainer {
 		final Button previousBtn = new Button(i18n.previous());
 		final Button nextBtn = new Button(i18n.next());
 		final Button createCompanyBtn = getCreateCompanyButton();
-		final ButtonBar buttonBar = new ButtonBar();
 		
 		previousBtn.disable();
 		previousBtn.setIcon(IconHelper.createPath("images/arrow_left.gif"));
@@ -187,14 +198,14 @@ public class CreateCompany extends LayoutContainer {
 				createCompanyBtn.disable();
 			}
 		});
-		buttonBar.add(previousBtn);
+		visibleArea.addButton(previousBtn);
 		
-		buttonBar.add(nextBtn);
+		visibleArea.addButton(nextBtn);
 		companyButtonBinding.addButton(nextBtn);
 
 		createCompanyBtn.disable();
-		buttonBar.add(createCompanyBtn);
-		buttonBar.add(getCancelButton());
+		visibleArea.addButton(createCompanyBtn);
+		visibleArea.addButton(getCancelButton());
 		
 		nextBtn.setIcon(IconHelper.createPath("images/arrow_right.gif"));
 		nextBtn.addSelectionListener(new SelectionListener<ButtonEvent>() {
@@ -213,11 +224,10 @@ public class CreateCompany extends LayoutContainer {
 				createCompanyBtn.enable();
 			}
 		});
+
+		visibleLayout.setActiveItem(companyArea);
 		
 		this.add(visibleArea);
-		this.add(buttonBar);
-		
-		visibleLayout.setActiveItem(companyArea);
 	}
 	
 	@Override
@@ -485,6 +495,7 @@ public class CreateCompany extends LayoutContainer {
 			
 			companyStore = new ListStore<Company>();
 			companyGrid = new Grid<Company>(companyStore, cm);
+			companyGrid.setAutoHeight(true);
 			companyGrid.setBorders(false);
 			companyGrid.setColumnLines(true);
 			companyGrid.setColumnReordering(true);

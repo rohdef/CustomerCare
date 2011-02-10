@@ -2,6 +2,7 @@ package dk.rohdef.client.panels;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.binding.FormBinding;
@@ -47,8 +48,8 @@ public class CompanyEditPanel extends FormPanel {
 	private ComboBox<City> cityBox;
 	private ComboBox<City> postalBox;
 	private TextField<String> addressFld;
-
 	private TextField<String> companynameFld;
+	private PhoneNumberPanel phonePanel;
 
 	/**
 	 * 
@@ -128,7 +129,8 @@ public class CompanyEditPanel extends FormPanel {
 			}
 		});
 
-		this.add(new PhoneNumberPanel());		
+		phonePanel = new PhoneNumberPanel();
+		this.add(phonePanel);		
 		
 		tradeStore = new ListStore<Trade>();
 		tradeBox = new ComboBox<Trade>();
@@ -176,10 +178,13 @@ public class CompanyEditPanel extends FormPanel {
 		commentsFld.setName("comments");
 		this.add(commentsFld);
 		
+		this.add(phonePanel.getValidatorField());
+		
 		this.setReadOnly(true);
+		phonePanel.setReadOnly(true);
 		binding.autoBind();
 	}
-
+	
 	/**
 	 * Attach a company to the panel to show the data and enable it for editing.
 	 * @param company the company to edit.
@@ -196,7 +201,9 @@ public class CompanyEditPanel extends FormPanel {
 		ArrayList<City> citySelect = new ArrayList<City>();
 		citySelect.add(city);
 		postalBox.setSelection(citySelect);
+		phonePanel.setPhoneNumbers(company.getPhones());
 		this.setReadOnly(false);
+		phonePanel.setReadOnly(false);
 	}
 
 	/**
@@ -207,8 +214,10 @@ public class CompanyEditPanel extends FormPanel {
 		importanceBox.clear();
 		cityBox.clear();
 		postalBox.clear();
+		phonePanel.reset();
 		original = null;
 		this.setReadOnly(true);
+		phonePanel.setReadOnly(true);
 	}
 	
 	/**
@@ -226,6 +235,7 @@ public class CompanyEditPanel extends FormPanel {
 	 * @return
 	 */
 	public Company getShownModel() {
+		((Company) binding.getModel()).setPhones(phonePanel.getPhoneNumbers());
 		return (Company) binding.getModel();
 	}
 
@@ -234,7 +244,10 @@ public class CompanyEditPanel extends FormPanel {
 	 * the model to be updated.
 	 */
 	public void saveToModel() {
-		original.setProperties(binding.getModel().getProperties());
+		Company c = ((Company) binding.getModel());
+		List<String> phones = phonePanel.getPhoneNumbers();
+		c.setPhones(phones);
+		original.setProperties(c.getProperties());
 	}
 	
 	/**

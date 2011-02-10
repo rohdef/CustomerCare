@@ -1,5 +1,6 @@
 package dk.rohdef.viewmodel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.extjs.gxt.ui.client.data.BaseModel;
@@ -47,6 +48,10 @@ public class Company extends BaseModel {
 		return true;
 	}
 
+	public Company() {
+		setPhones(new ArrayList<String>());
+	}
+	
 	public String getCompanyName() {
 		return get("companyname");
 	}
@@ -89,20 +94,12 @@ public class Company extends BaseModel {
 		set("postal", postal);
 	}
 
-//	public String getPhone() {
-//		return get("phone");
-//	}
-//
-//	public void setPhone(String phone) {
-//		set("phone", phone);
-//	}
-
 	public List<String> getPhones() {
-		return get("phone");
+		return get("phones");
 	}
 	
 	public void setPhones(List<String> phone) {
-		set("phone", phone);
+		set("phones", phone);
 	}
 
 	@SuppressWarnings("unchecked")

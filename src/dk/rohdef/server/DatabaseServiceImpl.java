@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -129,6 +130,46 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		} catch (SQLException e) {
 			logger.error("Could not close database connection", e);
 		}
+	}
+	
+	private ArrayList<String> getPhones(String table, String idColumn, int id) {
+		ArrayList<String> phones = new ArrayList<String>();
+		
+		String query = "SELECT phone FROM "+table+" WHERE "+idColumn+"="+id;
+		
+		Statement phoneStatement = null;
+		ResultSet phoneResults = null;
+		
+		try {
+			connect();
+			
+			phoneStatement = c.createStatement();
+			phoneResults = phoneStatement.executeQuery(query);
+			
+			while (phoneResults.next()) {
+				phones.add(phoneResults.getString("phone"));
+			}
+		} catch (Exception e) {
+			logger.fatal("Get "+table, e);
+			throw new RuntimeException("Kunne ikke hente listen af telefonnumre");
+		} finally {
+			if (phoneResults != null) {
+				try {
+					phoneResults.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the result set", e);
+				}
+			}
+			if (phoneStatement != null) {
+				try {
+					phoneStatement.close();
+				} catch (SQLException e) {
+					logger.fatal("Could not close the statement", e);
+				}
+			}
+		}
+		
+		return phones;
 	}
 	
 	public void loaded() {
@@ -409,7 +450,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				companyCity = "";
 			c.setCity(companyCity);
 
-			// TODO fill in phones
+			c.setPhones(this.getPhones("companyPhones", "companyid", companyid));
 
 			if (importanceChar == null)
 				importanceChar = "I";
@@ -549,7 +590,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		try {
 			logger.info("Inserting company");
 			String storedCall = "{? = call insertCompany " +
-					"(?, ?, ?, ?, ?, ?) }";
+					"(?, ?, ?, ?, ?, ?, ?) }";
 			insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
 			
@@ -559,15 +600,17 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				insertProc.setInt(4, company.getPostal());
 			else
 				insertProc.setNull(4, Types.INTEGER);
-			// TODO handle phones
+			
+			Array phoneArray = c.createArrayOf("varchar", company.getPhones().toArray());
+			insertProc.setArray(5, phoneArray);
 			
 			if (company.getTrade() == null || company.getTrade().get("tradeid") == null)
-				insertProc.setNull(5, Types.INTEGER);
+				insertProc.setNull(6, Types.INTEGER);
 			else
-				insertProc.setInt(5, company.getTrade().getId());
+				insertProc.setInt(6, company.getTrade().getId());
 						
-			insertProc.setString(6, company.getImportance().name());
-			insertProc.setString(7, company.getComments());
+			insertProc.setString(7, company.getImportance().name());
+			insertProc.setString(8, company.getComments());
 			
 			insertProc.execute();
 			logger.info("\tSuccessfully inserted the company");
@@ -602,9 +645,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		try {
 			logger.info("Updating company");
 			String storedCall = "{call updateCompany " +
-					"(?, ?, ?, ?, ?, ?, ?) }";
+					"(?, ?, ?, ?, ?, ?, ?, ?) }";
 			
-			// TODO handle phones
+			Array phoneArray = c.createArrayOf("varchar", company.getPhones().toArray());
 			
 			Trade trade = company.getTrade();
 			Integer tradeid = null;
@@ -619,12 +662,13 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				updateProc.setNull(4, Types.INTEGER);
 			else
 				updateProc.setInt(4, company.getPostal());
+			updateProc.setArray(5, phoneArray);
 			if (tradeid == null)
-				updateProc.setNull(5, Types.INTEGER);
+				updateProc.setNull(6, Types.INTEGER);
 			else
-				updateProc.setInt(5, tradeid);
-			updateProc.setString(6, company.getImportance().name());
-			updateProc.setString(7, company.getComments());
+				updateProc.setInt(6, tradeid);
+			updateProc.setString(7, company.getImportance().name());
+			updateProc.setString(8, company.getComments());
 			
 			updateProc.execute();
 			logger.info("\tSuccessfully updated");
@@ -753,8 +797,9 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		CallableStatement insertProc = null;
 		try {
 			String storedCall = "{? = call insertContact " +
-			"(?, ?, ?, ?, ?, ?, ?) }";
-			// TODO handle phones
+				"(?, ?, ?, ?, ?, ?, ?, ?) }";
+			
+			Array phoneArray = c.createArrayOf("VARCHAR(128)", contact.getPhones().toArray());
 			
 			insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
@@ -781,9 +826,10 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			
 			insertProc.setString(4, contactName);
 			insertProc.setString(5, title);
-			insertProc.setString(6, mail);
-			insertProc.setBoolean(7, acceptsmails);
-			insertProc.setString(8, comments);
+			insertProc.setArray(6, phoneArray);
+			insertProc.setString(7, mail);
+			insertProc.setBoolean(8, acceptsmails);
+			insertProc.setString(9, comments);
 			
 			insertProc.execute();
 			int contactId = insertProc.getInt(1);
@@ -810,17 +856,18 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		CallableStatement updateProc = null;
 		try {
 			String storedCall = "{call updateContact " +
-					"(?, ?, ?, ?, ?, ?, ?) }";
-			// TODO handle phones
+					"(?, ?, ?, ?, ?, ?, ?, ?) }";
+			Array phoneArray = c.createArrayOf("VARCHAR(128)", contact.getPhones().toArray());
 			
 			updateProc = c.prepareCall(storedCall);
 			updateProc.setInt(1, (Integer) contact.get("contactid"));
 			updateProc.setInt(2, (Integer) contact.getSalesman().get("salesmanid"));
 			updateProc.setString(3, contact.getName());
 			updateProc.setString(4, contact.getTitle());
-			updateProc.setString(5, contact.getMail());
-			updateProc.setBoolean(6, contact.getAcceptsMails());
-			updateProc.setString(7, contact.getComments());
+			updateProc.setArray(5, phoneArray);
+			updateProc.setString(6, contact.getMail());
+			updateProc.setBoolean(7, contact.getAcceptsMails());
+			updateProc.setString(8, contact.getComments());
 			
 			updateProc.execute();
 		} catch (Exception e) {
@@ -903,7 +950,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				k.set("contactid", contactResult.getInt("contactid"));
 				k.setName(contactResult.getString("contactname"));
 				k.setTitle(contactResult.getString("title"));
-				// TODO handle phones
+				k.setPhones(this.getPhones("contactphones", "contactid",
+						contactResult.getInt("contactid")));
 				k.setMail(contactResult.getString("mail"));
 				k.setComments(contactResult.getString("comments"));
 				k.setAcceptsMails(contactResult.getBoolean("acceptsmails"));
@@ -963,7 +1011,8 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 				k.set("contactid", contactResult.getInt("contactid"));
 				k.setName(contactResult.getString("contactname"));
 				k.setTitle(contactResult.getString("title"));
-				// TODO handle phones
+				k.setPhones(this.getPhones("contactphones", "contactid",
+						contactResult.getInt("contactid")));
 				k.setMail(contactResult.getString("mail"));
 				k.setComments(contactResult.getString("comments"));
 				k.setAcceptsMails(contactResult.getBoolean("acceptsmails"));

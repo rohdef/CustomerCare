@@ -296,6 +296,7 @@ public class CustomerView extends LayoutContainer {
 					throw new RuntimeException(caught);
 				}
 		});
+		
 	}
 	
 	/**
