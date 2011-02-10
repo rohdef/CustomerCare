@@ -799,7 +799,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 			String storedCall = "{? = call insertContact " +
 				"(?, ?, ?, ?, ?, ?, ?, ?) }";
 			
-			Array phoneArray = c.createArrayOf("VARCHAR(128)", contact.getPhones().toArray());
+			Array phoneArray = c.createArrayOf("varchar", contact.getPhones().toArray());
 			
 			insertProc = c.prepareCall(storedCall);
 			insertProc.registerOutParameter(1, Types.INTEGER);
@@ -857,7 +857,7 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		try {
 			String storedCall = "{call updateContact " +
 					"(?, ?, ?, ?, ?, ?, ?, ?) }";
-			Array phoneArray = c.createArrayOf("VARCHAR(128)", contact.getPhones().toArray());
+			Array phoneArray = c.createArrayOf("varchar", contact.getPhones().toArray());
 			
 			updateProc = c.prepareCall(storedCall);
 			updateProc.setInt(1, (Integer) contact.get("contactid"));
@@ -1342,7 +1342,6 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements
 		      return null;
 		  }
 		}
-
 
 	public Integer createPdf(ArrayList<LabelRecipient> recipients) {
 		connect();
