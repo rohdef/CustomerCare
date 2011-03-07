@@ -56,7 +56,7 @@ public class CompanyEditPanel extends FormPanel {
 	 */
 	public CompanyEditPanel() {
 		this.setHeading(i18n.companyData());
-		binding = new FormBinding(this);
+		binding = new FormBinding(this, true);
 		
 		companynameFld = new TextField<String>();
 		companynameFld.setFieldLabel(i18n.companyName());
@@ -183,6 +183,7 @@ public class CompanyEditPanel extends FormPanel {
 		this.setReadOnly(true);
 		phonePanel.setReadOnly(true);
 		binding.autoBind();
+//		binding.addFieldBinding(new FieldBinding(companynameFld, "companyname"));
 	}
 	
 	/**

@@ -28,6 +28,7 @@ import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.menu.Menu;
 import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -115,9 +116,9 @@ public class SelectLabelRecipiantsPanel extends FormPanel {
 		dataService.createPdf(recipients,
 				new AsyncCallback<Integer>() {
 					public void onSuccess(Integer result) {
-						String url = "./customercare/pdfdownload?labelsessid="
-							+result;
-						logger.log(Level.FINE, "Accessubg url "+url);
+						String url = GWT.getHostPageBaseURL()
+							+ "customercare/pdfdownload?labelsessid=" + result;
+						logger.log(Level.FINE, "Accessing url "+url);
 						Window.open(url, "_blank", "");
 					}
 					
